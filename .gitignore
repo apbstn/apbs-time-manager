@@ -1,0 +1,12 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/.vs
+/apbs-time-app/bin/Debug/net9.0
+/apbs-time-app-admin/bin/Debug/net9.0
+/apbs-time-app-admin/logs
+/apbs-time-app-admin/obj
+/Shared/bin/Debug/net9.0
+/Shared/obj
+/apbs-time-app/obj

@@ -1,0 +1,6 @@
+@apbs_time_app_HostAddress = http://localhost:5193
+
+GET {{apbs_time_app_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
