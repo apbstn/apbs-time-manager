@@ -5,5 +5,6 @@ namespace apbs_time_app_admin.Services.TenantService;
 
 public interface ITenantService
 {
-    Task<Tenant> CreateTenant(CreateTenantRequest request);
+    Task<Tenant> CreateTenant(CreateTenantRequest request, User user);
+    Task<IEnumerable<ResponseTenantDto>> GetAll();
 }

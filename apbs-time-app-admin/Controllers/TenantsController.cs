@@ -21,16 +21,26 @@ public class TenantsController : ControllerBase
         _userService = userService;
     }
     [Authorize(Roles = "Admin")]
+    [HttpPost]
     public async Task<IActionResult> Post(CreateTenantRequest request)
     {
-        var resultUser = await _userService.SetUser(new UserDto
+        var user = new UserDto
         {
             Email = request.Email,
             Username = request.Username,
+            PhoneNumber = request.PhoneNumber,
             Password = generatePass(16)
-        });
-        var result = await _tenantService.CreateTenant(request);
-        return Ok(new {result, resultUser});
+        };
+        var resultUser = await _userService.SetUser(user);
+        var result = await _tenantService.CreateTenant(request, resultUser);
+        return Ok(new {result, user});
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> GetAll()
+    {
+        var result = await _tenantService.GetAll();
+        return Ok(result);
     }
 
     private string generatePass(int length)

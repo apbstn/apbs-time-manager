@@ -2,6 +2,7 @@
 using Shared.Context;
 using Shared.Models;
 using apbs_time_app_admin.Services.TenantService.DTOs;
+using Shared.DTOs;
 
 namespace apbs_time_app_admin.Services.TenantService;
 
@@ -17,7 +18,7 @@ public class TenantService : ITenantService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<Tenant> CreateTenant(CreateTenantRequest request)
+    public async Task<Tenant> CreateTenant(CreateTenantRequest request, User user)
     {
         string newConnectionString = null;
 
@@ -49,12 +50,32 @@ public class TenantService : ITenantService
         {
             Name = request.TenantName,
             Code = request.Code,
-            ConnectionString = newConnectionString
+            ConnectionString = newConnectionString,
+            Owner = user
         };
 
         _context.Add(tenant);
         _context.SaveChanges();
 
         return tenant;
+    }
+
+    public async Task<IEnumerable<ResponseTenantDto>> GetAll()
+    {
+        return await _context.Tenants
+            .Include(t=> t.Owner)
+            .Select(t => new ResponseTenantDto
+            {
+                id = t.Id,
+                Code = t.Code,
+                TenantName = t.Name,
+                ConnectionString = t.ConnectionString,
+                UserId = t.Owner.Id,
+                Username = t.Owner.Username,
+                Email = t.Owner.Email,
+                PhoneNumber = t.Owner.PhoneNumber
+            })
+            .ToListAsync();
+        
     }
 }

@@ -11,8 +11,8 @@ using Shared.Context;
 namespace Shared.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20250318104147_Second")]
-    partial class Second
+    [Migration("20250402133854_Fourth")]
+    partial class Fourth
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,19 +43,22 @@ namespace Shared.Migrations.TenantDb
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("T_NAME");
 
+                    b.Property<string>("OWNER_ID")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OWNER_ID");
 
                     b.ToTable("Tenant");
                 });
 
             modelBuilder.Entity("Shared.Models.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("A_ID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit")
@@ -68,6 +71,10 @@ namespace Shared.Migrations.TenantDb
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("A_PASSWORD_HASH");
+
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("A_PHONE_NUMBER");
 
                     b.Property<bool>("Registred")
                         .HasColumnType("bit")
@@ -92,6 +99,15 @@ namespace Shared.Migrations.TenantDb
                     b.HasKey("Id");
 
                     b.ToTable("ACCOUNT");
+                });
+
+            modelBuilder.Entity("Shared.Models.Tenant", b =>
+                {
+                    b.HasOne("Shared.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OWNER_ID");
+
+                    b.Navigation("Owner");
                 });
 #pragma warning restore 612, 618
         }

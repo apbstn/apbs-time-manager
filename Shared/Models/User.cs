@@ -10,7 +10,7 @@ namespace Shared.Models
         [Key]
         [Column("A_ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public int Id { get; set; }
+        public string Id { get; set; }
         [Column("A_EMAIL")]
         public string? Email { get; set; }
         [Column("A_USERNAME")]
@@ -27,5 +27,7 @@ namespace Shared.Models
         public bool Active { get; set; } = false;
         [Column("A_REGISTRED")]
         public bool Registred { get; set; } = false;
+        [Column("A_PHONE_NUMBER")]
+        public string? PhoneNumber { get; set; }
     }
 }

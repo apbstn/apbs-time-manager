@@ -11,8 +11,8 @@ using Shared.Context;
 namespace Shared.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20250318094919_First")]
-    partial class First
+    [Migration("20250402133658_Third")]
+    partial class Third
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -43,19 +43,22 @@ namespace Shared.Migrations.TenantDb
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("T_NAME");
 
+                    b.Property<string>("OwnerId")
+                        .HasColumnType("nvarchar(450)");
+
                     b.HasKey("Id");
+
+                    b.HasIndex("OwnerId");
 
                     b.ToTable("Tenant");
                 });
 
             modelBuilder.Entity("Shared.Models.User", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<string>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("int")
+                        .HasColumnType("nvarchar(450)")
                         .HasColumnName("A_ID");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<bool>("Active")
                         .HasColumnType("bit")
@@ -69,9 +72,17 @@ namespace Shared.Migrations.TenantDb
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("A_PASSWORD_HASH");
 
+                    b.Property<string>("PhoneNumber")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("A_PHONE_NUMBER");
+
                     b.Property<bool>("Registred")
                         .HasColumnType("bit")
                         .HasColumnName("A_REGISTRED");
+
+                    b.Property<int>("Role")
+                        .HasColumnType("int")
+                        .HasColumnName("A_ROLE");
 
                     b.Property<string>("Seed")
                         .HasColumnType("nvarchar(max)")
@@ -88,6 +99,15 @@ namespace Shared.Migrations.TenantDb
                     b.HasKey("Id");
 
                     b.ToTable("ACCOUNT");
+                });
+
+            modelBuilder.Entity("Shared.Models.Tenant", b =>
+                {
+                    b.HasOne("Shared.Models.User", "Owner")
+                        .WithMany()
+                        .HasForeignKey("OwnerId");
+
+                    b.Navigation("Owner");
                 });
 #pragma warning restore 612, 618
         }
