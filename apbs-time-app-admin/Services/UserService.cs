@@ -62,7 +62,7 @@ public class UserService : IUserService
         var user = new User();
         user.Username = request.Username;
         user.Email = request.Email;
-        user.PasswordHash = request.Password;
+        user.PasswordHash = _encryptionService.Encrypt(request.Password);
 
         _tenantDbContext.Users.Add(user);
         _tenantDbContext.SaveChanges();
