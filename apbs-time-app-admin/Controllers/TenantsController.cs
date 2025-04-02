@@ -27,7 +27,7 @@ public class TenantsController : ControllerBase
         {
             Email = request.Email,
             Username = request.Username,
-            Password = generatePass(32)
+            Password = generatePass(16)
         });
         var result = await _tenantService.CreateTenant(request);
         return Ok(new {result, resultUser});
