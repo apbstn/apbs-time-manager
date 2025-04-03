@@ -33,9 +33,10 @@ public class TenantsController : ControllerBase
         };
         var resultUser = await _userService.SetUser(user);
         var result = await _tenantService.CreateTenant(request, resultUser);
-        return Ok(new {result, user});
+        return Ok(new {result});
     }
 
+    [Authorize(Roles = "Admin")]
     [HttpGet]
     public async Task<IActionResult> GetAll()
     {
