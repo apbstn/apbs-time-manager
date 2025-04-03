@@ -9,6 +9,7 @@ using Shared.Extensions;
 using Serilog;
 using apbs_time_app_admin.Security;
 using apbs_time_app_admin.Services.Security;
+using Shared.Models;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -27,6 +28,9 @@ builder.Services.AddDbContext<ApplicationDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<TenantDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddTransient<ITenantService, TenantService>();
