@@ -10,6 +10,7 @@ using Serilog;
 using apbs_time_app_admin.Security;
 using apbs_time_app_admin.Services.Security;
 using Shared.Models;
+using Shared.Services.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 

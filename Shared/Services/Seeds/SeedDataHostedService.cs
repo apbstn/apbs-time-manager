@@ -3,7 +3,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Shared.Models;
 
-namespace Shared.Services;
+namespace Shared.Services.Seeds;
 
 public class SeedDataHostedService : IHostedService
 {
