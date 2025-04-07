@@ -33,7 +33,7 @@ public class AuthController : ControllerBase
     }
 
     [AllowAnonymous]
-    [HttpPost("login")]
+    [HttpGet("login")]
     public async Task<IActionResult> Login([FromBody] LoginModel model)
     {
         var user = await _userService.AuthenticateAsync(model.Email, model.Password);
