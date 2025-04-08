@@ -15,11 +15,13 @@ public class TenantsController : ControllerBase
 {
     private readonly ITenantService _tenantService;
     private readonly IUserService _userService;
+
     public TenantsController(ITenantService tenantService, IUserService userService)
     {
         _tenantService = tenantService;
         _userService = userService;
     }
+
     [Authorize(Roles = "Admin")]
     [HttpPost]
     public async Task<IActionResult> Post(CreateTenantRequest request)
@@ -28,12 +30,11 @@ public class TenantsController : ControllerBase
         {
             Email = request.Email,
             Username = request.Username,
-            PhoneNumber = request.PhoneNumber,
-            Password = generatePass(16)
+            PhoneNumber = request.PhoneNumber
         };
         var resultUser = await _userService.SetUser(user);
         var result = await _tenantService.CreateTenant(request, resultUser);
-        return Ok(new {result});
+        return Ok(new { result });
     }
 
     [Authorize(Roles = "Admin")]
@@ -42,6 +43,30 @@ public class TenantsController : ControllerBase
     {
         var result = await _tenantService.GetAll();
         return Ok(result);
+    }
+
+    // === NEW: PUT - Update Tenant ===
+    [Authorize(Roles = "Admin")]
+    [HttpPut("{tenantId}")]
+    public async Task<IActionResult> Put(Guid tenantId, [FromBody] UpdateTenantRequest request)
+    {
+        var result = await _tenantService.UpdateTenant(tenantId, request);
+        if (!result)
+            return NotFound(new { message = "Tenant not found or update failed." });
+
+        return Ok(new { message = "Tenant updated successfully." });
+    }
+
+    // === NEW: DELETE - Delete Tenant ===
+    [Authorize(Roles = "Admin")]
+    [HttpDelete("{tenantId}")]
+    public async Task<IActionResult> Delete(Guid tenantId)
+    {
+        var result = await _tenantService.DeleteTenant(tenantId);
+        if (!result)
+            return NotFound(new { message = "Tenant not found or delete failed." });
+
+        return Ok(new { message = "Tenant deleted successfully." });
     }
 
     private string generatePass(int length)
