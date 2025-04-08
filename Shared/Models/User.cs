@@ -1,10 +1,12 @@
 ﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
 using Shared.Models.Enumerations;
+using Microsoft.EntityFrameworkCore;
 
 namespace Shared.Models
 {
     [Table("ACCOUNT")]
+    [Index(nameof(Email), IsUnique = true)]
     public class User
     {
         [Key]
