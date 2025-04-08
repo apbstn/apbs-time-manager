@@ -78,4 +78,35 @@ public class TenantService : ITenantService
             .ToListAsync();
         
     }
+
+    public async Task<bool> UpdateTenant(Guid tenantId, UpdateTenantRequest request)
+    {
+        var tenant = await _context.Tenants
+            .Include(t => t.Owner) // ⬅️ important!
+            .FirstOrDefaultAsync(t => t.Id == tenantId.ToString());
+
+        if (tenant == null || tenant.Owner == null)
+            return false;
+
+        tenant.Name = request.Name;
+        tenant.Owner.Email = request.Email;
+        tenant.Owner.Username = request.Username;
+        tenant.Owner.PhoneNumber = request.PhoneNumber;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
+
+    public async Task<bool> DeleteTenant(Guid tenantId)
+    {
+        var tenant = await _context.Tenants.FindAsync(tenantId);
+        if (tenant == null)
+            return false;
+
+        _context.Tenants.Remove(tenant);
+        await _context.SaveChangesAsync();
+        return true;
+    }
+
 }
