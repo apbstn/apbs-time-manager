@@ -1,8 +1,10 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.EntityFrameworkCore;
+using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
 
 namespace Shared.Models;
 [Table("Tenant")]
+[Index(nameof(Code), IsUnique = true)]
 public class Tenant
 {
     [Key]

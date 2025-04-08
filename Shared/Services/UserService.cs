@@ -78,7 +78,7 @@ public class UserService : IUserService
 
     public async Task SendUserCreationMail(User user, string pass)
     {
-        var applicationUrl = "https://blogs.shahriyarali.com";
+        var applicationUrl = "https://localhost:5197";
         string body = $@"
             <!DOCTYPE html>
             <html>

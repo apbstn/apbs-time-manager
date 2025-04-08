@@ -1,9 +1,7 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.IdentityModel.Tokens;
 using Shared.Context;
 using Shared.Services;
-using System.Text;
 using apbs_time_app_admin.Services.TenantService;
 using Shared.Extensions;
 using Serilog;
