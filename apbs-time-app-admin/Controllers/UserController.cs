@@ -1,7 +1,9 @@
-﻿using Microsoft.AspNetCore.Http.HttpResults;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
 using Shared.Services;
+using System.Text;
 
 namespace apbs_time_app_admin.Controllers
 {
@@ -15,6 +17,7 @@ namespace apbs_time_app_admin.Controllers
             _userService = userService;
         }
 
+        [Authorize]
         [HttpGet]
         public async Task<IActionResult> Get() 
         { 
@@ -22,11 +25,34 @@ namespace apbs_time_app_admin.Controllers
             return Ok(list);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Post(UserDto request) 
-        { 
+        {
+            request.Password = generatePass(20);
+
             var result = await _userService.SetUser(request);
             return Ok(result);
+        }
+
+        //[Authorize]
+        //[HttpPatch]
+        //[Route("resetPass")]
+        //public async Task<IActionResult> Patch(UserDto user)
+        //{
+            
+        //}
+
+        private string generatePass(int length)
+        {
+            const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
+            StringBuilder res = new StringBuilder();
+            Random rnd = new Random();
+            while (0 < length--)
+            {
+                res.Append(valid[rnd.Next(valid.Length)]);
+            }
+            return res.ToString();
         }
     }
 }

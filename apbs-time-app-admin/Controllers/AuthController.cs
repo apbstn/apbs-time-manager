@@ -41,11 +41,11 @@ public class AuthController : ControllerBase
         if (user == null)
             return Unauthorized();
 
-        if (user.Role != RoleEnum.Admin)
+        if (!user.IsAdmin)
             return Unauthorized();
 
         var token = _jwtTokenGenerator.Generate(user);
-        return Ok(new { Token = token, Role = user.Role.ToString()});
+        return Ok(new { Token = token});
     }
 
     //[HttpPost("register")]

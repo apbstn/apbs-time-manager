@@ -14,39 +14,30 @@ namespace apbs_time_app_admin.Controllers;
 public class TenantsController : ControllerBase
 {
     private readonly ITenantService _tenantService;
-    private readonly IUserService _userService;
 
-    public TenantsController(ITenantService tenantService, IUserService userService)
+    public TenantsController(ITenantService tenantService)
     {
         _tenantService = tenantService;
-        _userService = userService;
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpPost]
     public async Task<IActionResult> Post(CreateTenantRequest request)
     {
-        var user = new UserDto
-        {
-            Email = request.Email,
-            Username = request.Username,
-            PhoneNumber = request.PhoneNumber
-        };
-        var resultUser = await _userService.SetUser(user);
-        var result = await _tenantService.CreateTenant(request, resultUser);
+        var result = await _tenantService.CreateTenant(request, request.User);
         return Ok(new { result });
     }
 
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetAll()
+    public async Task<IActionResult> GetAll(PaginationParameters param)
     {
-        var result = await _tenantService.GetAll();
+        var result = await _tenantService.GetAll(param.PageNumber, param.PageSize);
         return Ok(result);
     }
 
     // === NEW: PUT - Update Tenant ===
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpPut("{tenantId}")]
     public async Task<IActionResult> Put(Guid tenantId, [FromBody] UpdateTenantRequest request)
     {
@@ -58,7 +49,7 @@ public class TenantsController : ControllerBase
     }
 
     // === NEW: DELETE - Delete Tenant ===
-    [Authorize(Roles = "Admin")]
+    [Authorize]
     [HttpDelete("{tenantId}")]
     public async Task<IActionResult> Delete(Guid tenantId)
     {
@@ -67,17 +58,5 @@ public class TenantsController : ControllerBase
             return NotFound(new { message = "Tenant not found or delete failed." });
 
         return Ok(new { message = "Tenant deleted successfully." });
-    }
-
-    private string generatePass(int length)
-    {
-        const string valid = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890";
-        StringBuilder res = new StringBuilder();
-        Random rnd = new Random();
-        while (0 < length--)
-        {
-            res.Append(valid[rnd.Next(valid.Length)]);
-        }
-        return res.ToString();
     }
 }
