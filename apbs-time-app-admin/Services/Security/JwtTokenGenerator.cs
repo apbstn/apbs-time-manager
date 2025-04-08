@@ -28,8 +28,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
             Subject = new ClaimsIdentity(
                 [
                     new Claim(ClaimTypes.Name, user.Email!),
-                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                    new Claim("role", user.Role.ToString())
+                    new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
                 ])
         };
 

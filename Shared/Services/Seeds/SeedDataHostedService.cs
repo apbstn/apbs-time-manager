@@ -25,7 +25,7 @@ public class SeedDataHostedService : IHostedService
             {
                 Username = "admin@example.com",
                 Email = "admin@example.com",
-                Role = Models.Enumerations.RoleEnum.Admin
+                IsAdmin = true
             };
 
             await userService.RegisterAsync(adminUser, "123456");

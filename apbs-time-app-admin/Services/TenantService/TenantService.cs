@@ -3,6 +3,7 @@ using Shared.Context;
 using Shared.Models;
 using apbs_time_app_admin.Services.TenantService.DTOs;
 using Shared.DTOs;
+using Shared.Services.Pagination;
 
 namespace apbs_time_app_admin.Services.TenantService;
 
@@ -18,7 +19,7 @@ public class TenantService : ITenantService
         _serviceProvider = serviceProvider;
     }
 
-    public async Task<Tenant> CreateTenant(CreateTenantRequest request, User user)
+    public async Task<Tenant> CreateTenant(CreateTenantRequest request, UserDto user)
     {
         string newConnectionString = null;
 
@@ -44,14 +45,15 @@ public class TenantService : ITenantService
         {
             throw new Exception(ex.Message);
         }
-        
+
+        var us = await _context.Users.FirstAsync(x => x.Email == user.Email);
 
         Tenant tenant = new()
         {
             Name = request.TenantName,
             Code = request.Code,
             ConnectionString = newConnectionString,
-            Owner = user
+            Owner = us
         };
 
         _context.Add(tenant);
@@ -60,10 +62,18 @@ public class TenantService : ITenantService
         return tenant;
     }
 
-    public async Task<IEnumerable<ResponseTenantDto>> GetAll()
+    public async Task<PaginatedResponse<ResponseTenantDto>> GetAll(int pageNumber, int pageSize = 10)
     {
-        return await _context.Tenants
+        int itemsToSkip = (pageNumber - 1) * pageSize;
+
+        // Get total count of items
+        int totalCount = await _context.Tenants.CountAsync();
+
+        var items = await _context.Tenants
             .Include(t=> t.Owner)
+            .OrderBy(t => t.Id)
+            .Skip(itemsToSkip)
+            .Take(pageSize)
             .Select(t => new ResponseTenantDto
             {
                 id = t.Id,
@@ -76,7 +86,14 @@ public class TenantService : ITenantService
                 PhoneNumber = t.Owner.PhoneNumber
             })
             .ToListAsync();
-        
+
+        return new PaginatedResponse<ResponseTenantDto>
+        {
+            PageNumber = pageNumber,
+            PageSize = pageSize,
+            TotalCount = totalCount,
+            Items = items
+        };
     }
 
     public async Task<bool> UpdateTenant(Guid tenantId, UpdateTenantRequest request)
