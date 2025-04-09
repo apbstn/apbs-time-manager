@@ -3,9 +3,6 @@ using Shared.Models;
 using apbs_time_app_admin.Services.TenantService;
 using apbs_time_app_admin.Services.TenantService.DTOs;
 using Microsoft.AspNetCore.Authorization;
-using Shared.Services;
-using Shared.DTOs;
-using System.Text;
 
 namespace apbs_time_app_admin.Controllers;
 

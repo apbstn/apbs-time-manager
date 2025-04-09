@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs;
+using Shared.Models;
 using Shared.Services;
 using System.Text;
 
@@ -19,9 +19,9 @@ namespace apbs_time_app_admin.Controllers
 
         [Authorize]
         [HttpGet]
-        public async Task<IActionResult> Get() 
+        public async Task<IActionResult> GetAll(PaginationParameters param) 
         { 
-            var list = await _userService.GetUsers();
+            var list = await _userService.GetUsers(param.PageNumber, param.PageSize);
             return Ok(list);
         }
 
@@ -40,7 +40,7 @@ namespace apbs_time_app_admin.Controllers
         //[Route("resetPass")]
         //public async Task<IActionResult> Patch(UserDto user)
         //{
-            
+
         //}
 
         private string generatePass(int length)
