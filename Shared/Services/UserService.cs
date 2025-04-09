@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using NPOI.SS.UserModel;
 using Shared.Context;
 using Shared.DTOs;
 using Shared.Models;
@@ -48,10 +49,26 @@ public class UserService : IUserService
         return password == decryptedPassword;
     }
 
-    public async Task<IEnumerable<User>> GetUsers()
+    public async Task<IEnumerable<UserResponseDto>> GetUsers(int pageNumber, int pageSize = 10)
     {
-        var users = _tenantDbContext.Users.ToList();
-        return users;
+        int itemsToSkip = (pageNumber - 1) * pageSize;
+
+        // Get total count of items
+        int totalCount = await _tenantDbContext.Users.CountAsync();
+
+        var items = await _tenantDbContext.Users
+            .OrderBy(t => t.Id)
+            .Skip(itemsToSkip)
+            .Take(pageSize)
+            .Select(t => new UserResponseDto
+            {
+                Id = t.Id,
+                Email = t.Email,
+                Username = t.Username,
+                PhoneNumber = t.PhoneNumber
+            })
+            .ToListAsync();
+        return items;
     }
 
     public async Task<User> GetUser(string Email)

@@ -7,7 +7,7 @@ public interface IUserService
 {
     public Task<User> AuthenticateAsync(string email, string password);
     public Task<bool> RegisterAsync(User user, string password);
-    public Task<IEnumerable<User>> GetUsers();
+    public Task<IEnumerable<UserResponseDto>> GetUsers(int pageNumber, int pageSize = 10);
     public Task<User> SetUser(UserDto request);
     public Task<User> GetUser(string Email);
 }
