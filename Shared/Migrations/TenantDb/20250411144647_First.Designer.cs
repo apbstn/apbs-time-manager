@@ -11,15 +11,15 @@ using Shared.Context;
 namespace Shared.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20250408145006_Sixth")]
-    partial class Sixth
+    [Migration("20250411144647_First")]
+    partial class First
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
-                .HasAnnotation("ProductVersion", "9.0.3")
+                .HasAnnotation("ProductVersion", "9.0.4")
                 .HasAnnotation("Relational:MaxIdentifierLength", 128);
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
@@ -31,23 +31,25 @@ namespace Shared.Migrations.TenantDb
                         .HasColumnType("nvarchar(450)")
                         .HasColumnName("J_ID");
 
-                    b.Property<string>("TenantId")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(450)");
-
-                    b.Property<int>("role")
+                    b.Property<int>("Role")
                         .HasColumnType("int")
                         .HasColumnName("J_USER_TENANT_ROLE");
 
-                    b.Property<string>("userId")
+                    b.Property<string>("TenantId")
                         .IsRequired()
-                        .HasColumnType("nvarchar(450)");
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("J_TENANT_ID");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("J_USER_ID");
 
                     b.HasKey("Id");
 
                     b.HasIndex("TenantId");
 
-                    b.HasIndex("userId");
+                    b.HasIndex("UserId");
 
                     b.ToTable("JOIN_TENANT_USER");
                 });
@@ -71,8 +73,10 @@ namespace Shared.Migrations.TenantDb
                         .HasColumnType("nvarchar(max)")
                         .HasColumnName("T_NAME");
 
-                    b.Property<string>("OWNER_ID")
-                        .HasColumnType("nvarchar(450)");
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)")
+                        .HasColumnName("J_USER_ID");
 
                     b.HasKey("Id");
 
@@ -80,7 +84,7 @@ namespace Shared.Migrations.TenantDb
                         .IsUnique()
                         .HasFilter("[T_CODE] IS NOT NULL");
 
-                    b.HasIndex("OWNER_ID");
+                    b.HasIndex("UserId");
 
                     b.ToTable("Tenant");
                 });
@@ -137,25 +141,27 @@ namespace Shared.Migrations.TenantDb
                     b.HasOne("Shared.Models.Tenant", "Tenant")
                         .WithMany()
                         .HasForeignKey("TenantId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("Shared.Models.User", "user")
+                    b.HasOne("Shared.Models.User", "User")
                         .WithMany("Roles")
-                        .HasForeignKey("userId")
+                        .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
                     b.Navigation("Tenant");
 
-                    b.Navigation("user");
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("Shared.Models.Tenant", b =>
                 {
                     b.HasOne("Shared.Models.User", "Owner")
                         .WithMany()
-                        .HasForeignKey("OWNER_ID");
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
                     b.Navigation("Owner");
                 });

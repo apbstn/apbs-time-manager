@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.Models;
+namespace Shared.Models.Mailing;
 
 public class MailParams
 {

@@ -41,6 +41,7 @@ public class AuthController : ControllerBase
         return Ok(new { Token = token});
     }
 
+
     //[HttpPost("register")]
     //public async Task<IActionResult> Register([FromBody] RegisterModel model)
     //{

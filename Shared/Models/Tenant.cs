@@ -17,6 +17,9 @@ public class Tenant
     public string? Name { get; set; }
     [Column("T_CONNECTION_STRING")]
     public string? ConnectionString { get; set; }
-    [ForeignKey("OWNER_ID")]
+    [Required]
+    [Column("J_USER_ID")]
+    public string UserId { get; set; }
+    [ForeignKey(nameof(UserId))]
     public virtual User? Owner { get; set; }
 }

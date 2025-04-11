@@ -8,8 +8,9 @@ using System.Net.Mail;
 using System.Net;
 using System.Text;
 using System.Threading.Tasks;
+using Shared.Models.Mailing;
 
-namespace Shared.Services;
+namespace Shared.Services.Mailing;
 
 public class SmtpMailService : IMailService
 {

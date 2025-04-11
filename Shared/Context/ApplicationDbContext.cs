@@ -1,4 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Options;
+using Shared.Models;
+using Shared.Models.Join;
 using Shared.Services;
 
 namespace Shared.Context
@@ -15,10 +18,13 @@ namespace Shared.Context
             CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
 
+        public DbSet<UserTenant> Users { get; set; }
+
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<User>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
         //}
+
 
         protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
         {
@@ -27,6 +33,12 @@ namespace Shared.Context
             {
                 _ = optionsBuilder.UseSqlServer(tenantConnectionString);
             }
+        }
+
+        public void ForceReload()
+        {
+            CurrentTenantId = _tenantService.TenantId;
+            CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
     }
 }
