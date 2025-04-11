@@ -1,4 +1,4 @@
-﻿namespace Shared.Models;
+﻿namespace Shared.Models.Mailing;
 
 public class SmtpSettings
 {

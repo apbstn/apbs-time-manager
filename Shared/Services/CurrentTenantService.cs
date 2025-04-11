@@ -18,16 +18,23 @@ public class CurrentTenantService : ICurrentTenantService
 
     public async Task<bool> SetTenant(string tenant)
     {
-        var tenantInfo = await _context.Tenants.FirstOrDefaultAsync(x => x.Id == tenant);
-        if (tenantInfo != null) 
-        { 
-            TenantId = tenantInfo.Id;
-            ConnectionString = tenantInfo.ConnectionString;
-            return true;
+        try { 
+            var tenantInfo = await _context.Tenants.FirstOrDefaultAsync(x => x.Id == tenant);
+            if (tenantInfo != null)
+            {
+                TenantId = tenantInfo.Id;
+                ConnectionString = tenantInfo.ConnectionString;
+                return true;
+            }
+            else
+            {
+                throw new Exception("Invalid Tenant");
+            }
         }
-        else
+        catch (Exception ex)
         {
-            throw new Exception("Invalid Tenant");
+            throw ex;
         }
+
     }
 }

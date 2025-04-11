@@ -14,14 +14,14 @@ namespace Shared.Models
         [Column("A_ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
         public string Id { get; set; }
+
         [Column("A_EMAIL")]
         public string? Email { get; set; }
         [Column("A_USERNAME")]
         public string? Username { get; set; }
         [Column("A_PASSWORD_HASH")]
         public string? PasswordHash { get; set; }
-        [Column("A_TENANT_ROLE")]
-        public IEnumerable<UserTenantRole> Roles { get; set; } = [];
+        public virtual IList<UserTenantRole> Roles { get; set; } = [];
         [Column("A_SEED")]
         public string? Seed { get; set; }
         [Column("A_ACTIVE")]

@@ -1,8 +1,11 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using NPOI.SS.UserModel;
 using Shared.Context;
-using Shared.DTOs;
+using Shared.DTOs.UserDtos;
+using Shared.DTOs.UserDtos.Mappers;
 using Shared.Models;
+using Shared.Models.Mailing;
+using Shared.Services.Mailing;
 
 namespace Shared.Services;
 
@@ -49,8 +52,9 @@ public class UserService : IUserService
         return password == decryptedPassword;
     }
 
-    public async Task<IEnumerable<UserResponseDto>> GetUsers(int pageNumber, int pageSize = 10)
+    public async Task<IEnumerable<UserNoPassDto>> GetUsers(int pageNumber, int pageSize = 10)
     {
+        var mapper = new UserMapper();
         int itemsToSkip = (pageNumber - 1) * pageSize;
 
         // Get total count of items
@@ -60,24 +64,19 @@ public class UserService : IUserService
             .OrderBy(t => t.Id)
             .Skip(itemsToSkip)
             .Take(pageSize)
-            .Select(t => new UserResponseDto
-            {
-                Id = t.Id,
-                Email = t.Email,
-                Username = t.Username,
-                PhoneNumber = t.PhoneNumber
-            })
+            .Select(t => mapper.ToUserNoPassDto(t))
             .ToListAsync();
         return items;
     }
 
-    public async Task<User> GetUser(string Email)
+    public async Task<UserNoPassDto> GetUser(string Email)
     {
         throw new NotImplementedException();
     }
 
-    public async Task<User> SetUser(UserDto request)
+    public async Task<UserNoPassDto> SetUser(UserDto request)
     {
+        var mapper = new UserMapper();
         var user = new User();
         user.Username = request.Username;
         user.Email = request.Email;
@@ -89,7 +88,7 @@ public class UserService : IUserService
 
         _ = Task.Run(() => SendUserCreationMail(user, request.Password));
         
-        return user;
+        return mapper.ToUserNoPassDto(user);
     }
 
 
@@ -142,4 +141,74 @@ public class UserService : IUserService
 
         await _mailService.SendEmailAsync(mailParams);
     }
+
+    public async Task<UserNoPassDto> ResetPass(UserDto req)
+    {
+        var mapper = new UserMapper();
+        var user = await _tenantDbContext.Users.FirstAsync(s => s.Email == req.Email);
+
+        user.PasswordHash = _encryptionService.Encrypt(req.Password);
+
+        _tenantDbContext.Users.Update(user);
+        _tenantDbContext.SaveChanges();
+
+        _ = Task.Run(() => SendUserResetPasswordMail(user, req.Password));
+
+        return mapper.ToUserNoPassDto(user);
+    }
+
+
+    public async Task SendUserResetPasswordMail(User user, string pass)
+    {
+        var applicationUrl = "https://localhost:5197";
+        string body = $@"
+            <!DOCTYPE html>
+            <html>
+            <head>
+                <style>
+                    body {{ font-family: Arial, sans-serif; line-height: 1.6; }}
+                    .container {{ max-width: 600px; margin: 0 auto; padding: 20px; }}
+                    .header {{ color: #2c3e50; border-bottom: 1px solid #eee; padding-bottom: 10px; }}
+                    .footer {{ margin-top: 20px; font-size: 0.8em; color: #7f8c8d; }}
+                </style>
+            </head>
+            <body>
+                <div class='container'>
+                    <div class='header'>
+                        <h2>Welcome to Our Platform!</h2>
+                    </div>
+                    <p>Dear {user.Username},</p>
+                    <p>Your password has been successfully modified. Here are your login details:</p>
+                    <p><strong>Username:</strong> {user.Username}</p>
+                    <p><strong>Email:</strong> {user.Email}</p>
+                    <p><strong>Temporary Password:</strong> {pass}</p>
+                    <p>For security reasons, we recommend you change your password after first login.</p>
+                    <p>You can access the system by clicking the button below:</p>
+                    <p>
+                        <a href='{applicationUrl}' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                            Go to Application
+                        </a>
+                    </p>
+                    <div class='footer'>
+                        <p>Best regards,<br>The Support Team</p>
+                        <p>If you didn't request this account, please ignore this email.</p>
+                    </div>
+                </div>
+            </body>
+            </html>";
+
+        var mailParams = new MailParams
+        {
+            ToEmail = user.Email,
+            Subject = "Your Account Has Been Created",
+            Body = body,
+            IsBodyHtml = true
+        };
+
+        await _mailService.SendEmailAsync(mailParams);
+    }
+
+
+
+
 }
