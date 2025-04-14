@@ -44,6 +44,8 @@ builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
 
+builder.Services.AddMigrateTenantDatabase(builder.Configuration);
+
 
 builder.Services.AddAuthentication("Bearer")
     .AddJwtBearer("Bearer", options =>
@@ -121,6 +123,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Shared.Services;
+using System.IdentityModel.Tokens.Jwt;
 
 namespace Shared.Middleware;
 
@@ -11,20 +12,35 @@ public class TenantResolver
     _next = next; 
     }
 
-    public async Task InvokeAsync(HttpContext context, ICurrentTenantService currentTennant)
+    public async Task InvokeAsync(HttpContext context, ICurrentTenantService currentTenant)
     {
         context.Request.Headers.TryGetValue("tenant", out var tenantFromHeader);
-        if (context.Request.Path.StartsWithSegments("/api/tenant")
-            || context.Request.Path.StartsWithSegments("/api/auth/login")
-            || context.Request.Path.StartsWithSegments("/api/auth/register"))
+        context.Request.Headers.TryGetValue("Authorization", out var accessTokenHeader);
+
+        if (context.Request.Path.StartsWithSegments("/api/auth/login") 
+            || context.Request.Path.StartsWithSegments("/api/auth/switch"))
         {
             await _next(context);
             return;
         }
         
-        if (!string.IsNullOrEmpty(tenantFromHeader))
+        if (!string.IsNullOrEmpty(accessTokenHeader))
         {
-            await currentTennant.SetTenant(tenantFromHeader);
+            var token = accessTokenHeader.ToString().Replace("Bearer ", "", StringComparison.OrdinalIgnoreCase);
+
+            var handler = new JwtSecurityTokenHandler();
+            var jwtToken = handler.ReadJwtToken(token);
+
+            // Look for the claim that holds the tenant ID
+            var tenantId = jwtToken.Claims.FirstOrDefault(c => c.Type == "tenant_id")?.Value;
+
+
+            if (!string.IsNullOrEmpty(tenantId))
+            {
+                await currentTenant.SetTenant(tenantId);
+                await _next(context);
+                return;
+            }
             await _next(context);
         }
         else

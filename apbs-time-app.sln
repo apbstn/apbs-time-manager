@@ -1,9 +1,12 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 17
-VisualStudioVersion = 17.13.35825.156 d17.13
+VisualStudioVersion = 17.13.35825.156
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apbs-time-app", "apbs-time-app\apbs-time-app.csproj", "{10276AFC-24BA-4454-A64C-15ACFECBD4FF}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.Auth", "apbs-time-app\Apbs-Time-App.Client.Auth.csproj", "{10276AFC-24BA-4454-A64C-15ACFECBD4FF}"
+	ProjectSection(ProjectDependencies) = postProject
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D} = {E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apbs-time-app-admin", "apbs-time-app-admin\apbs-time-app-admin.csproj", "{E4387B8E-3E0F-4CE5-AB82-2D1744E25F7A}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -11,6 +14,12 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "apbs-time-app-admin", "apbs
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Shared", "Shared\Shared.csproj", "{CB37C4D0-1D52-42C1-90A9-331F74DDF2DF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "client-apbs-time-app", "client-apbs-time-app", "{02EA681E-C7D8-13C7-8484-4AC65E1B71E8}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.Gateway", "time-app-gateway\Apbs-Time-App.Client.Gateway.csproj", "{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.Shared", "Apbs-Time-App.Client.Shared\Apbs-Time-App.Client.Shared.csproj", "{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -30,9 +39,22 @@ Global
 		{CB37C4D0-1D52-42C1-90A9-331F74DDF2DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{CB37C4D0-1D52-42C1-90A9-331F74DDF2DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{CB37C4D0-1D52-42C1-90A9-331F74DDF2DF}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{10276AFC-24BA-4454-A64C-15ACFECBD4FF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3911703B-7D7E-4645-8178-607E5BD8E020}

@@ -1,7 +1,7 @@
 ﻿using Microsoft.IdentityModel.Tokens;
 using System.Text;
 
-namespace apbs_time_app_admin.Security;
+namespace Apbs_Time_App.Client.Shared.Services.Security;
 
 public class JwtIssuerOptions
 {
@@ -22,7 +22,7 @@ public class JwtIssuerOptions
     ///   JWT.  The processing of this claim is generally application specific.
     ///   The "iss" value is a case-sensitive string containing a StringOrURI
     ///   value.  Use of this claim is OPTIONAL.</remarks>
-    public string Issuer => "APBSADMIN";
+    public string Issuer => "apbsTimeApp";
 
     /// <summary>
     /// "sub" (Subject) Claim

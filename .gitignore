@@ -11,3 +11,7 @@
 /Shared/obj
 /apbs-time-app/obj
 /.idea/.idea.apbs-time-app/.idea
+/Apbs-Time-App.Client.Shared/bin/Debug/net9.0
+/Apbs-Time-App.Client.Shared/obj
+/time-app-gateway/bin/Debug/net9.0
+/time-app-gateway/obj

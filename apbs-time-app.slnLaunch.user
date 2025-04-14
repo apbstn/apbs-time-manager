@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "apbs-time-app\\Apbs-Time-App.Client.Auth.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "apbs-time-app-admin\\apbs-time-app-admin.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]
