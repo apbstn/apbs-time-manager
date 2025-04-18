@@ -21,6 +21,10 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.Gatewa
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.Shared", "Apbs-Time-App.Client.Shared\Apbs-Time-App.Client.Shared.csproj", "{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}"
 EndProject
+Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.TimeManager", "Apbs-Time-App.Client.TimeManager\Apbs-Time-App.Client.TimeManager.csproj", "{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -47,6 +51,14 @@ Global
 		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81DDED9D-158B-E303-5F62-77A2896D2A5A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -55,6 +67,7 @@ Global
 		{10276AFC-24BA-4454-A64C-15ACFECBD4FF} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{3BB49054-965B-44C9-BA66-5FA2A2AE6C5E} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 		{E9E6C7D0-84EA-49E0-A16D-5752CFC5693D} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
+		{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F} = {02EA681E-C7D8-13C7-8484-4AC65E1B71E8}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {3911703B-7D7E-4645-8178-607E5BD8E020}

@@ -14,6 +14,12 @@ using Shared.Services.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console() // Log to the console
     .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day) // Log to a file

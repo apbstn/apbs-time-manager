@@ -1,5 +1,4 @@
 ﻿using Microsoft.EntityFrameworkCore;
-using NPOI.SS.UserModel;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
@@ -36,7 +35,7 @@ public class UserService : IUserService
 
     public async Task<bool> RegisterAsync(User user, string password)
     {
-        if (await _tenantDbContext.Users.AnyAsync(u => u.Username == user.Username))
+        if (await _tenantDbContext.Users.AnyAsync(u => u.Email == user.Email))
             return false;
 
         user.PasswordHash = _encryptionService.Encrypt(password);
@@ -69,7 +68,7 @@ public class UserService : IUserService
         return items;
     }
 
-    public async Task<UserNoPassDto> GetUser(string Email)
+    public async Task<User> GetUser(string Email)
     {
         throw new NotImplementedException();
     }
@@ -208,7 +207,12 @@ public class UserService : IUserService
         await _mailService.SendEmailAsync(mailParams);
     }
 
+    public async Task<bool> CheckAccess(string UserId, string TenantId)
+    {
+        var ss = await _tenantDbContext.UserTenantRoles.FirstOrDefaultAsync(s => s.UserId == UserId && s.TenantId == TenantId);
 
-
-
+        if (ss != null)
+            return true;
+        return false;
+    }
 }

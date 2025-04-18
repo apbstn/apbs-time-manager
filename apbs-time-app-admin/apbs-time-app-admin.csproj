@@ -7,6 +7,7 @@
     <RootNamespace>apbs_time_app_admin</RootNamespace>
     <UserSecretsId>215435c2-022c-46c6-81a9-14d7b8fc07b2</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>

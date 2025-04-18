@@ -1,8 +1,9 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Shared.Models;
 using apbs_time_app_admin.Services.TenantService;
-using apbs_time_app_admin.Services.TenantService.DTOs;
 using Microsoft.AspNetCore.Authorization;
+using Shared.DTOs.TenantDtos;
+using Shared.DTOs.TenantDtos.Mappers;
 
 namespace apbs_time_app_admin.Controllers;
 
@@ -21,8 +22,8 @@ public class TenantsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post(CreateTenantRequest request)
     {
-        var result = await _tenantService.CreateTenant(request, request.User);
-        return Ok(new { result });
+        var result = await _tenantService.CreateTenant(request, request.UserId);
+        return Ok(new TenantMapper().ToResponseTenantDto(result));
     }
 
     [Authorize]

@@ -1,0 +1,13 @@
+{
+  "profiles": {
+    "Docker Compose": {
+      "commandName": "DockerCompose",
+      "commandVersion": "1.0",
+      "serviceActions": {
+        "apbs-time-app.client.auth": "StartDebugging",
+        "apbs-time-app.client.gateway": "StartDebugging",
+        "apbs-time-app-admin": "StartDebugging"
+      }
+    }
+  }
+}

@@ -11,6 +11,8 @@ public class TenantDbContextFactory : IDesignTimeDbContextFactory<TenantDbContex
         IConfigurationRoot configuration = new ConfigurationBuilder()
             .SetBasePath(Directory.GetCurrentDirectory())
             .AddJsonFile("appsettings.json")
+            .AddJsonFile($"appsettings.{Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT")}.json", optional: true, reloadOnChange: true)
+            .AddEnvironmentVariables()
             .Build();
 
         string connectionString = configuration.GetConnectionString("DefaultConnection");

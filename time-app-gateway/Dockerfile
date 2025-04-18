@@ -12,19 +12,20 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
-COPY ["time-app-gateway/time-app-gateway.csproj", "time-app-gateway/"]
-RUN dotnet restore "./time-app-gateway/time-app-gateway.csproj"
+COPY ["time-app-gateway/Apbs-Time-App.Client.Gateway.csproj", "time-app-gateway/"]
+COPY ["Shared/Shared.csproj", "Shared/"]
+RUN dotnet restore "./time-app-gateway/Apbs-Time-App.Client.Gateway.csproj"
 COPY . .
 WORKDIR "/src/time-app-gateway"
-RUN dotnet build "./time-app-gateway.csproj" -c $BUILD_CONFIGURATION -o /app/build
+RUN dotnet build "./Apbs-Time-App.Client.Gateway.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # This stage is used to publish the service project to be copied to the final stage
 FROM build AS publish
 ARG BUILD_CONFIGURATION=Release
-RUN dotnet publish "./time-app-gateway.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
+RUN dotnet publish "./Apbs-Time-App.Client.Gateway.csproj" -c $BUILD_CONFIGURATION -o /app/publish /p:UseAppHost=false
 
 # This stage is used in production or when running from VS in regular mode (Default when not using the Debug configuration)
 FROM base AS final
 WORKDIR /app
 COPY --from=publish /app/publish .
-ENTRYPOINT ["dotnet", "time-app-gateway.dll"]
+ENTRYPOINT ["dotnet", "Apbs-Time-App.Client.Gateway.dll"]
