@@ -2,6 +2,13 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS base
+USER root
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+    libgssapi-krb5-2 \
+    && rm -rf /var/lib/apt/lists/*
+
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080
@@ -13,6 +20,7 @@ FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build
 ARG BUILD_CONFIGURATION=Release
 WORKDIR /src
 COPY ["apbs-time-app-admin/apbs-time-app-admin.csproj", "apbs-time-app-admin/"]
+COPY ["Shared/Shared.csproj", "Shared/"]
 RUN dotnet restore "./apbs-time-app-admin/apbs-time-app-admin.csproj"
 COPY . .
 WORKDIR "/src/apbs-time-app-admin"

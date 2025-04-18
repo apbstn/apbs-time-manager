@@ -8,7 +8,8 @@ namespace Shared.Extensions;
 
 public static class MultipleDatabaseExtensions
 {
-    public static IServiceCollection AddMigrateTenantDatabase(this IServiceCollection services, IConfiguration configuration)
+
+    public static async Task<IServiceCollection> AddMigrateTenantDatabase(this IServiceCollection services, IConfiguration configuration)
     {
         using IServiceScope scopeTenant = services.BuildServiceProvider().CreateScope();
         TenantDbContext tenantDbContext = scopeTenant.ServiceProvider.GetRequiredService<TenantDbContext>();

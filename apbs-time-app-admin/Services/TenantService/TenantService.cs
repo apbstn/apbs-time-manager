@@ -1,12 +1,7 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.Models;
-using apbs_time_app_admin.Services.TenantService.DTOs;
 using Shared.Services.Pagination;
-using Shared.DTOs.UserDtos;
-using Shared.Models.Join;
-using Shared.Models.Enumerations;
-using Shared.Services;
 
 namespace apbs_time_app_admin.Services.TenantService;
 
@@ -106,22 +101,14 @@ public class TenantService : ITenantService
         // Get total count of items
         int totalCount = await _context.Tenants.CountAsync();
 
+        var mapper = new TenantMapper();
+
         var items = await _context.Tenants
             .Include(t=> t.Owner)
             .OrderBy(t => t.Id)
             .Skip(itemsToSkip)
             .Take(pageSize)
-            .Select(t => new ResponseTenantDto
-            {
-                id = t.Id,
-                Code = t.Code,
-                TenantName = t.Name,
-                ConnectionString = t.ConnectionString,
-                UserId = t.Owner.Id,
-                Username = t.Owner.Username,
-                Email = t.Owner.Email,
-                PhoneNumber = t.Owner.PhoneNumber
-            })
+            .Select(t => mapper.ToResponseTenantDto(t))
             .ToListAsync();
 
         return new PaginatedResponse<ResponseTenantDto>

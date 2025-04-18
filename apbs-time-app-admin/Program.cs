@@ -14,6 +14,12 @@ using Shared.Services.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Configuration
+    .SetBasePath(Directory.GetCurrentDirectory())
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console() // Log to the console
     .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day) // Log to a file
@@ -43,6 +49,8 @@ builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
+
+builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 
 
 builder.Services.AddAuthentication("Bearer")
@@ -121,6 +129,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+
 app.UseCors("AllowAll");
 
 app.UseAuthentication();

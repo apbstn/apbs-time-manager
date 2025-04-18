@@ -34,7 +34,7 @@ public class JwtIssuerOptions
     ///   The processing of this claim is generally application specific.  The
     ///   "sub" value is a case-sensitive string containing a StringOrURI
     ///   value.  Use of this claim is OPTIONAL.</remarks>
-    public string Subject => "bhub";
+    public string Subject => "apbsTimeApp";
 
     /// <summary>
     /// "aud" (Audience) Claim

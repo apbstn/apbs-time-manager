@@ -4,13 +4,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
-    <RootNamespace>apbs_time_app</RootNamespace>
-    <UserSecretsId>c956fe09-2304-46c8-9aa4-6e854088561c</UserSecretsId>
+    <RootNamespace>Apbs_Time_App.Client.TimeManager</RootNamespace>
+    <UserSecretsId>3090b167-4940-4fe7-8786-43c8ae45ed7d</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="9.0.4" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.0" />
   </ItemGroup>
 

@@ -11,4 +11,5 @@ public interface IUserService
     public Task<UserNoPassDto> SetUser(UserDto request);
     public Task<UserNoPassDto> GetUser(string Email);
     public Task<UserNoPassDto> ResetPass(UserDto user);
+
 }

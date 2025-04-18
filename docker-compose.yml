@@ -1,0 +1,64 @@
+services:
+  apbs-time-app.client.auth:
+    container_name: Time-App-Auth
+    image: ${DOCKER_REGISTRY-}apbstimeappclientauth
+    build:
+      context: .
+      dockerfile: apbs-time-app/Dockerfile
+    depends_on:
+        - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - DefaultConnection=Server=sqlserver;Database=mtaDb;User=sa;Password=sa12345@;TrustServerCertificate=True;Authentication=SqlPassword;
+
+  apbs-time-app.client.gateway:
+    container_name: Time-App-Gateway
+    image: ${DOCKER_REGISTRY-}apbstimeappclientgateway
+    build:
+      context: .
+      dockerfile: time-app-gateway/Dockerfile
+    ports:
+        - 58157:8080
+        - 58158:8081
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+ 
+  apbs-time-app-admin:
+    container_name: Time-App-Admin
+    image: ${DOCKER_REGISTRY-}apbstimeappadmin
+    build:
+      context: .
+      dockerfile: apbs-time-app-admin/Dockerfile
+    ports:
+        - 58159:8080
+        - 58160:8081
+    depends_on:
+        - sqlserver
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Docker
+      - DefaultConnection=Server=sqlserver;Database=TenantDB;User=sa;Password=sa12345@;TrustServerCertificate=True;Authentication=SqlPassword;
+  
+  sqlserver:
+      image: mcr.microsoft.com/mssql/server:2022-latest
+      container_name: sqlserver
+      environment:
+        ACCEPT_EULA: "Y"
+        MSSQL_SA_PASSWORD: "sa12345@"
+      ports:
+        - "9632:1433"
+      volumes:
+        - sqlserverdata:/var/opt/mssql
+
+  mailhog:
+    container_name: mailhog
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025"  # SMTP
+      - "8025:8025"  # Web UI
+
+
+
+
+volumes:
+  sqlserverdata:
+
