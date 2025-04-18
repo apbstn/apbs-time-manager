@@ -1,4 +1,19 @@
-﻿
+﻿using apbs_time_app.Services.Security;
+using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.Services;
+using System.Security.Claims;
+
+namespace Apbs_Time_App.Controllers;
+
+[ApiController]
+[Route("api/auth")]
+public class AuthController : ControllerBase
+{
+    private readonly IUserService _userService;
+    private readonly IJwtTokenGenerator _jwtGen;
+
+    public AuthController(IUserService userService, IJwtTokenGenerator jwtGen)
     {
         _userService = userService;
         _jwtGen = jwtGen;
@@ -43,7 +58,7 @@
         {
             accessToken = accessToken.Result
         });
-        
+
     }
 }
 

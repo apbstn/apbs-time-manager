@@ -22,7 +22,7 @@ public class TenantsController : ControllerBase
     [HttpPost]
     public async Task<IActionResult> Post(CreateTenantRequest request)
     {
-        var result = await _tenantService.CreateTenant(request, request.UserId);
+        var result = await _tenantService.CreateTenant(request, request.User);
         return Ok(new TenantMapper().ToResponseTenantDto(result));
     }
 

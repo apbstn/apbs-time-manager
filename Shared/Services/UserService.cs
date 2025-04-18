@@ -68,7 +68,7 @@ public class UserService : IUserService
         return items;
     }
 
-    public async Task<UserNoPassDto> GetUser(string Email)
+    public async Task<User> GetUser(string Email)
     {
         throw new NotImplementedException();
     }
@@ -86,7 +86,7 @@ public class UserService : IUserService
         await _tenantDbContext.SaveChangesAsync();
 
         _ = Task.Run(() => SendUserCreationMail(user, request.Password));
-        
+
         return mapper.ToUserNoPassDto(user);
     }
 

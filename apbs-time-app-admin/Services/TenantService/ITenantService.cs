@@ -1,4 +1,5 @@
-﻿using Shared.Models;
+﻿using Shared.DTOs.TenantDtos;
+using Shared.Models;
 using Shared.Services.Pagination;
 
 namespace apbs_time_app_admin.Services.TenantService;
