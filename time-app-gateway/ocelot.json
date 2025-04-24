@@ -15,6 +15,22 @@
       "HttpHandlerOptions": {
         "AllowAutoRedirect": false // Disable following 307
       }
+    },
+    {
+      "DownstreamPathTemplate": "/{everything}",
+      "DownstreamScheme": "http",
+      "DownstreamHostAndPorts": [
+        {
+          "Host": "apbs-time-app.client.timemanager",
+          "Port": 8080
+        }
+      ],
+      "UpstreamPathTemplate": "/api/time/{everything}",
+      "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
+      "DangerousAcceptAnyServerCertificate": true, // for dev only
+      "HttpHandlerOptions": {
+        "AllowAutoRedirect": false // Disable following 307
+      }
     }
   ]
 }

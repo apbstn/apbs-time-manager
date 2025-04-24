@@ -7,6 +7,7 @@
     <RootNamespace>Apbs_Time_App.Client.TimeManager</RootNamespace>
     <UserSecretsId>3090b167-4940-4fe7-8786-43c8ae45ed7d</UserSecretsId>
     <DockerDefaultTargetOS>Linux</DockerDefaultTargetOS>
+    <DockerComposeProjectPath>..\docker-compose.dcproj</DockerComposeProjectPath>
   </PropertyGroup>
 
   <ItemGroup>

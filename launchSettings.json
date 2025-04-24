@@ -6,7 +6,8 @@
       "serviceActions": {
         "apbs-time-app.client.auth": "StartDebugging",
         "apbs-time-app.client.gateway": "StartDebugging",
-        "apbs-time-app-admin": "StartDebugging"
+        "apbs-time-app-admin": "StartDebugging",
+        "apbs-time-app.client.timemanager": "StartDebugging"
       }
     }
   }
