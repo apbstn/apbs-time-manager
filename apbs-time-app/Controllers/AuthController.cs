@@ -35,7 +35,8 @@ public class AuthController : ControllerBase
         return Ok(new
         {
             authToken = authToken.Result,
-            accessToken
+            accessToken,
+            user.Id
         });
     }
     [Authorize]
