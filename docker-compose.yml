@@ -1,6 +1,6 @@
 services:
   apbs-time-app.client.auth:
-    container_name: Time-App-Auth
+    container_name: time.app.auth
     image: ${DOCKER_REGISTRY-}apbstimeappclientauth
     build:
       context: .
@@ -12,7 +12,7 @@ services:
       - DefaultConnection=Server=sqlserver;Database=mtaDb;User=sa;Password=sa12345@;TrustServerCertificate=True;Authentication=SqlPassword;
 
   apbs-time-app.client.gateway:
-    container_name: Time-App-Gateway
+    container_name: time.app.gateway
     image: ${DOCKER_REGISTRY-}apbstimeappclientgateway
     build:
       context: .
@@ -24,7 +24,7 @@ services:
       - ASPNETCORE_ENVIRONMENT=Docker
  
   apbs-time-app-admin:
-    container_name: Time-App-Admin
+    container_name: time-app-admin
     image: ${DOCKER_REGISTRY-}apbstimeappadmin
     build:
       context: .

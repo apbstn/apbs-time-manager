@@ -1,4 +1,5 @@
-﻿using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
@@ -70,7 +71,10 @@ public class UserService : IUserService
 
     public async Task<User> GetUser(string Email)
     {
-        throw new NotImplementedException();
+        var user = await _tenantDbContext.Users.FirstOrDefaultAsync(x => x.Email == Email);
+        if (user == null)
+            throw new Exception("the user doesn't exist.");
+        return user;
     }
 
     public async Task<UserNoPassDto> SetUser(UserDto request)
@@ -81,6 +85,7 @@ public class UserService : IUserService
         user.Email = request.Email;
         user.PasswordHash = _encryptionService.Encrypt(request.Password);
         user.PhoneNumber = request.PhoneNumber;
+        user.Registred = true;
 
         _tenantDbContext.Users.Add(user);
         await _tenantDbContext.SaveChangesAsync();

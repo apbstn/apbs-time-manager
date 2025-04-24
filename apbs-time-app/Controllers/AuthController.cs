@@ -25,6 +25,9 @@ public class AuthController : ControllerBase
     {
         var user = await _userService.AuthenticateAsync(loginModel.Email, loginModel.Password);
 
+        if (!user.Registred)
+            return Unauthorized();
+
         var authToken = _jwtGen.GenerateAuthToken(user);
 
         var accessToken = await _jwtGen.GenerateAccessToken(user);
@@ -60,6 +63,9 @@ public class AuthController : ControllerBase
         });
 
     }
+
+
+    //public async Task<IActionResult> AcceptInvite()
 }
 
 public class LoginModel
