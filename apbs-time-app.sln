@@ -24,6 +24,9 @@ EndProject
 Project("{E53339B2-1760-4266-BCC7-CA923CBCF16C}") = "docker-compose", "docker-compose.dcproj", "{81DDED9D-158B-E303-5F62-77A2896D2A5A}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Apbs-Time-App.Client.TimeManager", "Apbs-Time-App.Client.TimeManager\Apbs-Time-App.Client.TimeManager.csproj", "{7C67DDA3-1B14-4A6F-BE42-D582C91C0B4F}"
+	ProjectSection(ProjectDependencies) = postProject
+		{CB37C4D0-1D52-42C1-90A9-331F74DDF2DF} = {CB37C4D0-1D52-42C1-90A9-331F74DDF2DF}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

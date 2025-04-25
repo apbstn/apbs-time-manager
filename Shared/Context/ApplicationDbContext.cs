@@ -11,15 +11,15 @@ namespace Shared.Context
         private readonly ICurrentTenantService _tenantService;
         public string CurrentTenantId { get; set; }
         public string CurrentTenantConnectionString { get; set; }
-        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentTenantService currentTenantService) : base(options) 
-        { 
+        public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentTenantService currentTenantService) : base(options)
+        {
             _tenantService = currentTenantService;
             CurrentTenantId = _tenantService.TenantId;
             CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
 
         public DbSet<UserTenant> Users { get; set; }
-
+        public DbSet<TimeLog> TimeLogs { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<User>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
@@ -40,5 +40,13 @@ namespace Shared.Context
             CurrentTenantId = _tenantService.TenantId;
             CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
+    
+    public DbSet<Team> Teams { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<Team>().HasQueryFilter(t => t.TenantId == CurrentTenantId);
+            // ... other configurations ...
+        }
     }
-}
+    }
