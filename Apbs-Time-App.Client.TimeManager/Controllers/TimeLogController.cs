@@ -3,7 +3,6 @@
     using Shared.Services;
     using Shared.Models;
     using Shared.DTOs;
-    using static Shared.Services.TimeLogService;
     using Microsoft.Extensions.Logging;
     using Microsoft.AspNetCore.Authorization;
 
@@ -15,11 +14,13 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
         {
             private readonly TimeLogService _timeLogService;
             private readonly ILogger<TimeLogController> _logger;
-
-            public TimeLogController(TimeLogService timeLogService, ILogger<TimeLogController> logger)
+        private readonly IExxception _ex;
+            
+            public TimeLogController(TimeLogService timeLogService, ILogger<TimeLogController> logger, IExxception ex)
             {
                 _timeLogService = timeLogService;
                 _logger = logger;
+                _ex = ex;
             }
 
             [HttpPost("start/{accountId}")]
@@ -49,8 +50,8 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
                 }
                 else
                 {
-                    _logger.LogWarning(result.Exception.Message);
-                    return BadRequest(result.Exception.Message);
+                    _logger.LogWarning(_ex.Message);
+                    return BadRequest(_ex.Message);
                 }
             }
 

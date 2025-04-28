@@ -67,5 +67,5 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers;
             return NoContent();
         }
     }
-}
+
 

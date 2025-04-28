@@ -4,14 +4,9 @@ using Microsoft.AspNetCore.Http;
 
 namespace Shared.Services
 {
-    public class Exxception : IExceptionHandler
+    public class Exxception : IExceptionHandler, IExxception
     {
-        private readonly string _message;
-
-        public Exxception(string message)
-        {
-            _message = message;
-        }
+        public string? Message { get; set; }
 
         public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
         {
@@ -23,6 +18,6 @@ namespace Shared.Services
     public class Result
     {
         public bool Success { get; set; }
-        public IExceptionHandler ExceptionHandler { get; set; }
+        public Exxception? Exception { get; set; }
     }
 }
