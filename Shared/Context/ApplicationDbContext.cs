@@ -43,10 +43,10 @@ namespace Shared.Context
     
     public DbSet<Team> Teams { get; set; }
 
-        protected override void OnModelCreating(ModelBuilder modelBuilder)
-        {
-            modelBuilder.Entity<Team>().HasQueryFilter(t => t.TenantId == CurrentTenantId);
-            // ... other configurations ...
-        }
+        //protected override void OnModelCreating(ModelBuilder modelBuilder)
+        //{
+        //    modelBuilder.Entity<Team>().HasQueryFilter(t => t.TenantId == CurrentTenantId);
+        //    // ... other configurations ...
+        //}
     }
-    }
+}
