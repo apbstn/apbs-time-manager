@@ -1,4 +1,5 @@
-﻿using apbs_time_app.Services.Security;
+﻿using apbs_time_app.Services;
+using apbs_time_app.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.Services;
@@ -12,11 +13,13 @@ public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IJwtTokenGenerator _jwtGen;
+    private readonly ITenantService _tenantService;
 
-    public AuthController(IUserService userService, IJwtTokenGenerator jwtGen)
+    public AuthController(IUserService userService, IJwtTokenGenerator jwtGen, ITenantService tenantService)
     {
         _userService = userService;
         _jwtGen = jwtGen;
+        _tenantService = tenantService;
     }
 
     [AllowAnonymous]
@@ -28,15 +31,18 @@ public class AuthController : ControllerBase
         if (!user.Registred)
             return Unauthorized();
 
-        var authToken = _jwtGen.GenerateAuthToken(user);
+        //var authToken = _jwtGen.GenerateAuthToken(user);
 
         var accessToken = await _jwtGen.GenerateAccessToken(user);
 
+        var listTen = await _tenantService.GetListTenantOfUser(user.Id);
+
         return Ok(new
         {
-            authToken = authToken.Result,
+            //authToken = authToken.Result,
             accessToken,
-            user.Id
+            user.Id,
+            listTen
         });
     }
     [Authorize]

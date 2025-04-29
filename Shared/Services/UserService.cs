@@ -34,6 +34,7 @@ public class UserService : IUserService
         return user;
     }
 
+
     public async Task<bool> RegisterAsync(User user, string password)
     {
         if (await _tenantDbContext.Users.AnyAsync(u => u.Email == user.Email))

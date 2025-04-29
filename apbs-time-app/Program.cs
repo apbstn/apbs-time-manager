@@ -1,3 +1,4 @@
+using apbs_time_app.Services;
 using apbs_time_app.Services.Security;
 using Apbs_Time_App.Client.Shared.Services.Security;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -33,6 +34,7 @@ builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
+builder.Services.AddTransient<ITenantService, TenantService>();
 builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
 
