@@ -35,9 +35,29 @@ public class TenantService : ITenantService
         string newConnectionString = null;
 
 
-        string dbName = "multiTenantAppDb-" + request.Code;
+
+        var us = await _context.Users.FirstAsync(x => x.Id == Guid.Parse(user));
+
+        Tenant tenant = new()
+        {
+            Name = request.TenantName,
+            Code = request.Code,
+            ConnectionString = newConnectionString,
+            UserId = us.Id
+        };
+
+        _context.Tenants.Add(tenant);
+        _context.SaveChanges();
+
+        string dbName = "multiTenantAppDb-" + tenant.Id;
         string defaultConnectionString = _configuration.GetConnectionString("DefaultConnection");
-        newConnectionString = defaultConnectionString.Replace("mtaDb", dbName);
+        newConnectionString = defaultConnectionString.Replace("TenantDB", dbName);
+
+        tenant.ConnectionString = newConnectionString;
+
+        _context.Update(tenant);
+        _context.SaveChanges();
+
 
         try
         {
@@ -56,19 +76,6 @@ public class TenantService : ITenantService
         {
             throw new Exception(ex.Message);
         }
-
-        var us = await _context.Users.FirstAsync(x => x.Id == user);
-
-        Tenant tenant = new()
-        {
-            Name = request.TenantName,
-            Code = request.Code,
-            ConnectionString = newConnectionString,
-            UserId = us.Id
-        };
-
-        _context.Tenants.Add(tenant);
-        _context.SaveChanges();
 
 
         us.Roles.Add(new UserTenantRole
@@ -129,7 +136,7 @@ public class TenantService : ITenantService
     {
         var tenant = await _context.Tenants
             .Include(t => t.Owner) // ⬅️ important!
-            .FirstOrDefaultAsync(t => t.Id == tenantId.ToString());
+            .FirstOrDefaultAsync(t => t.Id == tenantId);
 
         if (tenant == null || tenant.Owner == null)
             return false;

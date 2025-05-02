@@ -2,6 +2,7 @@
 using apbs_time_app.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Shared.DTOs.UserDtos;
 using Shared.Services;
 using System.Security.Claims;
 
@@ -56,7 +57,7 @@ public class AuthController : ControllerBase
             return Unauthorized();
 
 
-        var access = await _userService.CheckAccess(userId, tenantId);
+        var access = await _userService.CheckAccess(Guid.Parse(userId), Guid.Parse(tenantId));
         if (!access)
             return Unauthorized();
 
@@ -70,6 +71,8 @@ public class AuthController : ControllerBase
         });
 
     }
+
+
 
 
     //public async Task<IActionResult> AcceptInvite()

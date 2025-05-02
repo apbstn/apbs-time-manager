@@ -13,7 +13,7 @@ namespace Shared.Models
         [Key]
         [Column("A_ID")]
         [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-        public string Id { get; set; }
+        public Guid Id { get; set; }
 
         [Column("A_EMAIL")]
         public string? Email { get; set; }

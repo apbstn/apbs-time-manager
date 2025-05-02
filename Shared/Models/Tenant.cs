@@ -10,7 +10,7 @@ public class Tenant
     [Key]
     [Column("T_ID")]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; }
+    public Guid Id { get; set; }
     [Column("T_CODE")]
     public string? Code { get; set; }
     [Column("T_NAME")]
@@ -19,7 +19,7 @@ public class Tenant
     public string? ConnectionString { get; set; }
     [Required]
     [Column("J_USER_ID")]
-    public string UserId { get; set; }
+    public Guid UserId { get; set; }
     [ForeignKey(nameof(UserId))]
     public virtual User? Owner { get; set; }
 }

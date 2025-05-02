@@ -13,10 +13,10 @@ public class CurrentTenantService : ICurrentTenantService
         _context = context;
     }
 
-    public string? TenantId { get; set; }
+    public Guid? TenantId { get; set; }
     public string? ConnectionString { get; set; }
 
-    public async Task<bool> SetTenant(string tenant)
+    public async Task<bool> SetTenant(Guid tenant)
     {
         try { 
             var tenantInfo = await _context.Tenants.FirstOrDefaultAsync(x => x.Id == tenant);

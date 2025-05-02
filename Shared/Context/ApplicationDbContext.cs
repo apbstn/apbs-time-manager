@@ -9,7 +9,7 @@ namespace Shared.Context
     public class ApplicationDbContext : DbContext
     {
         private readonly ICurrentTenantService _tenantService;
-        public string CurrentTenantId { get; set; }
+        public Guid? CurrentTenantId { get; set; }
         public string CurrentTenantConnectionString { get; set; }
         public ApplicationDbContext(DbContextOptions<ApplicationDbContext> options, ICurrentTenantService currentTenantService) : base(options)
         {

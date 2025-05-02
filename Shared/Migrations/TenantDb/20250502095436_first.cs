@@ -1,11 +1,12 @@
-﻿using Microsoft.EntityFrameworkCore.Migrations;
+﻿using System;
+using Microsoft.EntityFrameworkCore.Migrations;
 
 #nullable disable
 
 namespace Shared.Migrations.TenantDb
 {
     /// <inheritdoc />
-    public partial class First : Migration
+    public partial class first : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -14,7 +15,7 @@ namespace Shared.Migrations.TenantDb
                 name: "ACCOUNT",
                 columns: table => new
                 {
-                    A_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    A_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     A_EMAIL = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     A_USERNAME = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     A_PASSWORD_HASH = table.Column<string>(type: "nvarchar(max)", nullable: true),
@@ -33,11 +34,11 @@ namespace Shared.Migrations.TenantDb
                 name: "Tenant",
                 columns: table => new
                 {
-                    T_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    T_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     T_CODE = table.Column<string>(type: "nvarchar(450)", nullable: true),
                     T_NAME = table.Column<string>(type: "nvarchar(max)", nullable: true),
                     T_CONNECTION_STRING = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    J_USER_ID = table.Column<string>(type: "nvarchar(450)", nullable: false)
+                    J_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -54,9 +55,9 @@ namespace Shared.Migrations.TenantDb
                 name: "JOIN_TENANT_USER",
                 columns: table => new
                 {
-                    J_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    J_USER_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
-                    J_TENANT_ID = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    J_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    J_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    J_TENANT_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
                     J_USER_TENANT_ROLE = table.Column<int>(type: "int", nullable: false)
                 },
                 constraints: table =>

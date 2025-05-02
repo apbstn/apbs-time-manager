@@ -62,7 +62,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         {
             new Claim(ClaimTypes.Name, user.Email ?? ""),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim("tenant_id", ten.TenantId),
+            new Claim("tenant_id", ten.TenantId.ToString()),
             new Claim(ClaimTypes.Role, ten.Role.ToString())
         };
 

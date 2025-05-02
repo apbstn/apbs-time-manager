@@ -14,7 +14,7 @@ public class TenantService : ITenantService
         _context = context;
     }
 
-    public async Task<List<SimpleTenantDto>> GetListTenantOfUser(string userId)
+    public async Task<List<SimpleTenantDto>> GetListTenantOfUser(Guid userId)
     {
         var mapper = new TenantMapper();
         return _context.UserTenantRoles

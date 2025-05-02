@@ -5,6 +5,7 @@ using Shared.Context;
 using Shared.Extensions;
 using Shared.Middleware;
 using Shared.Services;
+using Shared.Services.Mailing;
 using Shared.Services.Seeds;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,10 +24,15 @@ builder.Services.AddDbContext<TenantDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 
+builder.Services.AddScoped<IUserService, UserService>();
+builder.Services.AddTransient<IMailService, SmtpMailService>();
+builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
+builder.Services.AddTransient<IEncryptionService, EncryptionService>();
+
 builder.Services.AddTransient<ITimeLogService, TimeLogService>();
 builder.Services.AddSingleton<IExxception, Exxception>();
 
-builder.Services.AddMigrateTenantDatabase(builder.Configuration);
+await builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
 
 builder.Services.AddAuthentication("Bearer")

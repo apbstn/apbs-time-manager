@@ -4,5 +4,5 @@ namespace apbs_time_app.Services;
 
 public interface ITenantService
 {
-    public Task<List<SimpleTenantDto>> GetListTenantOfUser(string userId);
+    public Task<List<SimpleTenantDto>> GetListTenantOfUser(Guid userId);
 }

@@ -9,15 +9,15 @@ public class UserTenantRole
     [Key]
     [Column("J_ID")]
     [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
-    public string Id { get; set; }
+    public Guid Id { get; set; }
 
     [Required]
     [Column("J_USER_ID")]
-    public string? UserId { get; set; }
+    public Guid UserId { get; set; }
 
     [Required]
     [Column("J_TENANT_ID")]
-    public string? TenantId { get; set; }
+    public Guid TenantId { get; set; }
 
     [ForeignKey(nameof(TenantId))]
     public virtual Tenant? Tenant { get; set; }

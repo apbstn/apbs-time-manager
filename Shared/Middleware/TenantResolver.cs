@@ -37,7 +37,7 @@ public class TenantResolver
 
             if (!string.IsNullOrEmpty(tenantId))
             {
-                await currentTenant.SetTenant(tenantId);
+                await currentTenant.SetTenant(Guid.Parse(tenantId));
                 await _next(context);
                 return;
             }

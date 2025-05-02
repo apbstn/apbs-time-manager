@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.Extensions;
+using Shared.Middleware;
 using Shared.Services;
 using Shared.Services.Mailing;
 using Shared.Services.Seeds;
@@ -35,7 +36,8 @@ builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<ITenantService, TenantService>();
-builder.Services.AddMigrateTenantDatabase(builder.Configuration);
+
+await builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
 
 builder.Services.AddAuthentication("Bearer")
@@ -74,6 +76,8 @@ if (app.Environment.IsDevelopment())
 //app.UseHttpsRedirection();
 
 app.UseAuthorization();
+
+app.UseMiddleware<TenantResolver>();
 
 app.MapControllers();
 

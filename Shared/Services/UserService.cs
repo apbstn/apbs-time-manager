@@ -213,7 +213,7 @@ public class UserService : IUserService
         await _mailService.SendEmailAsync(mailParams);
     }
 
-    public async Task<bool> CheckAccess(string UserId, string TenantId)
+    public async Task<bool> CheckAccess(Guid UserId, Guid TenantId)
     {
         var ss = await _tenantDbContext.UserTenantRoles.FirstOrDefaultAsync(s => s.UserId == UserId && s.TenantId == TenantId);
 
