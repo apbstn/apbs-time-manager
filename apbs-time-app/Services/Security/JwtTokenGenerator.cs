@@ -52,18 +52,15 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         var ten = await _context.UserTenantRoles.FirstOrDefaultAsync(s => s.UserId == user.Id);
 
-        if (ten == null)
-            return "";
-
 
         var tokenExpire = jwtOptions.IssuedAt.AddHours(hours);
 
         var claims = new List<Claim>
         {
-            new Claim(ClaimTypes.Name, user.Email ?? ""),
+            new Claim(ClaimTypes.Name, user.Email ?? string.Empty),
             new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-            new Claim("tenant_id", ten.TenantId.ToString()),
-            new Claim(ClaimTypes.Role, ten.Role.ToString())
+            new Claim("tenant_id", ten?.TenantId.ToString() ?? string.Empty),
+            new Claim(ClaimTypes.Role, ten?.Role.ToString() ?? string.Empty)
         };
 
         var tokenDescriptor = new SecurityTokenDescriptor
