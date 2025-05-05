@@ -34,7 +34,7 @@ public class AuthController : ControllerBase
 
         //var authToken = _jwtGen.GenerateAuthToken(user);
 
-        var accessToken = await _jwtGen.GenerateAccessToken(user);
+        (var accessToken, var role) = await _jwtGen.GenerateAccessToken(user);
 
         var listTen = await _tenantService.GetListTenantOfUser(user.Id);
 
@@ -43,7 +43,8 @@ public class AuthController : ControllerBase
             //authToken = authToken.Result,
             accessToken,
             user.Id,
-            listTen
+            listTen,
+            role
         });
     }
     [Authorize]

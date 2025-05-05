@@ -45,7 +45,7 @@ public class JwtTokenGenerator : IJwtTokenGenerator
         return Task.FromResult(handler.CreateToken(tokenDescriptor));
     }
 
-    public async Task<string> GenerateAccessToken(User user)
+    public async Task<(string, string)> GenerateAccessToken(User user)
     {
         var hours = 20;
         var jwtOptions = new JwtIssuerOptions("Audience");
@@ -76,7 +76,9 @@ public class JwtTokenGenerator : IJwtTokenGenerator
 
         var handler = new JsonWebTokenHandler();
         handler.SetDefaultTimesOnTokenCreation = false;
-        return handler.CreateToken(tokenDescriptor);
+        var token = handler.CreateToken(tokenDescriptor);
+
+        return (token, ten?.Role.ToString() ?? string.Empty);
     }
 
     public async Task<string> GenerateAccessToken(User user, string tenantId, string authToken)
