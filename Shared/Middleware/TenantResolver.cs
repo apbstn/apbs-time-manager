@@ -18,7 +18,8 @@ public class TenantResolver
         context.Request.Headers.TryGetValue("Authorization", out var accessTokenHeader);
 
         if (context.Request.Path.StartsWithSegments("/api/auth/login") 
-            || context.Request.Path.StartsWithSegments("/api/auth/switch"))
+            || context.Request.Path.StartsWithSegments("/api/auth/switch")
+            || context.Request.Path.StartsWithSegments("/api/teams/test"))
         {
             await _next(context);
             return;
