@@ -35,10 +35,16 @@ public static class MultipleDatabaseExtensions
 
             if (dbContext.Database.GetPendingMigrations().Any())
             {
+                try { 
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine($"Applying Migrations for '{tenant.Id}' tenant.");
                 Console.ResetColor();
                 dbContext.Database.Migrate();
+                }
+                catch(Exception ex)
+                {
+                    
+                }
             }
         }
 

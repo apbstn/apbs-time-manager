@@ -14,6 +14,9 @@
       "DangerousAcceptAnyServerCertificate": true, // for dev only
       "HttpHandlerOptions": {
         "AllowAutoRedirect": false // Disable following 307
+      },
+      "DownstreamHeaderTransform": {
+        "Content-Type": "application/json"
       }
     },
     {
@@ -25,11 +28,14 @@
           "Port": 8080
         }
       ],
-      "UpstreamPathTemplate": "/api/time/{everything}",
+      "UpstreamPathTemplate": "/{everything}",
       "UpstreamHttpMethod": [ "GET", "POST", "PUT", "DELETE" ],
       "DangerousAcceptAnyServerCertificate": true, // for dev only
       "HttpHandlerOptions": {
         "AllowAutoRedirect": false // Disable following 307
+      },
+      "DownstreamHeaderTransform": {
+        "Content-Type": "application/json"
       }
     }
   ]

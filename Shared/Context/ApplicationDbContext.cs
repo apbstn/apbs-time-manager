@@ -3,6 +3,7 @@ using Microsoft.Extensions.Options;
 using Shared.Models;
 using Shared.Models.Join;
 using Shared.Services;
+using Shared.Models;
 
 namespace Shared.Context
 {
@@ -40,13 +41,18 @@ namespace Shared.Context
             CurrentTenantId = _tenantService.TenantId;
             CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
-    
-    public DbSet<Team> Teams { get; set; }
+
+        public DbSet<Team> Teams { get; set; }
 
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<Team>().HasQueryFilter(t => t.TenantId == CurrentTenantId);
         //    // ... other configurations ...
         //}
+        public DbSet<Employee> Employees { get; set; }
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<Notification> Notifications { get; set; }
     }
+
+
 }
