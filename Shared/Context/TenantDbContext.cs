@@ -12,6 +12,7 @@ public class TenantDbContext : DbContext
     public DbSet<Tenant> Tenants{ get; set;}
     public DbSet<User> Users { get; set; }
     public DbSet<UserTenantRole> UserTenantRoles { get; set; }
+    public DbSet<Invitation> Invitations { get; set; }
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

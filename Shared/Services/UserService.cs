@@ -74,7 +74,10 @@ public class UserService : IUserService
     {
         var user = await _tenantDbContext.Users.FirstOrDefaultAsync(x => x.Email == Email);
         if (user == null)
-            throw new Exception("the user doesn't exist.");
+        {
+            return null;
+        }
+
         return user;
     }
 

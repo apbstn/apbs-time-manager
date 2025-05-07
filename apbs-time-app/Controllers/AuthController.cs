@@ -3,6 +3,8 @@ using apbs_time_app.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.UserDtos;
+using Shared.Models;
+using Shared.Models.Requests;
 using Shared.Services;
 using System.Security.Claims;
 
@@ -71,6 +73,23 @@ public class AuthController : ControllerBase
             accessToken = accessToken.Result
         });
 
+    }
+
+    [HttpPost("register")]
+    public async Task<ActionResult> Register(RegisterRequest request)
+    {
+        var user = _userService.GetUser(request.Email);
+        if (user != null)
+            return Unauthorized();
+
+        _ = await _userService.RegisterAsync(new User
+        {
+            Email = request.Email,
+            PhoneNumber = request.PhoneNumber,
+            Username = request.Username
+        }, request.Password);
+
+        return Ok();
     }
 
 
