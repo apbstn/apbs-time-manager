@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Shared.Migrations.TenantDb
 {
     /// <inheritdoc />
-    public partial class first : Migration
+    public partial class Second : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
@@ -52,6 +52,31 @@ namespace Shared.Migrations.TenantDb
                 });
 
             migrationBuilder.CreateTable(
+                name: "Invitation",
+                columns: table => new
+                {
+                    I_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    I_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
+                    I_EMAIL = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    I_PHONE_NUMBER = table.Column<string>(type: "nvarchar(max)", nullable: true),
+                    I_TENANT_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
+                    I_TOKEN = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    I_CREATED_AT = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    I_EXPIRES_AT = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    I_IS_USED = table.Column<bool>(type: "bit", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Invitation", x => x.I_ID);
+                    table.ForeignKey(
+                        name: "FK_Invitation_Tenant_I_TENANT_ID",
+                        column: x => x.I_TENANT_ID,
+                        principalTable: "Tenant",
+                        principalColumn: "T_ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
+
+            migrationBuilder.CreateTable(
                 name: "JOIN_TENANT_USER",
                 columns: table => new
                 {
@@ -85,6 +110,11 @@ namespace Shared.Migrations.TenantDb
                 filter: "[A_EMAIL] IS NOT NULL");
 
             migrationBuilder.CreateIndex(
+                name: "IX_Invitation_I_TENANT_ID",
+                table: "Invitation",
+                column: "I_TENANT_ID");
+
+            migrationBuilder.CreateIndex(
                 name: "IX_JOIN_TENANT_USER_J_TENANT_ID",
                 table: "JOIN_TENANT_USER",
                 column: "J_TENANT_ID");
@@ -110,6 +140,9 @@ namespace Shared.Migrations.TenantDb
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
+            migrationBuilder.DropTable(
+                name: "Invitation");
+
             migrationBuilder.DropTable(
                 name: "JOIN_TENANT_USER");
 

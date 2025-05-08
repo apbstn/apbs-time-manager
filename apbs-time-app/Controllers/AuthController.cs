@@ -75,27 +75,34 @@ public class AuthController : ControllerBase
 
     }
 
+    [AllowAnonymous]
     [HttpPost("register")]
     public async Task<ActionResult> Register(RegisterRequest request)
     {
-        var user = _userService.GetUser(request.Email);
+        var user = await _userService.GetUser(request.Email);
         if (user != null)
             return Unauthorized();
 
-        _ = await _userService.RegisterAsync(new User
+
+        var newUser = new User
         {
             Email = request.Email,
             PhoneNumber = request.PhoneNumber,
             Username = request.Username
-        }, request.Password);
+        };
 
-        return Ok();
+        var ss = await _userService.RegisterAsync(newUser, request.Password);
+
+        (var accessToken, var role) = await _jwtGen.GenerateAccessToken(newUser);
+
+        return Ok(new
+        {
+            accessToken,
+            role
+        });
     }
 
 
-
-
-    //public async Task<IActionResult> AcceptInvite()
 }
 
 public class LoginModel

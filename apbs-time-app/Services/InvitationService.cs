@@ -18,6 +18,7 @@ public class InvitationService : IInvitationService
     private IMailService _mailService;
     private IEncryption _encryption;
     private ApplicationDbContext _appContext;
+    private ILogger<InvitationService> _logger;
 
     public InvitationService(TenantDbContext tenantDbContext, IMailService mailService, IEncryption encryption, ApplicationDbContext applicationDbContext)
     {
@@ -47,7 +48,9 @@ public class InvitationService : IInvitationService
         await _tenantDbContext.Invitations.AddAsync(inv);
         _tenantDbContext.SaveChanges();
 
-        _ = Task.Run(() => SendInviteEmail(user, token, inv, tenantId));
+        var tenant = _tenantDbContext.Tenants.FirstAsync(t => t.Id == Guid.Parse(tenantId)).Result;
+
+        _ = Task.Run(() => SendInviteEmail(user, token, inv, tenant));
 
         return inv;
     }
@@ -72,9 +75,11 @@ public class InvitationService : IInvitationService
 
         await _appContext.Users.AddAsync(mapper.FromUserNoPassDtoToUserTenant(user));
         _appContext.SaveChanges();
-        
 
-        _ = Task.Run(() => SendInviteEmail(mapper.ToUser(user), token, inv, tenantId));
+        var tenant = _tenantDbContext.Tenants.FirstAsync(t => t.Id == Guid.Parse(tenantId)).Result;
+
+
+        _ = Task.Run(() => SendInviteEmail(mapper.ToUserNoId(user), token, inv, tenant));
 
         return inv;
     }
@@ -91,17 +96,11 @@ public class InvitationService : IInvitationService
 
 
 
-    public async Task SendInviteEmail(User user, string token, Invitation inv, string tenantId)
+    public async Task SendInviteEmail(User user, string token, Invitation inv, Tenant tenant)
     {
-        var combined = $"{user.Email}|{user.Username}|{tenantId}";
-
+        var combined = $"{user.Email}|{user.Username}|{tenant.Id}";
         var encryptedData = _encryption.EncryptString(combined);
-
         var urlEncodedData = Uri.EscapeDataString(encryptedData);
-
-        var tenant = _tenantDbContext.Tenants.FirstAsync(t => t.Id == Guid.Parse(tenantId)).Result;
-
-
         var applicationUrl = inv.UserExists
             ? $"https://localhost:5173/invite/exists?token={token}&data={urlEncodedData}"
             : $"https://localhost:5173/invite/dontExists?token={token}&data={urlEncodedData}";
@@ -135,15 +134,13 @@ public class InvitationService : IInvitationService
             </div>
         </body>
         </html>";
-
         var mailParams = new MailParams
         {
-            ToEmail = user.Email,
+            ToEmail = inv.Email,
             Subject = "You're Invited to Join",
             Body = body,
             IsBodyHtml = true
         };
-
         await _mailService.SendEmailAsync(mailParams);
     }
 
@@ -163,9 +160,9 @@ public class InvitationService : IInvitationService
 
     public async Task<bool> CheckInvite(ConfirmInvite confirm)
     {
-        var inv = await _tenantDbContext.Invitations.FirstAsync(t => t.Email == confirm.Email && t.TenantId == confirm.TenantId);
+        var inv = await _tenantDbContext.Invitations.FirstAsync(t => t.Email == confirm.Email && t.TenantId == Guid.Parse(confirm.TenantId));
 
-        if (inv.Token == confirm.Token && inv.ExpiresAt <= DateTime.UtcNow)
+        if (inv.Token == confirm.Token)
         {
             return true;
         }

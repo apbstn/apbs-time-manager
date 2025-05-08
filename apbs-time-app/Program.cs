@@ -6,6 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.Extensions;
 using Shared.Middleware;
+using Shared.Models.Mailing;
 using Shared.Services;
 using Shared.Services.Mailing;
 using Shared.Services.Seeds;
@@ -30,12 +31,17 @@ builder.Services.AddDbContext<ApplicationDbContext>(
 builder.Services.AddDbContext<TenantDbContext>(
     options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
+builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+
+
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<ITenantService, TenantService>();
+builder.Services.AddTransient<IInvitationService, InvitationService>();
+builder.Services.AddTransient<IEncryption, Encryption>();
 
 await builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
@@ -65,6 +71,8 @@ builder.Services.AddAuthentication("Bearer")
     }
     );
 
+
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
@@ -74,6 +82,16 @@ if (app.Environment.IsDevelopment())
 }
 
 //app.UseHttpsRedirection();
+
+using (var scope = app.Services.CreateScope())
+{
+    try
+    {
+        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+        dbContext.Database.Migrate();
+    }
+    catch { }
+}
 
 app.UseAuthorization();
 

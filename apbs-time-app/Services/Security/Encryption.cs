@@ -48,6 +48,7 @@ public class Encryption : IEncryption
             .TrimEnd('=')
             .Replace('+', '-')
             .Replace('/', '_');
+
     }
 
     private byte[] Base64UrlDecode(string input)

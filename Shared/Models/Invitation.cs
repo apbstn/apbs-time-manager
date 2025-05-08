@@ -15,10 +15,10 @@ public class Invitation
     [Column("I_USER_ID")]
     public Guid? UserId { get; set; }
     [Required]
-    [Column("I_Email")]
-    public string Email;
+    [Column("I_EMAIL")]
+    public string Email { get; set; }
     [Column("I_PHONE_NUMBER")]
-    public string? Phone_Number;
+    public string? Phone_Number { get; set; }
     [Required]
     [Column("I_TENANT_ID")]
     public Guid TenantId { get; set; }

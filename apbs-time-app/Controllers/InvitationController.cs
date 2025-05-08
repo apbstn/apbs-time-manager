@@ -1,29 +1,36 @@
 ﻿using apbs_time_app.Models;
 using apbs_time_app.Services;
+using apbs_time_app.Services.Security;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
+using Shared.Models;
 using Shared.Services;
 
 namespace apbs_time_app.Controllers;
 
 [ApiController]
-[Route("api/auth")]
+[Route("api/auth/invite")]
 public class InvitationController : ControllerBase
 {
     private readonly IUserService _userService;
     private readonly IInvitationService _invitationService;
+    private readonly IJwtTokenGenerator _jwtGen;
     private readonly ITenantService _tenantService;
 
-    public InvitationController(IUserService userService, IInvitationService invitationService, ITenantService tenantService)
+    public InvitationController(IUserService userService, IInvitationService invitationService, ITenantService tenantService, IJwtTokenGenerator jwtToken)
     {
         _userService = userService;
         _invitationService = invitationService;
+        _jwtGen = jwtToken;
+        _tenantService = tenantService;
     }
 
+
+
     [Authorize(Roles = "Owner")]
-    [HttpPost("invite")]
+    [HttpPost]
     public async Task<IActionResult> InviteUser(UserNoPassDto user)
     {
         if (user.Email == null)
@@ -50,16 +57,28 @@ public class InvitationController : ControllerBase
         return Ok(_invitationService.ExtractInvitationData(data));
     }
 
-
-    [HttpPost("confirm")]
-    public async Task<IActionResult> ConfirmInvite(ConfirmInvite confirm)
+    [Authorize]
+    [HttpPost("confirmation")]
+    public async Task<IActionResult> ConfirmInvitation([FromBody] ConfirmInvite confirmation)
     {
-        var checkInvite = await _invitationService.CheckInvite(confirm);
+        if (confirmation == null || string.IsNullOrEmpty(confirmation.Token))
+            return Unauthorized("Token is missing or invalid.");
+
+        var checkInvite = await _invitationService.CheckInvite(confirmation);
         if (!checkInvite)
             return Unauthorized();
 
-        await _tenantService.AddUserToTenant(confirm.Email, confirm.TenantId);
+        await _tenantService.AddUserToTenant(confirmation.Email, Guid.Parse(confirmation.TenantId));
 
-        return Ok();
+        var user = await _userService.GetUser(confirmation.Email);
+
+        (var accessToken, var role) = await _jwtGen.GenerateAccessToken(user);
+
+        return Ok(new
+        {
+            accessToken,
+            role
+        });
     }
+
 }

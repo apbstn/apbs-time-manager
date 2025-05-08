@@ -34,6 +34,13 @@ public class UserService : IUserService
         return user;
     }
 
+    public async Task<User> AuthenticateAsyncNoPass(string email)
+    {
+        var user = await _tenantDbContext.Users.SingleOrDefaultAsync(u => u.Email == email);
+
+        return user;
+    }
+
 
     public async Task<bool> RegisterAsync(User user, string password)
     {
@@ -72,13 +79,15 @@ public class UserService : IUserService
 
     public async Task<User> GetUser(string Email)
     {
-        var user = await _tenantDbContext.Users.FirstOrDefaultAsync(x => x.Email == Email);
-        if (user == null)
+        try
+        {
+            var user = await _tenantDbContext.Users.FirstAsync(x => x.Email == Email);
+            return user;
+        }
+        catch (Exception ex)
         {
             return null;
         }
-
-        return user;
     }
 
     public async Task<UserNoPassDto> SetUser(UserDto request)

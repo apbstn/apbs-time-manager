@@ -12,8 +12,8 @@ using Shared.Context;
 namespace Shared.Migrations.AppDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250506092056_First")]
-    partial class First
+    [Migration("20250508131304_Second")]
+    partial class Second
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

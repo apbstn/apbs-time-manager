@@ -15,7 +15,10 @@ public partial class UserMapper
     [MapperIgnoreTarget(nameof(User.PasswordHash))]
     public partial UserNoPassDto ToUserNoPassDto(User user);
 
-    [MapperIgnoreTarget(nameof(User.PasswordHash))]
+    [MapperIgnoreTarget(nameof(UserNoPassDto.Id))]
     public partial UserTenant FromUserNoPassDtoToUserTenant(UserNoPassDto user);
+
+    [MapperIgnoreTarget(nameof(UserNoPassDto.Id))]
+    public partial User ToUserNoId(UserNoPassDto user);
 
 }

@@ -2,8 +2,7 @@
 
 public class ConfirmInvite
 {
-    public string Email;
-    public string Token;
-    public Guid TenantId;
-
+    public required string Email { get; set; }
+    public required string Token { get; set; }
+    public required string TenantId { get; set; }
 }

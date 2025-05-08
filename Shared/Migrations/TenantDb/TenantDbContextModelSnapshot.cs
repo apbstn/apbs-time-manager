@@ -22,6 +22,54 @@ namespace Shared.Migrations.TenantDb
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("Shared.Models.Invitation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("I_ID");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("I_CREATED_AT");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("I_EMAIL");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("I_EXPIRES_AT");
+
+                    b.Property<bool>("IsUsed")
+                        .HasColumnType("bit")
+                        .HasColumnName("I_IS_USED");
+
+                    b.Property<string>("Phone_Number")
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("I_PHONE_NUMBER");
+
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("I_TENANT_ID");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)")
+                        .HasColumnName("I_TOKEN");
+
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uniqueidentifier")
+                        .HasColumnName("I_USER_ID");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TenantId");
+
+                    b.ToTable("Invitation");
+                });
+
             modelBuilder.Entity("Shared.Models.Join.UserTenantRole", b =>
                 {
                     b.Property<Guid>("Id")
@@ -129,6 +177,17 @@ namespace Shared.Migrations.TenantDb
                         .HasFilter("[A_EMAIL] IS NOT NULL");
 
                     b.ToTable("ACCOUNT");
+                });
+
+            modelBuilder.Entity("Shared.Models.Invitation", b =>
+                {
+                    b.HasOne("Shared.Models.Tenant", "Tenant")
+                        .WithMany()
+                        .HasForeignKey("TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Tenant");
                 });
 
             modelBuilder.Entity("Shared.Models.Join.UserTenantRole", b =>
