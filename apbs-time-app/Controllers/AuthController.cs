@@ -88,7 +88,8 @@ public class AuthController : ControllerBase
         {
             Email = request.Email,
             PhoneNumber = request.PhoneNumber,
-            Username = request.Username
+            Username = request.Username,
+            Registred = true
         };
 
         var ss = await _userService.RegisterAsync(newUser, request.Password);
