@@ -83,15 +83,15 @@ if (app.Environment.IsDevelopment())
 
 //app.UseHttpsRedirection();
 
-using (var scope = app.Services.CreateScope())
-{
-    try
-    {
-        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-        dbContext.Database.Migrate();
-    }
-    catch { }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    try
+//    {
+//        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//        dbContext.Database.Migrate();
+//    }
+//    catch { }
+//}
 
 app.UseAuthorization();
 

@@ -88,14 +88,14 @@ app.UseMiddleware<TenantResolver>();
 app.MapControllers();
 
 app.UseCors("AllowAll");
-using (var scope = app.Services.CreateScope())
-{
-    try { 
-    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-    dbContext.Database.Migrate();
-    }
-    catch { }
-}
+//using (var scope = app.Services.CreateScope())
+//{
+//    try { 
+//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//    dbContext.Database.Migrate();
+//    }
+//    catch { }
+//}
 
 
 app.Run();

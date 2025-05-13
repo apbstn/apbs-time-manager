@@ -12,21 +12,6 @@ namespace Shared.Migrations.AppDb
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.CreateTable(
-                name: "Employees",
-                columns: table => new
-                {
-                    Id = table.Column<int>(type: "int", nullable: false)
-                        .Annotation("SqlServer:Identity", "1, 1"),
-                    FirstName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LastName = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    LeaveBalance = table.Column<decimal>(type: "decimal(18,2)", nullable: false)
-                },
-                constraints: table =>
-                {
-                    table.PrimaryKey("PK_Employees", x => x.Id);
-                });
-
-            migrationBuilder.CreateTable(
                 name: "T_ACCOUNT",
                 columns: table => new
                 {
@@ -81,28 +66,17 @@ namespace Shared.Migrations.AppDb
                     L_NUMBEROFDAYS = table.Column<int>(type: "int", nullable: false),
                     L_STATUS = table.Column<int>(type: "int", nullable: false),
                     L_TYPE = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    L_REASON = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    EmployeeId = table.Column<int>(type: "int", nullable: true)
+                    L_REASON = table.Column<string>(type: "nvarchar(max)", nullable: false)
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_LEAVEREQUEST", x => x.L_ID);
-                    table.ForeignKey(
-                        name: "FK_LEAVEREQUEST_Employees_EmployeeId",
-                        column: x => x.EmployeeId,
-                        principalTable: "Employees",
-                        principalColumn: "Id");
                     table.ForeignKey(
                         name: "FK_LEAVEREQUEST_T_ACCOUNT_L_USER_ID",
                         column: x => x.L_USER_ID,
                         principalTable: "T_ACCOUNT",
                         principalColumn: "A_ID");
                 });
-
-            migrationBuilder.CreateIndex(
-                name: "IX_LEAVEREQUEST_EmployeeId",
-                table: "LEAVEREQUEST",
-                column: "EmployeeId");
 
             migrationBuilder.CreateIndex(
                 name: "IX_LEAVEREQUEST_L_USER_ID",
@@ -128,9 +102,6 @@ namespace Shared.Migrations.AppDb
 
             migrationBuilder.DropTable(
                 name: "TimeLogs");
-
-            migrationBuilder.DropTable(
-                name: "Employees");
 
             migrationBuilder.DropTable(
                 name: "T_ACCOUNT");

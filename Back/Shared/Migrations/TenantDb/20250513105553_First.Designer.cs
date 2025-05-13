@@ -12,8 +12,8 @@ using Shared.Context;
 namespace Shared.Migrations.TenantDb
 {
     [DbContext(typeof(TenantDbContext))]
-    [Migration("20250508131229_Second")]
-    partial class Second
+    [Migration("20250513105553_First")]
+    partial class First
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)

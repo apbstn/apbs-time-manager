@@ -12,7 +12,7 @@ using Shared.Context;
 namespace Shared.Migrations.AppDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250512123051_First")]
+    [Migration("20250513105627_First")]
     partial class First
     {
         /// <inheritdoc />
@@ -28,39 +28,12 @@ namespace Shared.Migrations.AppDb
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
-            modelBuilder.Entity("Shared.Models.Employee", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("int");
-
-                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
-
-                    b.Property<string>("FirstName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<string>("LastName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<decimal>("LeaveBalance")
-                        .HasColumnType("decimal(18,2)");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Employees");
-                });
-
             modelBuilder.Entity("Shared.Models.LeaveRequest", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier")
                         .HasColumnName("L_ID");
-
-                    b.Property<int?>("EmployeeId")
-                        .HasColumnType("int");
 
                     b.Property<DateTime>("EndDate")
                         .HasColumnType("datetime2")
@@ -93,8 +66,6 @@ namespace Shared.Migrations.AppDb
                         .HasColumnName("L_USER_ID");
 
                     b.HasKey("Id");
-
-                    b.HasIndex("EmployeeId");
 
                     b.HasIndex("UserId");
 
@@ -182,10 +153,6 @@ namespace Shared.Migrations.AppDb
 
             modelBuilder.Entity("Shared.Models.LeaveRequest", b =>
                 {
-                    b.HasOne("Shared.Models.Employee", null)
-                        .WithMany("LeaveRequests")
-                        .HasForeignKey("EmployeeId");
-
                     b.HasOne("Shared.Models.UserTenant", "User")
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -193,11 +160,6 @@ namespace Shared.Migrations.AppDb
                         .IsRequired();
 
                     b.Navigation("User");
-                });
-
-            modelBuilder.Entity("Shared.Models.Employee", b =>
-                {
-                    b.Navigation("LeaveRequests");
                 });
 #pragma warning restore 612, 618
         }
