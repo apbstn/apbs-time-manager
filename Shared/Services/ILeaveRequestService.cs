@@ -1,4 +1,4 @@
-﻿using Shared.Models;
+﻿using Shared.DTOs.Leave;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,14 +9,11 @@ namespace Shared.Services
 {
     public interface ILeaveRequestService
     {
-        Task<LeaveRequest> CreateLeaveRequest(LeaveRequestRequest request);
-        Task<LeaveRequest> UpdateLeaveRequest(int id, LeaveRequestRequest request);
-        Task<bool> DeleteLeaveRequest(int id);
-        Task<LeaveRequest> GetLeaveRequest(int id);
-        Task<List<LeaveRequest>> GetEmployeeLeaveHistory(int employeeId);
-        Task<LeaveRequest> UpdateLeaveStatus(int id, string action);
-        Task<List<LeaveRequest>> GetLeaveRequestsByType(string type, int employeeId);
-        Task<List<LeaveRequest>> GetAllLeaveRequests();
-        Task<decimal> GetEmployeeLeaveBalance(int employeeId);
+        Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync();
+        Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id);
+        Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId);
+        Task<LeaveRequestDto> CreateLeaveRequestAsync(Guid userId, CreateLeaveRequestDto createDto);
+        Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto);
+        Task<bool> DeleteLeaveRequestAsync(Guid id);
     }
 }

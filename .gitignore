@@ -21,3 +21,5 @@
 /apbs-time-app/.sonarqube
 /Apbs-Time-App.Client.TimeManager/.sonarqube
 /Apbs-Time-App.Client.TimeManager/bin/Debug/net9.0
+/time-tracking-frontend/node_modules
+/ultima-vue-6.3.0/node_modules

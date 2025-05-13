@@ -34,6 +34,9 @@ builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<ITimeLogService, TimeLogService>();
 builder.Services.AddSingleton<IExxception, Exxception>();
 
+builder.Services.AddTransient<ILeaveRequestService, LeaveRequestService>();
+builder.Services.AddTransient<ILeaveRequestRepository, LeaveRequestRepository>();
+
 await builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
 

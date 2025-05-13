@@ -1,144 +1,76 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Shared.Models;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
+using Shared.DTOs.Leave;
 using Shared.Services;
+using System.Security.Claims;
 
-namespace Apbs_Time_App.Client.TimeManager.Controllers
+namespace Apbs_Time_App.Client.TimeManager.Controllers;
+
+[Authorize]
+[ApiController]
+[Route("api/[controller]")]
+public class LeaveRequestsController : ControllerBase
 {
-    [ApiController]
-    [Route("api/[controller]")]
-    public class LeaveRequestsController : ControllerBase
+    private readonly ILeaveRequestService _leaveRequestService;
+
+    public LeaveRequestsController(ILeaveRequestService leaveRequestService)
     {
-        private readonly ILeaveRequestService _leaveRequestService;
+        _leaveRequestService = leaveRequestService;
+    }
 
-        public LeaveRequestsController(ILeaveRequestService leaveRequestService)
-        {
-            _leaveRequestService = leaveRequestService;
-        }
+    [HttpGet]
+    public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetAll()
+    {
+        var leaveRequests = await _leaveRequestService.GetAllLeaveRequestsAsync();
+        return Ok(leaveRequests);
+    }
 
-        [HttpPost]
-        public async Task<IActionResult> Create([FromBody] LeaveRequestRequest request)
+    [HttpGet("{id}")]
+    public async Task<ActionResult<LeaveRequestDto>> GetById(Guid id)
+    {
+        var leaveRequest = await _leaveRequestService.GetLeaveRequestByIdAsync(id);
+        if (leaveRequest == null)
         {
-            try
-            {
-                var result = await _leaveRequestService.CreateLeaveRequest(request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return NotFound();
         }
+        return Ok(leaveRequest);
+    }
 
-        [HttpPut("{id}")]
-        public async Task<IActionResult> Update(int id, [FromBody] LeaveRequestRequest request)
-        {
-            try
-            {
-                var result = await _leaveRequestService.UpdateLeaveRequest(id, request);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+    [HttpGet("user")]
+    public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetByUserId()
+    {
+        var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var leaveRequests = await _leaveRequestService.GetLeaveRequestsByUserIdAsync(Guid.Parse(userId));
+        return Ok(leaveRequests);
+    }
 
-        [HttpDelete("{id}")]
-        public async Task<IActionResult> Delete(int id)
-        {
-            try
-            {
-                var success = await _leaveRequestService.DeleteLeaveRequest(id);
-                return success ? Ok() : NotFound();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+    [HttpPost]
+    public async Task<ActionResult<LeaveRequestDto>> Create(CreateLeaveRequestDto createDto)
+    {
+        var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var leaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(Guid.Parse(userId), createDto);
+        return CreatedAtAction(nameof(GetById), new { id = leaveRequest.Id }, leaveRequest);
+    }
 
-        [HttpGet("{id}")]
-        public async Task<IActionResult> Get(int id)
+    [HttpPut("{id}")]
+    public async Task<ActionResult<LeaveRequestDto>> Update(Guid id, UpdateLeaveRequestDto updateDto)
+    {
+        var leaveRequest = await _leaveRequestService.UpdateLeaveRequestAsync(id, updateDto);
+        if (leaveRequest == null)
         {
-            try
-            {
-                var result = await _leaveRequestService.GetLeaveRequest(id);
-                return result != null ? Ok(result) : NotFound();
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return NotFound();
         }
+        return Ok(leaveRequest);
+    }
 
-        [HttpGet("employee/{employeeId}")]
-        public async Task<IActionResult> GetEmployeeHistory(int employeeId)
+    [HttpDelete("{id}")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        var result = await _leaveRequestService.DeleteLeaveRequestAsync(id);
+        if (!result)
         {
-            try
-            {
-                var result = await _leaveRequestService.GetEmployeeLeaveHistory(employeeId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
+            return NotFound();
         }
-
-        [HttpPut("status/{id}")]
-        public async Task<IActionResult> UpdateStatus(int id, [FromQuery] string action)
-        {
-            try
-            {
-                var result = await _leaveRequestService.UpdateLeaveStatus(id, action);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet("type/{type}/{employeeId}")]
-        public async Task<IActionResult> GetByType(string type, int employeeId)
-        {
-            try
-            {
-                var result = await _leaveRequestService.GetLeaveRequestsByType(type, employeeId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet]
-        public async Task<IActionResult> GetAll()
-        {
-            try
-            {
-                var result = await _leaveRequestService.GetAllLeaveRequests();
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
-
-        [HttpGet("balance/{employeeId}")]
-        public async Task<IActionResult> GetBalance(int employeeId)
-        {
-            try
-            {
-                var result = await _leaveRequestService.GetEmployeeLeaveBalance(employeeId);
-                return Ok(result);
-            }
-            catch (Exception ex)
-            {
-                return BadRequest(ex.Message);
-            }
-        }
+        return NoContent();
     }
 }
