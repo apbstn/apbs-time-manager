@@ -21,6 +21,9 @@ namespace Shared.Context
 
         public DbSet<UserTenant> Users { get; set; }
         public DbSet<TimeLog> TimeLogs { get; set; }
+     
+        public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<Team> Teams { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<User>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
@@ -42,16 +45,15 @@ namespace Shared.Context
             CurrentTenantConnectionString = _tenantService.ConnectionString;
         }
 
-        public DbSet<Team> Teams { get; set; }
+        
 
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<Team>().HasQueryFilter(t => t.TenantId == CurrentTenantId);
         //    // ... other configurations ...
         //}
-        public DbSet<Employee> Employees { get; set; }
-        public DbSet<LeaveRequest> LeaveRequests { get; set; }
-        public DbSet<Notification> Notifications { get; set; }
+        
+        //public DbSet<Notification> Notifications { get; set; }
     }
 
 

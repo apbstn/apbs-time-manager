@@ -1,42 +1,52 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations.Schema;
+﻿using System.ComponentModel.DataAnnotations.Schema;
 using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Shared.Models.Enumerations;
+using Microsoft.EntityFrameworkCore;
+using Shared.Models.Join;
 
-namespace Shared.Models
+namespace Shared.Models;
+
+[Table("LEAVEREQUEST")]
+public class LeaveRequest
 {
-    public class LeaveRequest
+    [Key]
+    [Column("L_ID")]
+    [DatabaseGenerated(DatabaseGeneratedOption.Identity)]
+    public Guid Id { get; set; }
+
+
+    [Column("L_USER_ID")]
+    public Guid UserId { get; set; }
+
+    [ForeignKey(nameof(UserId))]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
+    public virtual UserTenant User { get; set; }
+
+    [Required]
+    [Column("L_START")]
+    public DateTime StartDate { get; set; }
+
+    [Required]
+    [Column("L_END")]
+    public DateTime EndDate { get; set; }
+
+    [Required]
+    [Column("L_NUMBEROFDAYS")]
+    public int NumberOfDays
     {
-        [Key]
-        public int Id { get; set; }
-
-        [Required]
-        public int Sequence { get; set; }
-
-        [Required]
-        public int EmployeeId { get; set; }
-
-        [ForeignKey("EmployeeId")]
-        public virtual Employee Employee { get; set; }
-
-        [Required]
-        public DateTime StartDate { get; set; }
-
-        [Required]
-        public DateTime EndDate { get; set; }
-
-        [NotMapped]
-        public int DaysRequested => (EndDate - StartDate).Days + 1;
-
-        [Required]
-        public LeaveStatus Status { get; set; }
-
-        [Required, MaxLength(50)]
-        public string LeaveType { get; set; }
-
-        public string Reason { get; set; }
+        get => (EndDate - StartDate).Days + 1;
+        set { }
     }
+
+    [Required]
+    [Column("L_STATUS")]
+    public required LeaveRequestStatus Status { get; set; } = LeaveRequestStatus.Pending;
+
+
+    [Required]
+    [Column("L_TYPE")]
+    public string? Type { get; set; } = string.Empty;
+    [Required]
+    [Column("L_REASON")]
+    public string? Reason { get; set; } = string.Empty;
 }
