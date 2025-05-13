@@ -4,7 +4,7 @@ services:
     image: ${DOCKER_REGISTRY-}apbstimeappclientauth
     build:
       context: .
-      dockerfile: Back/apbs-time-app/Dockerfile
+      dockerfile: apbs-time-app/Dockerfile
     depends_on:
         - sqlserver
         - apbs-time-app.client.timemanager
@@ -16,7 +16,7 @@ services:
     image: ${DOCKER_REGISTRY-}apbstimeappclienttimemanager
     build:
       context: .
-      dockerfile: Back/Apbs-Time-App.Client.TimeManager/Dockerfile
+      dockerfile: Apbs-Time-App.Client.TimeManager/Dockerfile
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
 
@@ -25,10 +25,10 @@ services:
     image: ${DOCKER_REGISTRY-}apbstimeappclientgateway
     build:
       context: .
-      dockerfile: Back/time-app-gateway/Dockerfile
+      dockerfile: time-app-gateway/Dockerfile
     ports:
-        - 58157:8080
-        - 58158:8081
+        - 58167:8080
+        - 58168:8081
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
  
@@ -37,10 +37,10 @@ services:
     image: ${DOCKER_REGISTRY-}apbstimeappadmin
     build:
       context: .
-      dockerfile: Back/apbs-time-app-admin/Dockerfile
+      dockerfile: apbs-time-app-admin/Dockerfile
     ports:
-        - 58159:8080
-        - 58160:8081
+        - 58169:8080
+        - 58170:8081
     depends_on:
         - sqlserver
     environment:
