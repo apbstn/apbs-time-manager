@@ -46,6 +46,7 @@ public class AuthController : ControllerBase
             accessToken,
             user.Id,
             listTen,
+            user.Username,
             role
         });
     }
