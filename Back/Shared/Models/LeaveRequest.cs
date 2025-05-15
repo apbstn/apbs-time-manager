@@ -22,6 +22,8 @@ public class LeaveRequest
     [DeleteBehavior(DeleteBehavior.NoAction)]
     public virtual UserTenant User { get; set; }
 
+
+
     [Required]
     [Column("L_START")]
     public DateTime StartDate { get; set; }

@@ -35,15 +35,15 @@ public class TimeLogService : ITimeLogService
         log.TotalHours = nextTime - log.Time;
     }
 
-    private TimeLog GetLastLog(int accountId)
+    private TimeLog GetLastLog(Guid accountId)
     {
         return _context.TimeLogs
-            .Where(t => t.AccountId == accountId)
+            .Where(t => t.UserId == accountId)
             .OrderByDescending(t => t.Time)
             .FirstOrDefault();
     }
 
-    public Result StartTracking(int accountId)
+    public Result StartTracking(Guid accountId)
     {
         var lastLog = GetLastLog(accountId);
 
@@ -72,7 +72,7 @@ public class TimeLogService : ITimeLogService
         {
             Time = DateTime.UtcNow,
             Type = TimeLogType.PE,
-            AccountId = accountId
+            UserId = accountId
         };
 
         _context.TimeLogs.Add(newLog);
@@ -82,7 +82,7 @@ public class TimeLogService : ITimeLogService
         return new Result { Success = true };
     }
 
-    public Result PauseTracking(int accountId)
+    public Result PauseTracking(Guid accountId)
     {
         var lastLog = GetLastLog(accountId);
 
@@ -115,7 +115,7 @@ public class TimeLogService : ITimeLogService
         {
             Time = DateTime.UtcNow,
             Type = TimeLogType.P,
-            AccountId = accountId
+            UserId = accountId
         };
 
         _context.TimeLogs.Add(newLog);
@@ -126,7 +126,7 @@ public class TimeLogService : ITimeLogService
     }
     
 
-    public Result StopTracking(int accountId)
+    public Result StopTracking(Guid accountId)
     {
         var lastLog = GetLastLog(accountId);
 
@@ -159,7 +159,7 @@ public class TimeLogService : ITimeLogService
         {
             Time = DateTime.UtcNow,
             Type = TimeLogType.PS,
-            AccountId = accountId
+            UserId = accountId
         };
 
         _context.TimeLogs.Add(newLog);
@@ -169,10 +169,10 @@ public class TimeLogService : ITimeLogService
         return new Result { Success = true };
     }
 
-    public List<TimeLog> GetLogs(int accountId)
+    public List<TimeLog> GetLogs(Guid accountId)
     {
         return _context.TimeLogs
-                       .Where(log => log.AccountId == accountId)
+                       .Where(log => log.UserId == accountId)
                        .OrderBy(log => log.Time)
                        .AsNoTracking()
                        .ToList();
@@ -182,7 +182,7 @@ public class TimeLogService : ITimeLogService
 
     public Result UpdateLog(Guid logId, DateTime newTime, TimeLogType newType, int? totalHours)
     {
-        var log = _context.TimeLogs.FirstOrDefault(t => t.Id == logId);
+        var log = _context.TimeLogs.FirstOrDefault(t => t.TM_Id == logId);
 
         if (log == null)
         {

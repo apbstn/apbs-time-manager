@@ -57,4 +57,31 @@ public class TenantsController : ControllerBase
 
         return Ok(new { message = "Tenant deleted successfully." });
     }
+
+    [Authorize]
+    [HttpGet("{userId}")]
+    public async Task<IActionResult> GetTenantsByUserId(Guid userId)
+    {
+        try
+        {
+            // Optional: Restrict to authenticated user's own tenants
+            // var authenticatedUserId = Guid.Parse(User.FindFirstValue("sub") ?? string.Empty);
+            // if (userId != authenticatedUserId) return Unauthorized("You can only access your own tenants.");
+
+            var tenants = await _tenantService.GetTenantsByUserIdAsync(userId);
+            if (tenants == null || !tenants.Any())
+            {
+                return NotFound(new { message = $"No tenants found for user ID {userId}" });
+            }
+
+            var tenantDtos = tenants.Select(t => new TenantMapper().ToResponseTenantDto(t)).ToList();
+            return Ok(tenantDtos);
+        }
+        catch (Exception ex)
+        {
+            // In production, use a logging framework like Serilog
+            Console.WriteLine($"Error fetching tenants for user ID {userId}: {ex.Message}");
+            return StatusCode(500, new { message = "An error occurred while retrieving tenants." });
+        }
+    }
 }

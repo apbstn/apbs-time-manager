@@ -1,4 +1,5 @@
 ﻿using Shared.DTOs.Leave;
+using Shared.DTOs.Leave.Mapper;
 using Shared.Models;
 using System;
 using System.Collections.Generic;
@@ -21,10 +22,11 @@ namespace Shared.Services
         {
             var leaveRequests = await _repository.GetAllAsync();
             var result = new List<LeaveRequestDto>();
-
+            
+             var _mapper = new LeaveMapper();
             foreach (var lr in leaveRequests)
             {
-                result.Add(MapToDto(lr));
+                result.Add(_mapper.ToLeaveRequestDto(lr));
             }
 
             return result;

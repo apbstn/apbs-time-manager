@@ -10,5 +10,6 @@ public interface ITenantService
     Task<PaginatedResponse<ResponseTenantDto>> GetAll(int pageNumber, int pageSize = 10);
     Task<bool> UpdateTenant(Guid tenantId, UpdateTenantRequest request);
     Task<bool> DeleteTenant(Guid tenantId);
+    Task<List<Tenant>> GetTenantsByUserIdAsync(Guid userId);
 
 }

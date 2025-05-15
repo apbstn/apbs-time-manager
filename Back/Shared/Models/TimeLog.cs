@@ -1,14 +1,36 @@
-﻿using Shared.Services;
+﻿using Microsoft.EntityFrameworkCore;
+using Shared.Services;
+using System.ComponentModel.DataAnnotations.Schema;
+using System.ComponentModel.DataAnnotations;
 
-namespace Shared.Models
+namespace Shared.Models;
+[Table("TIMELOG")]
+public class TimeLog
 {
-    public class TimeLog
-    {
-        public Guid Id { get; set; } = Guid.NewGuid();
-        public DateTime Time { get; set; }
-        public TimeLogType Type { get; set; } // Use the enum directly
-        public bool Activ { get; set; } = true; // 1 (true) if active, 0 (false) if another row is added
-        public int AccountId { get; set; }
-        public TimeSpan? TotalHours { get; set; } // Null until updated
-    }
+    [Key]
+    [Column("TM_ID")]
+    public Guid TM_Id { get; set; } = Guid.NewGuid();
+
+    [Column("TM_USER_ID")]
+    public Guid UserId { get; set; }
+
+    [ForeignKey(nameof(UserId))]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
+    public virtual UserTenant User { get; set; } 
+
+    [Required]
+    [Column("TM_TIME")]
+    public DateTime Time { get; set; }
+
+    [Required]
+    [Column("TM_TYPE")]
+    public TimeLogType Type { get; set; }
+
+    [Required]
+    [Column("TM_ACTIV")]
+    public bool Activ { get; set; } = true;
+
+    [Required]
+    [Column("TM_TOTALHOURS")]
+    public TimeSpan? TotalHours { get; set; } // Null until updated
 }
