@@ -162,4 +162,16 @@ public class TenantService : ITenantService
         return true;
     }
 
+    public async Task<List<Tenant>> GetTenantsByUserIdAsync(Guid userId)
+    {
+        return await _context.Tenants
+            .Where(ut => ut.UserId == userId)
+            .Join(
+                _context.Tenants,
+                ut => ut.Id,
+                t => t.Id,
+                (ut, t) => t)
+            .ToListAsync();
+    }
+
 }

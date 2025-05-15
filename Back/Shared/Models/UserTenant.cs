@@ -24,4 +24,14 @@ public class UserTenant
     public RoleEnum? Role { get; set; }
     [Column("A_PHONE_NUMBER")]
     public string? PhoneNumber { get; set; }
+
+
+
+
+    [Column("A_TEAM")]
+    public Guid? TeamId { get; set; }
+
+    [ForeignKey(nameof(TeamId))]
+    [DeleteBehavior(DeleteBehavior.NoAction)]
+    public virtual Team? Team{ get; set; }
 }

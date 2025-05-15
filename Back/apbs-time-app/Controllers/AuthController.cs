@@ -51,7 +51,7 @@ public class AuthController : ControllerBase
         });
     }
     [Authorize]
-    [HttpGet("switch")]
+    [HttpPost("switch/{tenantId}")]
     public async Task<IActionResult> Switch(string tenantId)
     {
         var userId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;

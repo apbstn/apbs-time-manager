@@ -25,7 +25,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
 
             [HttpPost("start/{accountId}")]
             [Authorize]
-            public ActionResult StartTracking(int accountId)
+            public ActionResult StartTracking(Guid accountId)
             {
                 var result = _timeLogService.StartTracking(accountId);
                 if (result.Success)
@@ -41,7 +41,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
 
             [HttpPost("pause/{accountId}")]
             [Authorize]
-            public ActionResult PauseTracking(int accountId)
+            public ActionResult PauseTracking(Guid accountId)
             {
                 var result = _timeLogService.PauseTracking(accountId);
                 if (result.Success)
@@ -57,7 +57,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
 
             [HttpPost("stop/{accountId}")]
             [Authorize]
-            public ActionResult StopTracking(int accountId)
+            public ActionResult StopTracking(Guid accountId)
             {
                 var result = _timeLogService.StopTracking(accountId);
                 if (result.Success)
@@ -73,7 +73,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
 
             [HttpGet("{accountId}")]
             [Authorize]
-            public ActionResult<List<TimeLog>> GetLogs(int accountId)
+            public ActionResult<List<TimeLog>> GetLogs(Guid accountId)
             {
                 var logs = _timeLogService.GetLogs(accountId);
                 if (logs == null || logs.Count == 0)
