@@ -42,3 +42,6 @@
 /Back/time-app-gateway/bin/Debug/net9.0
 /Back/time-app-gateway/obj
 /Back/bin/Debug
+/Front/time-tracking-frontend/node_modules
+/Front/ultima-vue-6.3.0/node_modules
+/Front/ultima-vue-6.3.0/dist

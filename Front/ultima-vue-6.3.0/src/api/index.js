@@ -1,8 +1,8 @@
 import axios from "axios";
-const apiUrl = process.env.VUE_APP_API_URL;
 
+const apiUrl = import.meta.env.API_URL;
 const api = axios.create({
-  baseURL: apiUrl, // Ensure this is correct
+  baseURL: apiUrl ?? "http://localhost:5000", // Ensure this is correct
   headers: {
     "Content-Type": "application/json",
   },

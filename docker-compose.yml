@@ -1,0 +1,20 @@
+services:
+  admin.front:
+    image: apbs.time.app.admin.front
+    build: 
+      context: ./Front/ultima-vue-6.3.0
+      dockerfile: Dockerfile
+      args:
+        API_URL: http://localhost:58167
+    ports:
+      - "58170:80"
+
+  client.front:
+    image: apbs.time.app.client.front
+    build: 
+      context: ./Front/time-tracking-frontend
+      dockerfile: Dockerfile
+      args:
+        API_URL: http://localhost:58167
+    ports:
+      - "58171:80"
