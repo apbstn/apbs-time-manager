@@ -1,8 +1,8 @@
 # Builder
 FROM node:lts-alpine AS build-stage
 
-ARG API_URL
-ENV API_URL=${API_URL}
+ARG VITE_API_URL
+ENV VITE_API_URL=${VITE_API_URL}
 
 WORKDIR /app
 COPY package*.json .
