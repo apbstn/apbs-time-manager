@@ -20,10 +20,6 @@ builder.Configuration
     .AddJsonFile($"appsettings.{builder.Environment.EnvironmentName}.json", optional: true, reloadOnChange: true)
     .AddEnvironmentVariables();
 
-Log.Logger = new LoggerConfiguration()
-    .WriteTo.Console() // Log to the console
-    .WriteTo.File("logs/myapp.txt", rollingInterval: RollingInterval.Day) // Log to a file
-    .CreateLogger();
 
 builder.Host.UseSerilog();
 
@@ -128,7 +124,7 @@ if (app.Environment.IsDevelopment())
     app.MapOpenApi();
 }
 
-app.UseHttpsRedirection();
+//app.UseHttpsRedirection();
 
 app.UseCors("AllowAll");
 
