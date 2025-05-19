@@ -12,8 +12,8 @@ import Employe from '@/views/Employe.vue';
 import Teams from '@/views/teams.vue';
 
 import ListDemandeEmploye from '@/views/List demandeEmploye.vue';
-import DemandeDeCongé from '@/views/Demande de congé.vue';
-import Congés from '@/views/congés.vue';
+
+import Conges from '@/views/conges.vue';
 import EditCongé from '@/views/Edit Congé.vue';
 import Switch from '@/views/Switch.vue';
 import Logout from '@/views/logout.vue';
@@ -63,15 +63,9 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: 'demande',
-                name: 'demande',
-                component: DemandeDeCongé,
-                meta: { requiresAuth: true}
-            },
-            {
                 path: 'conges',
                 name: 'conges',
-                component: Congés,
+                component: Conges,
                 meta: { requiresAuth: true}
             },
             {
