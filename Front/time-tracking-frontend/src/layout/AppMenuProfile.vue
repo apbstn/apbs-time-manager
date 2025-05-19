@@ -45,7 +45,7 @@ function tooltipValue(tooltipText) {
 <template>
     <div class="layout-menu-profile">
         <button v-tooltip="{ value: tooltipValue('Profile') }" @click="toggleMenu">
-            <img src="C:\Users\ASUS\Downloads\fotor-20250518182628.png" alt="avatar" style="width: 32px; height: 32px" />
+            <img src="../assets/fotor-20250518182628.png" alt="avatar" style="width: 32px; height: 32px" />
             <span class="text-start">
                 <strong>{{name}}</strong>
                 <small>{{role}}</small>
