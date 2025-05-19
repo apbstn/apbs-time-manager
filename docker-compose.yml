@@ -24,7 +24,7 @@ services:
 
   apbs-time-app.client.auth:
     container_name: time.app.auth
-    image: apbstimeappclientauth
+    image: youssef_khe/apbs-time-app-client-auth
     build:
       context: ./Back
       dockerfile: apbs-time-app/Dockerfile
@@ -37,7 +37,7 @@ services:
     restart: unless-stopped
  
   apbs-time-app.client.timemanager:
-    image: apbstimeappclienttimemanager
+    image: youssef_khe/apbs-time-app-client-time-manager
     build:
       context: ./Back
       dockerfile: Apbs-Time-App.Client.TimeManager/Dockerfile
@@ -47,7 +47,7 @@ services:
 
   apbs-time-app.client.gateway:
     container_name: time.app.gateway
-    image: apbstimeappclientgateway
+    image: youssef_khe/apbs-time-app-client-gateway
     build:
       context: ./Back
       dockerfile: time-app-gateway/Dockerfile
@@ -60,7 +60,7 @@ services:
  
   apbs-time-app-admin:
     container_name: time-app-admin
-    image: apbstimeappadmin
+    image: youssef_khe/apbs-time-app-admin
     build:
       context: ./Back
       dockerfile: apbs-time-app-admin/Dockerfile
