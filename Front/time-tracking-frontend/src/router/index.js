@@ -15,11 +15,16 @@ import ListDemandeEmploye from '@/views/List demandeEmploye.vue';
 import DemandeDeCongé from '@/views/Demande de congé.vue';
 import Congés from '@/views/congés.vue';
 import EditCongé from '@/views/Edit Congé.vue';
+import Switch from '@/views/Switch.vue';
+import Logout from '@/views/logout.vue';
+import Settings from '@/views/settings.vue';
+
 
 const routes = [
     {
         path: '/',
-        component: AppLayout, // Wrap main routes inside layout
+        component: AppLayout,
+        meta: { requiresAuth: true },
         children: [
             {
                 path: 'home',
@@ -73,6 +78,24 @@ const routes = [
                 path: 'edit',
                 name: 'edit',
                 component: EditCongé,
+                meta: { requiresAuth: true}
+            },
+            {
+                path: 'Switch',
+                name: 'Switch',
+                component: Switch,
+                meta: { requiresAuth: true}
+            },
+            {
+                path: 'logout',
+                name: 'logout',
+                component: Logout,
+                meta: { requiresAuth: true}
+            },
+            {
+                path: 'settings',
+                name: 'settings',
+                component: Settings,
                 meta: { requiresAuth: true}
             }
         ]

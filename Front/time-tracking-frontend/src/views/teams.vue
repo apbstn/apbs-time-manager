@@ -17,7 +17,7 @@
           <template #body="slotProps">
             <Button icon="pi pi-pencil" class="p-button-warning p-button-sm mr-2"
               @click="openEditDialog(slotProps.data)" />
-            <Button icon="pi pi-trash" class="p-button-danger p-button-sm" @click="deleteTeam(slotProps.data)" />
+            <Button icon="pi pi-trash" class="p-button-danger p-button-sm" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>
         <template #empty>
@@ -27,44 +27,42 @@
     </div>
 
     <!-- Add/Edit Dialog -->
-    <Dialog v-model:visible="dialogVisible" modal :header="isEdit ? 'Edit Team' : 'Add Team'" class="w-[30rem]">
-      <div class="p-fluid">
-        <div class="field">
-          <label for="name">Team Name</label>
-          <InputText v-model="form.name" id="name" />
-        </div>
-        <div class="field">
-          <label for="description">Description</label>
-          <InputText v-model="form.description" id="description" />
-        </div>
-      </div>
-
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="closeDialog" />
-        <Button label="Save" icon="pi pi-check" @click="saveTeam" />
-      </template>
-    </Dialog>
+    <TeamDialog 
+        :visible="dialogVisible" 
+        :isEdit="isEdit" 
+        :team="selectedTeam" 
+        :currentId="currentId"
+        @update:visible="dialogVisible = $event"
+        @refresh="fetchTeams"
+        @close="closeDialog" />
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, inject, watch } from 'vue'
 import api from '@/api'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
-import Dialog from 'primevue/dialog'
 import InputText from 'primevue/inputtext'
+import TeamDialog from './Componant/TeamDialog.vue'
+
+// Inject the DeleteDialog instance
+const deleteDialogRef = inject('deleteDialog')
 
 const teams = ref([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
+const selectedTeam = ref(null)
 
-const form = ref({
-  name: '',
-  description: ''
+watch(deleteDialogRef, (newVal) => {
+    console.log('teams.vue: DeleteDialog ref updated:', newVal?.value)
+})
+
+onMounted(() => {
+    console.log('teams.vue: Initial DeleteDialog ref:', deleteDialogRef?.value)
 })
 
 const filteredTeams = computed(() => {
@@ -80,44 +78,52 @@ const fetchTeams = async () => {
   try {
     const response = await api.get('/api/teams')
     teams.value = response.data
+    console.log('Teams fetched:', response.data)
   } catch (error) {
     console.error('Error fetching teams:', error)
   }
 }
 
 const openEditDialog = (team) => {
-  form.value = { ...team }
+  console.log('Opening edit dialog for team:', team)
+  selectedTeam.value = { ...team }
   currentId.value = team.id
   isEdit.value = true
   dialogVisible.value = true
 }
 
 const openAddDialog = () => {
+  console.log('Opening add dialog')
   isEdit.value = false
-  form.value = { name: '', description: '' }
+  selectedTeam.value = null
+  currentId.value = null
   dialogVisible.value = true
 }
 
 const closeDialog = () => {
+  console.log('Closing add/edit dialog')
   dialogVisible.value = false
+  selectedTeam.value = null
 }
 
-const saveTeam = async () => {
-  try {
-    if (isEdit.value) {
-      await api.put(`/api/teams/${currentId.value}`, form.value)
+const confirmDelete = (team) => {
+    console.log('teams.vue: deleteDialogRef:', deleteDialogRef?.value)
+    console.log('teams.vue: showDeleteDialog available:', !!deleteDialogRef?.value?.showDeleteDialog)
+    if (deleteDialogRef?.value && deleteDialogRef.value.showDeleteDialog) {
+        deleteDialogRef.value.showDeleteDialog({
+            item: team,
+            type: 'team',
+            name: team.name || `ID ${team.id}`,
+            onConfirm: () => deleteTeam(team)
+        })
     } else {
-      await api.post('/api/teams', form.value)
+        console.error('DeleteDialog instance not found or showDeleteDialog not exposed')
     }
-    await fetchTeams()
-    closeDialog()
-  } catch (error) {
-    console.error('Error saving team:', error)
-  }
 }
 
 const deleteTeam = async (team) => {
   try {
+    console.log('Deleting team:', team)
     await api.delete(`/api/teams/${team.id}`)
     await fetchTeams()
   } catch (error) {
@@ -125,7 +131,7 @@ const deleteTeam = async (team) => {
   }
 }
 
-onMounted(fetchTeams)
+fetchTeams()
 </script>
 
 <style scoped>
@@ -146,23 +152,46 @@ onMounted(fetchTeams)
 }
 
 .search-input {
-  border: 1px solid #ced4da !important;
-  border-radius: 4px !important;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
   width: 300px;
   margin-bottom: 1rem;
+  padding: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+.search-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 h2 {
   font-size: 2rem;
   margin: 0;
+  color: #1f2a44;
+  font-weight: 600;
 }
 
 .add-button {
-  align-items: right;
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+    background: #6366f1;
+    border-color: #6366f1;
+}
+
+.add-button:hover {
+    transform: translateY(-1px);
+    background: #4f46e5;
+    border-color: #4f46e5;
 }
 
 .card {
   margin-top: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
 }
 
 .text-center {
@@ -170,6 +199,6 @@ h2 {
 }
 
 .text-muted {
-  color: #6c757d;
+  color: #6b7280;
 }
 </style>

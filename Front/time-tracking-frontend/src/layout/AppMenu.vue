@@ -57,13 +57,8 @@ const fullMenu = ref([
                 icon: 'pi pi-fw pi-pencil',
                 to: '/edit',
                 showFor: ['employee']
-            },
-            {
-                label: 'Logout',
-                icon: 'pi pi-fw pi-sign-out',
-                command: () => handleLogout(),
-                showFor: ['Owner', 'employee']
             }
+            
         ]
     }
 ]);
@@ -80,17 +75,7 @@ const model = computed(() => {
     }));
 });
 
-const handleLogout = async () => {
-    try {
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('userRole');
-        delete axios.defaults.headers.common['Authorization'];
-        window.location.href = '/login';
-    } catch (error) {
-        console.error('Logout failed:', error);
-        window.location.href = '/login';
-    }
-};
+
 </script>
 
 <template>

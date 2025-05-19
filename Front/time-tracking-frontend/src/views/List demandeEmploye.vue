@@ -1,112 +1,79 @@
 <template>
-    <div>
-        <div class="header-container">
-            <div class="flex justify-content-between align-items-center mb-2">
-                <h2>Leave Requests</h2>
-                <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
-            </div>
-        </div>
-
-        <InputText v-model="searchQuery" placeholder="Search leave requests..." class="search-input" />
-
-        <div class="card">
-            <DataTable :value="filteredRequests" paginator :rows="10" tableStyle="min-width: 50rem"
-                :showGridlines="true">
-                <Column field="startDate" header="Start Date" sortable>
-                    <template #body="{ data }">
-                        {{ formatDate(data.startDate) }}
-                    </template>
-                </Column>
-                <Column field="endDate" header="End Date" sortable>
-                    <template #body="{ data }">
-                        {{ formatDate(data.endDate) }}
-                    </template>
-                </Column>
-                <Column field="numberOfDays" header="Days" sortable />
-                <Column field="status" header="Status" sortable />
-                <Column field="type" header="Type" sortable />
-                <Column field="reason" header="Reason" sortable />
-                <Column :exportable="false" style="min-width: 12rem" header="Actions">
-                    <template #body="slotProps">
-                        <Button icon="pi pi-pencil" class="p-button-warning p-button-sm mr-2"
-                            @click="openEditDialog(slotProps.data)" />
-                        <Button icon="pi pi-trash" class="p-button-danger p-button-sm"
-                            @click="confirmDelete(slotProps.data)" />
-                    </template>
-                </Column>
-                <template #empty>
-                    <div class="text-center text-muted">No leave requests found</div>
-                </template>
-            </DataTable>
-        </div>
-
-        <!-- Add/Edit Dialog -->
-        <Dialog v-model:visible="dialogVisible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'"
-            class="w-[30rem]">
-            <div class="p-fluid">
-                <div class="field">
-                    <label for="startDate">Start Date</label>
-                    <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon />
-                </div>
-                <div class="field">
-                    <label for="endDate">End Date</label>
-                    <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon />
-                </div>
-                <div class="field">
-                    <label for="type">Type</label>
-                    <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value"
-                        placeholder="Select leave type" id="type" />
-                </div>
-                <div class="field">
-                    <label for="reason">Reason</label>
-                    <InputText v-model="form.reason" id="reason" />
-                </div>
-            </div>
-
-            <template #footer>
-                <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="closeDialog" />
-                <Button label="Save" icon="pi pi-check" @click="saveRequest" />
-            </template>
-        </Dialog>
-
-        <!-- Delete Confirmation Dialog -->
-        <Dialog v-model:visible="deleteDialogVisible" modal header="Confirm Delete" :style="{ width: '25rem' }">
-            <span>Are you sure you want to delete this leave request?</span>
-            <template #footer>
-                <Button label="No" icon="pi pi-times" class="p-button-text" @click="deleteDialogVisible = false" />
-                <Button label="Yes" icon="pi pi-check" class="p-button-danger" @click="deleteRequest" />
-            </template>
-        </Dialog>
+  <div>
+    <div class="header-container">
+      <div class="flex justify-content-between align-items-center mb-2">
+        <h2>Leave Requests</h2>
+        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+      </div>
     </div>
+
+    <InputText v-model="searchQuery" placeholder="Search leave requests..." class="search-input" />
+
+    <div class="card">
+      <DataTable :value="filteredRequests" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
+        <Column field="startDate" header="Start Date" sortable>
+          <template #body="{ data }">
+            {{ formatDate(data.startDate) }}
+          </template>
+        </Column>
+        <Column field="endDate" header="End Date" sortable>
+          <template #body="{ data }">
+            {{ formatDate(data.endDate) }}
+          </template>
+        </Column>
+        <Column field="numberOfDays" header="Days" sortable />
+        <Column field="status" header="Status" sortable>
+          <template #body="{ data }">
+            {{ statusDisplay(data.status) }}
+          </template>
+        </Column>
+        <Column field="type" header="Type" sortable />
+        <Column field="reason" header="Reason" sortable />
+        <Column :exportable="false" style="min-width: 12rem" header="Actions">
+          <template #body="slotProps">
+            <Button icon="pi pi-pencil" class="p-button-warning p-button-sm mr-2"
+              :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
+              @click="openEditDialog(slotProps.data)" />
+            <Button icon="pi pi-trash" class="p-button-danger p-button-sm"
+              :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
+              @click="confirmDelete(slotProps.data)" />
+          </template>
+        </Column>
+        <template #empty>
+          <div class="text-center text-muted">No leave requests found</div>
+        </template>
+      </DataTable>
+    </div>
+
+    <!-- Add/Edit Dialog -->
+    <LeaveRequestDialog 
+      :visible="dialogVisible" 
+      :isEdit="isEdit" 
+      :request="currentRequest" 
+      :userId="userId"
+      @update:visible="dialogVisible = $event"
+      @save="handleSave"
+    />
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
+import { ref, onMounted, computed, inject } from 'vue'
 import api from '@/api'
+import Button from 'primevue/button'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import LeaveRequestDialog from './Componant/LeaveRequestDialog.vue'
 
 const leaveRequests = ref([])
 const dialogVisible = ref(false)
-const deleteDialogVisible = ref(false)
 const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
-const leaveToDelete = ref(null)
-const userId = ref(null) // Store the current user's ID temporarily
-
-const leaveTypes = ref([
-    { label: 'Vacation', value: 'Vacation' },
-    { label: 'Sick Leave', value: 'Sick Leave' },
-    { label: 'Personal', value: 'Personal' },
-    { label: 'Bereavement', value: 'Bereavement' },
-    { label: 'Other', value: 'Other' }
-])
-
-const form = ref({
-    startDate: null,
-    endDate: null,
-    type: null,
-    reason: ''
-})
+const userId = ref(null)
+const currentRequest = ref(null)
+const deleteDialogRef = inject('deleteDialog')
 
 const filteredRequests = computed(() => {
     if (!searchQuery.value) return leaveRequests.value
@@ -118,24 +85,53 @@ const filteredRequests = computed(() => {
     )
 })
 
-onMounted(async () => {
-    // Fetch the user ID from stored login response (adjust based on your setup)
-    // Example: From Vuex store, Pinia, or auth service
-    // Replace with your actual method to get the user ID
-    // Example with Vuex: import { useStore } from 'vuex'; const store = useStore(); userId.value = store.state.auth.userId
-    // Example with Pinia: import { useAuthStore } from '@/stores/auth'; const authStore = useAuthStore(); userId.value = authStore.userId
-    userId.value = 'your-user-id' // Placeholder: Replace with actual retrieval (e.g., authStore.userId)
-    
-    if (!userId.value) {
-        console.error('User ID not found. Please ensure you are logged in.')
+const statusDisplay = (status) => {
+    switch (status) {
+        case 0: return 'Pending'
+        case 1: return 'Approved'
+        case 2: return 'Rejected'
+        default: return 'Unknown'
     }
-    await fetchLeaveRequests()
+}
+
+const decodeJwt = (token) => {
+    try {
+        const base64Url = token.split('.')[1]
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        }).join(''))
+        return JSON.parse(jsonPayload)
+    } catch (error) {
+        console.error('Error decoding JWT:', error)
+        return null
+    }
+}
+
+onMounted(async () => {
+    console.log('ListDemandeEmploye mounted')
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken) {
+        const decoded = decodeJwt(accessToken)
+        if (decoded && decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) {
+            userId.value = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+            await fetchLeaveRequests()
+        } else {
+            console.error('User ID not found in token')
+        }
+    } else {
+        console.error('Access token not found')
+    }
 })
 
 const fetchLeaveRequests = async () => {
     try {
-        const { data } = await api.get('/api/LeaveRequests')
+        if (!userId.value) {
+            throw new Error('User ID is not available')
+        }
+        const { data } = await api.get(`/api/LeaveRequests?userId=${userId.value}`)
         leaveRequests.value = data
+        console.log('Leave requests fetched:', data)
     } catch (error) {
         console.error('Error fetching leave requests:', error)
     }
@@ -148,66 +144,51 @@ const formatDate = (dateString) => {
 }
 
 const openEditDialog = (request) => {
-    form.value = {
-        startDate: new Date(request.startDate),
-        endDate: new Date(request.endDate),
-        type: request.type,
-        reason: request.reason
-    }
+    console.log('Opening edit dialog for request:', request)
+    currentRequest.value = request
     currentId.value = request.id
     isEdit.value = true
     dialogVisible.value = true
 }
 
 const openAddDialog = () => {
+    console.log('Opening add dialog')
     isEdit.value = false
-    form.value = { startDate: null, endDate: null, type: null, reason: '' }
+    currentRequest.value = null
     dialogVisible.value = true
 }
 
 const closeDialog = () => {
+    console.log('Closing dialog')
     dialogVisible.value = false
+    currentRequest.value = null
 }
 
-const saveRequest = async () => {
-    try {
-        if (!userId.value) {
-            throw new Error('User ID is not available. Please ensure you are logged in.')
-        }
-        const payload = {
-            startDate: form.value.startDate.toISOString().split('T')[0],
-            endDate: form.value.endDate.toISOString().split('T')[0],
-            type: form.value.type,
-            reason: form.value.reason,
-            L_USER_ID: userId.value // Include user ID from login response
-        }
-
-        if (isEdit.value) {
-            await api.put(`/api/LeaveRequests/${currentId.value}`, payload)
-        } else {
-            await api.post('/api/LeaveRequests', payload)
-        }
-        await fetchLeaveRequests()
-        closeDialog()
-    } catch (error) {
-        console.error('Error saving leave request:', error)
-    }
+const handleSave = async () => {
+    console.log('Handling save from dialog')
+    await fetchLeaveRequests()
+    closeDialog()
 }
 
 const confirmDelete = (request) => {
-    leaveToDelete.value = request
-    deleteDialogVisible.value = true
-}
-
-const deleteRequest = async () => {
-    try {
-        await api.delete(`/api/LeaveRequests/${leaveToDelete.value.id}`)
-        await fetchLeaveRequests()
-    } catch (error) {
-        console.error('Error deleting leave request:', error)
-    } finally {
-        deleteDialogVisible.value = false
-        leaveToDelete.value = null
+    console.log('Confirming delete for request:', request)
+    if (deleteDialogRef?.value?.showDeleteDialog) {
+        deleteDialogRef.value.showDeleteDialog({
+            item: request,
+            type: 'leave request',
+            name: request.type || `ID ${request.id}`,
+            onConfirm: async () => {
+                try {
+                    console.log('Deleting request:', request)
+                    await api.delete(`/api/LeaveRequests/${request.id}`)
+                    await fetchLeaveRequests()
+                } catch (error) {
+                    console.error('Error deleting leave request:', error)
+                }
+            }
+        })
+    } else {
+        console.error('DeleteDialog not injected or showDeleteDialog not exposed')
     }
 }
 </script>

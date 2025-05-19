@@ -3,7 +3,7 @@ import AppLayout from '@/layout/AppLayout.vue';
 import UserManagement from '@/views/UserManagement.vue';
 import Login from '@/views/Login.vue';
 import Home from '@/views/Home.vue';
-import Phonetest from '@/views/Phonetest.vue';
+import Phonetest from '@/views/phonetest.vue';
 
 const routes = [
     {

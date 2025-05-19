@@ -10,18 +10,12 @@ namespace apbs_time_app_admin.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly IUserService _userService;
-    private readonly IConfiguration _configuration;
-    private readonly IEncryptionService _encryptionService;
     private readonly IJwtTokenGenerator _jwtTokenGenerator;
 
-    public AuthController(IUserService userService, 
-        IConfiguration configuration, 
-        IEncryptionService encryptionService,
+    public AuthController(IUserService userService,
         IJwtTokenGenerator jwtTokenGenerator)
     {
         _userService = userService;
-        _configuration = configuration;
-        _encryptionService = encryptionService;
         _jwtTokenGenerator = jwtTokenGenerator;
     }
 

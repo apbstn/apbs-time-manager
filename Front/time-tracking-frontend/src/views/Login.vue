@@ -26,22 +26,39 @@ const login = async () => {
 
     const response = await api.post('/api/auth/login', {
       email: email.value,
+      
       password: password.value
-    },
-    {
-        headers: {
-          'Content-Type': 'application/json',  // Must include this
-          'Accept': '*/*'        // Optional but recommended
-        }
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': '*/*'
+      }
     })
+    localStorage.setItem('email', email.value);
 
     // Check if token exists in response
     if (response.data && response.data.accessToken) {
-      localStorage.setItem('accessToken', response.data.accessToken);
+      localStorage.setItem('accessToken', response.data.accessToken)
       localStorage.setItem('role', response.data.role)
+      localStorage.setItem('username', response.data.username)
+     
 
+      // Store tenants (check for both 'tenants' and 'lisTen' to handle potential naming)
+      if (response.data.tenants) {
+        localStorage.setItem('tenants', JSON.stringify(response.data.tenants))
+      } else if (response.data.listTen) {
+        localStorage.setItem('tenants', JSON.stringify(response.data.listTen))
+        const test = localStorage.getItem(response.data.listTen.name)
+        console.log(test)
+      } else {
+        console.warn('No tenants or lisTen found in response, storing empty array')
+        localStorage.setItem('tenants', JSON.stringify([]))
+      }
+
+      // Set Authorization header for future API calls
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.accessToken}`
 
+      // Redirect to Switch page to display tenants
       router.push('/home')
     } else {
       console.error('No access token found in response!')

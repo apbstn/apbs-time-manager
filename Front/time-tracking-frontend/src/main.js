@@ -27,12 +27,20 @@ import Textarea from 'primevue/textarea';
 
 import FloatLabel from 'primevue/floatlabel';
 
+
+import Menu from 'primevue/menu';
+import Vue3Toastify from 'vue3-toastify'
+import 'vue3-toastify/dist/index.css'
+
 // Then register it:
 
 
 const app = createApp(App);
 app.use(router);
-
+app.use(Vue3Toastify, {
+  autoClose: 3000,
+  position: 'top-right'
+})
 const MyPreset = definePreset(Material, {
     semantic: {
         primary: {
@@ -73,6 +81,9 @@ app.component('Dropdown', Dropdown);
 app.component('Select', Select);
 app.component('Textarea', Textarea);
 app.component('FloatLabel', FloatLabel);
+app.component('Menu', Menu);
+
+
 
 
 
