@@ -4,11 +4,13 @@ import UserManagement from '@/views/UserManagement.vue';
 import Login from '@/views/Login.vue';
 import Home from '@/views/Home.vue';
 import Phonetest from '@/views/Phonetest.vue';
+import Logout from '@/views/logout.vue';
 
 const routes = [
     {
         path: '/',
         component: AppLayout, // Wrap main routes inside layout
+        meta: { requiresAuth: true },
         children: [
             {
                 path: 'home',
@@ -26,6 +28,12 @@ const routes = [
                 path: 'phone', // Fix path
                 name: 'phone',
                 component: Phonetest,
+                meta: { requiresAuth: true }
+            },
+            {
+                path: 'logout',
+                name: 'Logout',
+                component: Logout,
                 meta: { requiresAuth: true }
             }
         ]

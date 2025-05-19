@@ -25,7 +25,7 @@ const model = ref([
             {
                 label: 'Logout',
                 icon: 'pi pi-fw pi-chart-pie',
-                to: '/login'
+                to: '/logout'
             }
             
             
