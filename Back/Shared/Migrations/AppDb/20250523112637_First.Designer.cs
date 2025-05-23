@@ -12,7 +12,7 @@ using Shared.Context;
 namespace Shared.Migrations.AppDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20250523085224_First")]
+    [Migration("20250523112637_First")]
     partial class First
     {
         /// <inheritdoc />
@@ -82,6 +82,11 @@ namespace Shared.Migrations.AppDb
                     b.Property<int>("PlanType")
                         .HasColumnType("integer")
                         .HasColumnName("P_TYPE");
+
+                    b.Property<string>("PlannerName")
+                        .IsRequired()
+                        .HasColumnType("text")
+                        .HasColumnName("P_Name");
 
                     b.HasKey("Id");
 
@@ -163,7 +168,7 @@ namespace Shared.Migrations.AppDb
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("TM_TIME");
 
-                    b.Property<TimeSpan>("TotalHours")
+                    b.Property<TimeSpan?>("TotalHours")
                         .HasColumnType("interval")
                         .HasColumnName("TM_TOTALHOURS");
 

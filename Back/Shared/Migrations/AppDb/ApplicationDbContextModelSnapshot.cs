@@ -165,13 +165,8 @@ namespace Shared.Migrations.AppDb
                         .HasColumnType("timestamp with time zone")
                         .HasColumnName("TM_TIME");
 
-<<<<<<< Updated upstream
-                    b.Property<TimeSpan>("TotalHours")
-                        .HasColumnType("interval")
-=======
                     b.Property<TimeSpan?>("TotalHours")
-                        .HasColumnType("time")
->>>>>>> Stashed changes
+                        .HasColumnType("interval")
                         .HasColumnName("TM_TOTALHOURS");
 
                     b.Property<int>("Type")

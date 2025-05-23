@@ -43,6 +43,7 @@ namespace Shared.Migrations.AppDb
                 columns: table => new
                 {
                     P_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    P_Name = table.Column<string>(type: "text", nullable: false),
                     P_TYPE = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
@@ -266,7 +267,7 @@ namespace Shared.Migrations.AppDb
                     TM_TIME = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
                     TM_TYPE = table.Column<int>(type: "integer", nullable: false),
                     TM_ACTIV = table.Column<bool>(type: "boolean", nullable: false),
-                    TM_TOTALHOURS = table.Column<TimeSpan>(type: "interval", nullable: false)
+                    TM_TOTALHOURS = table.Column<TimeSpan>(type: "interval", nullable: true)
                 },
                 constraints: table =>
                 {
