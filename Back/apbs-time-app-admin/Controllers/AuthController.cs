@@ -39,20 +39,20 @@ public class AuthController : ControllerBase
     //[HttpPost("register")]
     //public async Task<IActionResult> Register([FromBody] RegisterModel model)
     //{
-    //    var userRegister = await _userService.RegisterAsync(new User
-    //    {
-    //        Username = model.Username,
+    //    var userRegister = await _userService.RegisterAsync(new User)
+    //   {
+    //       Username = model.Username,
     //        Email = model.Email
     //    }, model.Password);
 
     //    if (userRegister)
     //    {
-    //        return Ok();
+    //       return Ok();
     //    }
     //    else
-    //    {
+    //   {
     //        return BadRequest();
-    //    }
+    //   }
     //}
 
     //private string GenerateJwtToken(User user)

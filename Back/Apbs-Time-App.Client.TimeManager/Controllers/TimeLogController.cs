@@ -1,10 +1,8 @@
-﻿
-    using Microsoft.AspNetCore.Mvc;
-    using Shared.Services;
-    using Shared.Models;
-    using Shared.DTOs;
-    using Microsoft.Extensions.Logging;
-    using Microsoft.AspNetCore.Authorization;
+﻿using Microsoft.AspNetCore.Mvc;
+using Shared.Services;
+using Shared.Models;
+using Shared.DTOs;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Apbs_Time_App.Client.TimeManager.Controllers
 {
@@ -12,11 +10,11 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
         [Route("api/timelog")]
         public class TimeLogController : ControllerBase
         {
-            private readonly TimeLogService _timeLogService;
+            private readonly ITimeLogService _timeLogService;
             private readonly ILogger<TimeLogController> _logger;
         private readonly IExxception _ex;
             
-            public TimeLogController(TimeLogService timeLogService, ILogger<TimeLogController> logger, IExxception ex)
+            public TimeLogController(ITimeLogService timeLogService, ILogger<TimeLogController> logger, IExxception ex)
             {
                 _timeLogService = timeLogService;
                 _logger = logger;
@@ -39,23 +37,24 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
                 }
             }
 
-            [HttpPost("pause/{accountId}")]
-            [Authorize]
-            public ActionResult PauseTracking(Guid accountId)
+        [HttpPost("pause/{accountId}")]
+        [Authorize]
+        public ActionResult PauseTracking(Guid accountId)
+        {
+            var result = _timeLogService.PauseTracking(accountId);
+            if (result.Success)
             {
-                var result = _timeLogService.PauseTracking(accountId);
-                if (result.Success)
-                {
-                    return Ok("Tracking paused successfully.");
-                }
-                else
-                {
-                    _logger.LogWarning(_ex.Message);
-                    return BadRequest(_ex.Message);
-                }
+                return Ok("Tracking paused successfully.");
             }
+            else
+            {
+                var errorMessage = result.Exception?.Message ?? "An error occurred while pausing tracking.";
+                _logger.LogWarning(errorMessage);
+                return BadRequest(errorMessage);
+            }
+        }
 
-            [HttpPost("stop/{accountId}")]
+        [HttpPost("stop/{accountId}")]
             [Authorize]
             public ActionResult StopTracking(Guid accountId)
             {
@@ -78,9 +77,13 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
                 var logs = _timeLogService.GetLogs(accountId);
                 if (logs == null || logs.Count == 0)
                 {
-                    return NotFound("No logs found.");
+                    return Ok("No logs found.");
                 }
-                return Ok(logs);
+                else
+                {
+                    return Ok(logs);
+                }
+                
             }
 
             [HttpPut("update/{logId}")]

@@ -2,6 +2,7 @@
 using Shared.Services;
 using System.IdentityModel.Tokens.Jwt;
 
+
 namespace Shared.Middleware;
 
 public class TenantResolver

@@ -32,8 +32,8 @@
         <Column field="reason" header="Reason" sortable />
         <Column :exportable="false" style="min-width: 12rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-check-circle" class="p-button-success p-button-sm mr-2" @click="acceptRequest(slotProps.data)" />
-            <Button icon="pi pi-times-circle" class="p-button-warning p-button-sm" @click="denyRequest(slotProps.data)" />
+            <Button icon="pi pi-check-circle" class="p-button-success p-button-sm mr-2" @click="showConfirmDialog(slotProps.data, 'accept')" />
+            <Button icon="pi pi-times-circle" class="p-button-danger p-button-sm" @click="showConfirmDialog(slotProps.data, 'deny')" />
           </template>
         </Column>
         <template #empty>
@@ -48,6 +48,28 @@
       @update:visible="dialogVisible = $event"
       @save="handleSave"
     />
+
+    <!-- Confirmation Dialog -->
+    <Dialog 
+      v-model:visible="confirmDialogVisible" 
+      header="Confirm Action" 
+      :modal="true" 
+      :closable="false"
+      :style="{ width: '400px' }"
+    >
+      <div class="confirmation-content">
+        <p>Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request?</p>
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="confirmDialogVisible = false" />
+        <Button 
+          :label="confirmAction === 'accept' ? 'Approve' : 'Deny'" 
+          :icon="confirmAction === 'accept' ? 'pi pi-check' : 'pi pi-times'" 
+          :class="confirmAction === 'accept' ? 'p-button-success' : 'p-button-danger'" 
+          @click="confirmActionHandler" 
+        />
+      </template>
+    </Dialog>
   </div>
 </template>
 
@@ -58,12 +80,16 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
 import LeaveRequestDialog from './Componant/LeaveRequestDialog.vue'
 
 const leaveRequests = ref([])
 const dialogVisible = ref(false)
 const searchQuery = ref('')
 const userId = ref(null)
+const confirmDialogVisible = ref(false)
+const confirmAction = ref('')
+const selectedRequest = ref(null)
 
 const filteredRequests = computed(() => {
   // First, filter by userId to show only the logged-in user's leave requests
@@ -138,6 +164,23 @@ const handleSave = async () => {
   console.log('Handling save from dialog')
   await fetchLeaveRequests()
   closeDialog()
+}
+
+const showConfirmDialog = (request, action) => {
+  selectedRequest.value = request
+  confirmAction.value = action
+  confirmDialogVisible.value = true
+}
+
+const confirmActionHandler = async () => {
+  if (confirmAction.value === 'accept') {
+    await acceptRequest(selectedRequest.value)
+  } else if (confirmAction.value === 'deny') {
+    await denyRequest(selectedRequest.value)
+  }
+  confirmDialogVisible.value = false
+  selectedRequest.value = null
+  confirmAction.value = ''
 }
 
 const acceptRequest = async (request) => {
@@ -227,5 +270,9 @@ h2 {
 
 .field {
   margin-bottom: 1.5rem;
+}
+
+.confirmation-content {
+  padding: 1rem;
 }
 </style>
