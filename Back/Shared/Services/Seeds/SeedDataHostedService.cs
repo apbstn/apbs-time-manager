@@ -18,17 +18,23 @@ public class SeedDataHostedService : IHostedService
     {
         using (var scope = _serviceProvider.CreateScope())
         {
-            var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
+            try { 
+                var userService = scope.ServiceProvider.GetRequiredService<IUserService>();
 
-            // Create the user
-            var adminUser = new User
+                // Create the user
+                var adminUser = new User
+                {
+                    Username = "admin@example.com",
+                    Email = "admin@example.com",
+                    IsAdmin = true
+                };
+
+                await userService.RegisterAsync(adminUser, "123456");
+            }
+            catch(Exception ex)
             {
-                Username = "admin@example.com",
-                Email = "admin@example.com",
-                IsAdmin = true
-            };
-
-            await userService.RegisterAsync(adminUser, "123456");
+                Console.WriteLine(ex.ToString());
+            }
         }
     }
 

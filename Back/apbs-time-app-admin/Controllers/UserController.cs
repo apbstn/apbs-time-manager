@@ -44,7 +44,7 @@ namespace apbs_time_app_admin.Controllers
 
             var result = await _userService.ResetPass(request);
 
-            return Ok(result);
+            return Ok(new{result, request.Password });
         }
     }
 }

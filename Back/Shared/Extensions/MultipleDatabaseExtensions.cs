@@ -43,7 +43,7 @@ public static class MultipleDatabaseExtensions
                 }
                 catch(Exception ex)
                 {
-                    
+                    Console.WriteLine(ex.ToString());
                 }
             }
         }

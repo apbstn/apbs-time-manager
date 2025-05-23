@@ -18,7 +18,7 @@ public class TenantDbContextFactory : IDesignTimeDbContextFactory<TenantDbContex
         string connectionString = configuration.GetConnectionString("DefaultConnection");
 
         DbContextOptionsBuilder<TenantDbContext> optionsBuilder = new();
-        _ = optionsBuilder.UseSqlServer(connectionString);
+        _ = optionsBuilder.UseNpgsql(connectionString);
         return new TenantDbContext(optionsBuilder.Options);
     }
 }

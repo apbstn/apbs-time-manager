@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shared.Context;
@@ -11,9 +12,11 @@ using Shared.Context;
 namespace Shared.Migrations.AppDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250523085224_First")]
+    partial class First
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -79,11 +82,6 @@ namespace Shared.Migrations.AppDb
                     b.Property<int>("PlanType")
                         .HasColumnType("integer")
                         .HasColumnName("P_TYPE");
-
-                    b.Property<string>("PlannerName")
-                        .IsRequired()
-                        .HasColumnType("text")
-                        .HasColumnName("P_Name");
 
                     b.HasKey("Id");
 

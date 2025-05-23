@@ -6,7 +6,7 @@ services:
       context: .
       dockerfile: apbs-time-app/Dockerfile
     depends_on:
-        - sqlserver
+        - postgres
         - apbs-time-app.client.timemanager
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
@@ -17,6 +17,8 @@ services:
     build:
       context: .
       dockerfile: Apbs-Time-App.Client.TimeManager/Dockerfile
+    depends_on:
+        - apbs-time-app-admin
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
 
@@ -42,21 +44,38 @@ services:
         - 58169:8080
         - 58170:8081
     depends_on:
-        - sqlserver
+        - postgres
     environment:
       - ASPNETCORE_ENVIRONMENT=Docker
       - DefaultConnection=Server=sqlserver;Database=TenantDB;User=sa;Password=sa12345@;TrustServerCertificate=True;Authentication=SqlPassword;
   
-  sqlserver:
-      image: mcr.microsoft.com/mssql/server:2022-latest
-      container_name: sqlserver
-      environment:
-        ACCEPT_EULA: "Y"
-        MSSQL_SA_PASSWORD: "sa12345@"
-      ports:
-        - "9632:1433"
-      volumes:
-        - sqlserverdata:/var/opt/mssql
+  # sqlserver:
+  #     image: mcr.microsoft.com/mssql/server:2022-latest
+  #     container_name: sqlserver
+  #     environment:
+  #       ACCEPT_EULA: "Y"
+  #       MSSQL_SA_PASSWORD: "sa12345@"
+  #     ports:
+  #       - "9632:1433"
+  #     volumes:
+  #       - sqlserverdata:/var/opt/mssql
+   
+  postgres:
+    image: postgres
+    restart: always
+    ports:
+        - 5432:5432
+    environment:
+      POSTGRES_DB: time
+      POSTGRES_USER: yk
+      POSTGRES_PASSWORD: yk12345@
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready"]
+      interval: 1s
+      timeout: 5s
+      retries: 10 
+    volumes:
+      - pgdata:/var/lib/postgresql/data 
 
   mailhog:
     container_name: mailhog
@@ -67,6 +86,6 @@ services:
 
 
 volumes:
-  sqlserverdata:
+  pgdata:
 
 

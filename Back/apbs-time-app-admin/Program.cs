@@ -30,11 +30,11 @@ builder.Services.AddControllers();
 builder.Services.AddDbContext<ApplicationDbContext>(
     options => options
     .UseLazyLoadingProxies()
-    .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<TenantDbContext>(
     options => options
     .UseLazyLoadingProxies()
-    .UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    .UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.Configure<SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 builder.Services.AddTransient<IMailService, SmtpMailService>();
@@ -45,8 +45,6 @@ builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
 builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 builder.Services.AddHostedService<SeedDataHostedService>();
-
-builder.Services.AddMigrateTenantDatabase(builder.Configuration);
 
 
 builder.Services.AddAuthentication("Bearer")
@@ -117,6 +115,16 @@ builder.Services.AddCors(options =>
 });
 
 var app = builder.Build();
+
+//using (var scope = app.Services.CreateScope())
+//{
+//    try
+//    {
+//        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//        dbContext.Database.Migrate();
+//    }
+//    catch { }
+//}
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())

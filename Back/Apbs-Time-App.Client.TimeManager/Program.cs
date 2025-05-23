@@ -6,6 +6,7 @@ using Shared.Extensions;
 using Shared.Middleware;
 using Shared.Services;
 using Shared.Services.Mailing;
+using Shared.Services.Planner;
 using Shared.Services.Seeds;
 
 
@@ -18,9 +19,9 @@ builder.Configuration
     .AddEnvironmentVariables();
 
 builder.Services.AddDbContext<ApplicationDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 builder.Services.AddDbContext<TenantDbContext>(
-    options => options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options => options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamService, TeamService>();
@@ -30,6 +31,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
+builder.Services.AddTransient<IFixedPlannerService, FixedPlannerService>();
 
 builder.Services.AddTransient<ITimeLogService, TimeLogService>();
 builder.Services.AddSingleton<IExxception, Exxception>();
@@ -90,9 +92,10 @@ app.MapControllers();
 app.UseCors("AllowAll");
 //using (var scope = app.Services.CreateScope())
 //{
-//    try { 
-//    var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
-//    dbContext.Database.Migrate();
+//    try
+//    {
+//        var dbContext = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
+//        dbContext.Database.Migrate();
 //    }
 //    catch { }
 //}

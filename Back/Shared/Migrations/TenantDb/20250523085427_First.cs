@@ -15,15 +15,15 @@ namespace Shared.Migrations.TenantDb
                 name: "ACCOUNT",
                 columns: table => new
                 {
-                    A_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    A_EMAIL = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    A_USERNAME = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    A_PASSWORD_HASH = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    A_SEED = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    A_ACTIVE = table.Column<bool>(type: "bit", nullable: false),
-                    A_REGISTRED = table.Column<bool>(type: "bit", nullable: false),
-                    A_PHONE_NUMBER = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    IsAdmin = table.Column<bool>(type: "bit", nullable: false)
+                    A_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    A_EMAIL = table.Column<string>(type: "text", nullable: true),
+                    A_USERNAME = table.Column<string>(type: "text", nullable: true),
+                    A_PASSWORD_HASH = table.Column<string>(type: "text", nullable: true),
+                    A_SEED = table.Column<string>(type: "text", nullable: true),
+                    A_ACTIVE = table.Column<bool>(type: "boolean", nullable: false),
+                    A_REGISTRED = table.Column<bool>(type: "boolean", nullable: false),
+                    A_PHONE_NUMBER = table.Column<string>(type: "text", nullable: true),
+                    IsAdmin = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -34,11 +34,11 @@ namespace Shared.Migrations.TenantDb
                 name: "Tenant",
                 columns: table => new
                 {
-                    T_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    T_CODE = table.Column<string>(type: "nvarchar(450)", nullable: true),
-                    T_NAME = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    T_CONNECTION_STRING = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    J_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false)
+                    T_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    T_CODE = table.Column<string>(type: "text", nullable: true),
+                    T_NAME = table.Column<string>(type: "text", nullable: true),
+                    T_CONNECTION_STRING = table.Column<string>(type: "text", nullable: true),
+                    J_USER_ID = table.Column<Guid>(type: "uuid", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -55,15 +55,15 @@ namespace Shared.Migrations.TenantDb
                 name: "Invitation",
                 columns: table => new
                 {
-                    I_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    I_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: true),
-                    I_EMAIL = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    I_PHONE_NUMBER = table.Column<string>(type: "nvarchar(max)", nullable: true),
-                    I_TENANT_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    I_TOKEN = table.Column<string>(type: "nvarchar(max)", nullable: false),
-                    I_CREATED_AT = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    I_EXPIRES_AT = table.Column<DateTime>(type: "datetime2", nullable: false),
-                    I_IS_USED = table.Column<bool>(type: "bit", nullable: false)
+                    I_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    I_USER_ID = table.Column<Guid>(type: "uuid", nullable: true),
+                    I_EMAIL = table.Column<string>(type: "text", nullable: false),
+                    I_PHONE_NUMBER = table.Column<string>(type: "text", nullable: true),
+                    I_TENANT_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    I_TOKEN = table.Column<string>(type: "text", nullable: false),
+                    I_CREATED_AT = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    I_EXPIRES_AT = table.Column<DateTime>(type: "timestamp with time zone", nullable: false),
+                    I_IS_USED = table.Column<bool>(type: "boolean", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -80,10 +80,10 @@ namespace Shared.Migrations.TenantDb
                 name: "JOIN_TENANT_USER",
                 columns: table => new
                 {
-                    J_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    J_USER_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    J_TENANT_ID = table.Column<Guid>(type: "uniqueidentifier", nullable: false),
-                    J_USER_TENANT_ROLE = table.Column<int>(type: "int", nullable: false)
+                    J_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    J_USER_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    J_TENANT_ID = table.Column<Guid>(type: "uuid", nullable: false),
+                    J_USER_TENANT_ROLE = table.Column<int>(type: "integer", nullable: false)
                 },
                 constraints: table =>
                 {
@@ -106,8 +106,7 @@ namespace Shared.Migrations.TenantDb
                 name: "IX_ACCOUNT_A_EMAIL",
                 table: "ACCOUNT",
                 column: "A_EMAIL",
-                unique: true,
-                filter: "[A_EMAIL] IS NOT NULL");
+                unique: true);
 
             migrationBuilder.CreateIndex(
                 name: "IX_Invitation_I_TENANT_ID",
@@ -133,8 +132,7 @@ namespace Shared.Migrations.TenantDb
                 name: "IX_Tenant_T_CODE",
                 table: "Tenant",
                 column: "T_CODE",
-                unique: true,
-                filter: "[T_CODE] IS NOT NULL");
+                unique: true);
         }
 
         /// <inheritdoc />
