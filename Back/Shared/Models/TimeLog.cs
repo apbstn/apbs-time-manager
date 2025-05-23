@@ -30,7 +30,6 @@ public class TimeLog
     [Column("TM_ACTIV")]
     public bool Activ { get; set; } = true;
 
-    [Required]
     [Column("TM_TOTALHOURS")]
     public TimeSpan? TotalHours { get; set; } // Null until updated
 }

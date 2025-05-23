@@ -96,6 +96,8 @@ const onRowClick = async (event) => {
         // Step 6: Refresh
         console.log('Step 6: Refreshing the page')
         window.location.reload()
+        
+     
     } catch (err) {
         console.error('Error switching tenant:', err)
         error.value = 'Failed to switch tenant: ' + (err.response?.data?.message || err.message)
@@ -105,7 +107,6 @@ const onRowClick = async (event) => {
 }
 
 // Placeholder function (to be implemented if needed)
-
 
 // Load tenants from localStorage on mount
 onMounted(() => {

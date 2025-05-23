@@ -3,10 +3,10 @@ import { computed, reactive } from 'vue';
 const layoutConfig = reactive({
     primary: 'indigo',
     surface: null,
-    darkTheme: false,
+    darkTheme: false, // Keep the app in light theme
     menuMode: 'static',
     menuTheme: 'light',
-    topbarTheme: 'indigo',
+    topbarTheme: 'dark', // Use a dark topbar theme (if supported by your layout)
     menuProfilePosition: 'end'
 });
 

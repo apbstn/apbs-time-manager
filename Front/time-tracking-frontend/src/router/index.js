@@ -18,6 +18,7 @@ import EditCongé from '@/views/Edit Congé.vue';
 import Switch from '@/views/Switch.vue';
 import Logout from '@/views/logout.vue';
 import Settings from '@/views/settings.vue';
+import Register from '@/views/register.vue';
 
 
 const routes = [
@@ -33,13 +34,13 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: 'Time-Tracking', // Fix path
+                path: 'Time-Tracking',
                 name: 'TimeTracking',
                 component: TimeTracking,
                 meta: { requiresAuth: true }
             },
             {
-                path: 'plan', // Fix path
+                path: 'plan',
                 name: 'plan',
                 component: Planning,
                 meta: { requiresAuth: true }
@@ -51,14 +52,14 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: 'employe', // Fix path
+                path: 'employe',
                 name: 'employe',
                 component: Employe,
                 meta: { requiresAuth: true }
             },
             {
                 path: 'listdemande',
-                name: 'List De demande',
+                name: 'ListDeDemande',
                 component: ListDemandeEmploye,
                 meta: { requiresAuth: true }
             },
@@ -66,31 +67,31 @@ const routes = [
                 path: 'conges',
                 name: 'conges',
                 component: Conges,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             },
             {
                 path: 'edit',
                 name: 'edit',
                 component: EditCongé,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             },
             {
                 path: 'Switch',
                 name: 'Switch',
                 component: Switch,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             },
             {
                 path: 'logout',
                 name: 'logout',
                 component: Logout,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             },
             {
                 path: 'settings',
                 name: 'settings',
                 component: Settings,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             }
         ]
     },
@@ -98,7 +99,12 @@ const routes = [
         path: '/login',
         name: 'Login',
         component: Login
-    } // Keep login separate
+    },
+    {
+        path: '/register',
+        name: 'Register',
+        component: Register
+    }
 ];
 
 const router = createRouter({
@@ -111,12 +117,12 @@ const router = createRouter({
 
 router.beforeEach((to, from, next) => {
     const isLoggedIn = !!localStorage.getItem('accessToken');
-  
+
     if (to.meta.requiresAuth && !isLoggedIn) {
-      next('/login'); // ✅ Redirect to login
+        next('/login');
     } else {
-      next(); // ✅ Allow navigation
+        next();
     }
-  });
+});
 
 export default router;

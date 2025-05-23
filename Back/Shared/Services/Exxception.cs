@@ -2,22 +2,16 @@
 using Microsoft.AspNetCore.Diagnostics;
 using Microsoft.AspNetCore.Http;
 
-namespace Shared.Services
+namespace Shared.Services;
+
+public class Exxception : IExxception
 {
-    public class Exxception : IExceptionHandler, IExxception
-    {
-        public string? Message { get; set; }
+    public string Message { get; set; } = string.Empty; // Initialize to empty string
 
-        public ValueTask<bool> TryHandleAsync(HttpContext httpContext, Exception exception, CancellationToken cancellationToken)
-        {
-            // Implementation required by IExceptionHandler
-            return ValueTask.FromResult(false);
-        }
-    }
+    public Exxception() { }
 
-    public class Result
+    public Exxception(string message)
     {
-        public bool Success { get; set; }
-        public Exxception? Exception { get; set; }
+        Message = message ?? string.Empty;
     }
 }

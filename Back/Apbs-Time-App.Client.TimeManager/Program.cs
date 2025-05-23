@@ -26,15 +26,15 @@ builder.Services.AddDbContext<TenantDbContext>(
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamService, TeamService>();
 
-
+builder.Services.AddScoped<ITimeLogService, TimeLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<IFixedPlannerService, FixedPlannerService>();
 
-builder.Services.AddTransient<ITimeLogService, TimeLogService>();
-builder.Services.AddSingleton<IExxception, Exxception>();
+
+builder.Services.AddScoped<IExxception, Shared.Services.Exxception>();
 
 builder.Services.AddTransient<ILeaveRequestService, LeaveRequestService>();
 builder.Services.AddTransient<ILeaveRequestRepository, LeaveRequestRepository>();

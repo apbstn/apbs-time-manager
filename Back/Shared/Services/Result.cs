@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace Shared.Services;
 
-public interface IExxception
+public class Result
 {
-    string Message { get; set; }
+    public bool Success { get; set; }
+    public IExxception Exception { get; set; }
 }

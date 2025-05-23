@@ -3,7 +3,7 @@ import { ref, computed } from 'vue';
 import AppMenuItem from './AppMenuItem.vue';
 
 // Get role from localStorage (make sure to set this during login)
-const userRole = ref(localStorage.getItem('role')); // 'owner' or 'employee'
+const userRole = ref(localStorage.getItem('role')); // e.g., 'Owner', 'employee', 'User', or null
 
 const fullMenu = ref([
     {
@@ -14,7 +14,7 @@ const fullMenu = ref([
                 label: 'Home',
                 icon: 'pi pi-fw pi-home',
                 to: '/home',
-                showFor: ['Owner', 'employee'] // Added home for employees
+                showFor: ['Owner', 'employee']
             },
             {
                 label: 'Time Tracking',
@@ -57,25 +57,33 @@ const fullMenu = ref([
                 icon: 'pi pi-fw pi-pencil',
                 to: '/edit',
                 showFor: ['employee']
+            },
+            {
+                label: 'Invitation',
+                icon: 'pi pi-fw pi-pencil',
+                to: '/invite',
+                showFor: ['Owner', 'employee', 'all'] // 'all' to indicate visibility regardless of role
             }
-            
         ]
     }
 ]);
 
 // Filter menu based on role
 const model = computed(() => {
-    if (!userRole.value) return []; // Show nothing if no role
-    
     return fullMenu.value.map(section => ({
         ...section,
-        items: section.items.filter(item => 
-            item.showFor.includes(userRole.value)
-        )
+        items: section.items.filter(item => {
+            // Always show items with 'all' in showFor
+            if (item.showFor.includes('all')) return true;
+            // If no role, only show items with 'all'
+            if (!userRole.value) return false;
+            // Otherwise, check if role matches (case-insensitive)
+            return item.showFor.some(role => 
+                role.toLowerCase() === userRole.value.toLowerCase()
+            );
+        })
     }));
 });
-
-
 </script>
 
 <template>
