@@ -1,7 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Shared.Models;
 using Shared.Services;
-using Shared.Models.Planners;
 
 namespace Shared.Context
 {
@@ -21,12 +20,7 @@ namespace Shared.Context
         public DbSet<TimeLog> TimeLogs { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<Team> Teams { get; set; }
-        public DbSet<PlannerBase> Planners { get; set; }
-        public DbSet<FixedPlanner> FixedPlanners { get; set; }
-        public DbSet<FlexiblePlanner> FlexiblePlanners { get; set; }
-        public DbSet<WeeklyPlanner> WeeklyPlanners { get; set; }
-        public DbSet<FixedDayPlanner> fixedDayPlanners { get; set; }
-        public DbSet<FlexibleDayPlanner> flexibleDayPlanners { get; set; }
+        public DbSet<Planner> Planners { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<User>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
@@ -34,7 +28,6 @@ namespace Shared.Context
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
-            modelBuilder.Entity<PlannerBase>().UseTptMappingStrategy();
         }
 
 

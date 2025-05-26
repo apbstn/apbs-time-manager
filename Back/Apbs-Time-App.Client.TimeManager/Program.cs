@@ -6,7 +6,6 @@ using Shared.Extensions;
 using Shared.Middleware;
 using Shared.Services;
 using Shared.Services.Mailing;
-using Shared.Services.Planner;
 using Shared.Services.Seeds;
 
 
@@ -31,7 +30,7 @@ builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
-builder.Services.AddTransient<IFixedPlannerService, FixedPlannerService>();
+builder.Services.AddTransient<IPlannerService, PlannerService>();
 
 
 builder.Services.AddScoped<IExxception, Shared.Services.Exxception>();
@@ -99,6 +98,5 @@ app.UseCors("AllowAll");
 //    }
 //    catch { }
 //}
-
 
 app.Run();

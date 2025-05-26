@@ -2,8 +2,8 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.PlannerDtos.Create;
 using Shared.DTOs.PlannerDtos.Create.Mapper;
-using Shared.Models.Planners;
-using Shared.Services.Planner;
+using Shared.DTOs.PlannerDtos.Response.Mapper;
+using Shared.Services;
 
 namespace Apbs_Time_App.Client.TimeManager.Controllers;
 
@@ -11,11 +11,11 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers;
 [ApiController]
 public class PlannerController : ControllerBase
 {
-    private readonly IFixedPlannerService _fixedPlannerService;
+    private readonly IPlannerService _PlannerService;
 
-    public PlannerController(IFixedPlannerService fixedPlannerService)
+    public PlannerController(IPlannerService PlannerService)
     {
-        _fixedPlannerService = fixedPlannerService;
+        _PlannerService = PlannerService;
     }
 
 
@@ -25,27 +25,21 @@ public class PlannerController : ControllerBase
     //    throw ();
     //}
 
-    [HttpPost("fixed")]
-    [Authorize]
-    public async Task<IActionResult> PostFixedPlanner(CreateFixedPlannerDto fixedPlanner)
-    {
-        var result = await _fixedPlannerService.CreatePlanner(fixedPlanner);
-        return Ok(result);
-    }
-
-
     [HttpPost]
     [Authorize]
-    public async Task<IActionResult> PostFlexiblePlanner(CreateFlexiblePlannerMapper flexiblePlanner)
+    public async Task<IActionResult> PostFixedPlanner(CreatePlannerDto fixedPlanner)
     {
-        return Ok();
+        ResponsePlannerMapper mapper = new();
+        var result = await _PlannerService.CreatePlanner(fixedPlanner);
+        
+        return Ok(mapper.ToDto(result));
     }
 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAll()
     {
-        var result = await _fixedPlannerService.GetAll();
+        var result = await _PlannerService.GetAll();
         return Ok(result);
     }
 }
