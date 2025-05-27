@@ -23,6 +23,6 @@ public class Planner
     public bool Saturday { get; set; }
     public bool Sunday { get; set; }
     public virtual ICollection<DayPlan> DayPlans { get; set; } = new List<DayPlan>();
-    public TimeOnly TotalWeeklyHours { get; set; }
+    public TimeOnly? TotalWeeklyHours { get; set; }
 
 }

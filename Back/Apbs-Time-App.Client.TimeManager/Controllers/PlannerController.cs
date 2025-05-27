@@ -18,26 +18,39 @@ public class PlannerController : ControllerBase
         _PlannerService = PlannerService;
     }
 
-
-    //[HttpGet]
-    //public IActionResult GetPlanners()
-    //{
-    //    throw ();
-    //}
-
     [HttpPost]
-    [Authorize]
+    [Authorize(Roles = "Owner")]
     public async Task<IActionResult> PostFixedPlanner(CreatePlannerDto fixedPlanner)
     {
-        ResponsePlannerMapper mapper = new();
-        var result = await _PlannerService.CreatePlanner(fixedPlanner);
-        
-        return Ok(mapper.ToDto(result));
+        try { 
+            ResponsePlannerMapper mapper = new();
+            var result = await _PlannerService.CreatePlanner(fixedPlanner);
+            return Ok(mapper.ToDto(result));
+        }
+        catch(Exception ex)
+        {
+            return Unauthorized(ex.ToString());
+        }
     }
 
     [HttpGet]
     [Authorize]
     public async Task<IActionResult> GetAll()
+    {
+        var result = await _PlannerService.GetAll();
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}")]
+    [Authorize(Roles = "Owner")]
+    public async Task<IActionResult> Delete(Guid id)
+    {
+        
+    }
+
+    [HttpGet("{id}")]
+    [Authorize]
+    public async Task<IActionResult> GetPlanner()
     {
         var result = await _PlannerService.GetAll();
         return Ok(result);

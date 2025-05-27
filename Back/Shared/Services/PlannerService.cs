@@ -2,6 +2,8 @@
 using Shared.Context;
 using Shared.DTOs.PlannerDtos.Create;
 using Shared.DTOs.PlannerDtos.Create.Mapper;
+using Shared.DTOs.PlannerDtos.Response;
+using Shared.DTOs.PlannerDtos.Response.Mapper;
 using Shared.Models;
 using Shared.Models.Enumerations;
 using System;
@@ -28,6 +30,10 @@ public class PlannerService : IPlannerService
         if (plannerEntity.PlanType != PlannerType.Weekly)
         {
             CalculateTotalWeeklyHours(plannerEntity);
+        }
+        else if(plannerEntity.TotalWeeklyHours == null)
+        {
+            throw new MissingFieldException("For a Weekly Planner you need to include the TotalWeeklyHours");
         }
 
 
@@ -62,5 +68,24 @@ public class PlannerService : IPlannerService
         }
 
         planner.TotalWeeklyHours = TimeOnly.FromTimeSpan(total);
+    }
+
+    public async Task<ResponsePlannerDto> GetById(Guid id)
+    {
+        var _mapper = new ResponsePlannerMapper();
+        var result = await _appContext.Planners
+            .FirstAsync(p => p.Id == id);
+
+        return _mapper.ToDto(result);
+    }
+
+    public async Task Delete(Guid id)
+    {
+        var planner = await _appContext.Planners.FindAsync(id);
+        if (planner != null)
+        {
+            _appContext.Planners.Remove(planner);
+            await _appContext.SaveChangesAsync();
+        }
     }
 }
