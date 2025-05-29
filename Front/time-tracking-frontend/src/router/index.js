@@ -19,6 +19,7 @@ import Switch from '@/views/Switch.vue';
 import Logout from '@/views/logout.vue';
 import Settings from '@/views/settings.vue';
 import Register from '@/views/register.vue';
+import Invitation from '@/views/invitation.vue';
 
 
 const routes = [
@@ -92,6 +93,12 @@ const routes = [
                 name: 'settings',
                 component: Settings,
                 meta: { requiresAuth: true }
+            },
+            {
+                path: 'invitation',
+                name: 'invitation',
+                component: Invitation,
+                meta: { requiresAuth: true}
             }
         ]
     },

@@ -10,4 +10,5 @@ public interface IInvitationService
     public Task<Invitation> CreateInviteNotExist(UserNoPassDto user, string tenantId);
     public InviteData ExtractInvitationData(string data);
     public Task<bool> CheckInvite(ConfirmInvite confirm);
+    public Task<List<Invitation>> GetInvitationsByTenantIdAsync(string tenantId);
 }

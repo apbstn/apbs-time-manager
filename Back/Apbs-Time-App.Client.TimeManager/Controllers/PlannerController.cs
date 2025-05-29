@@ -41,12 +41,12 @@ public class PlannerController : ControllerBase
         return Ok(result);
     }
 
-    [HttpDelete("{id}")]
-    [Authorize(Roles = "Owner")]
-    public async Task<IActionResult> Delete(Guid id)
-    {
+    //[HttpDelete("{id}")]
+    //[Authorize(Roles = "Owner")]
+    //public async Task<IActionResult> Delete(Guid id)
+    //{
         
-    }
+    //}
 
     [HttpGet("{id}")]
     [Authorize]
