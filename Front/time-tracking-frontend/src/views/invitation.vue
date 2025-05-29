@@ -1,0 +1,199 @@
+<template>
+  <div>
+    <div class="header-container">
+      <div class="flex justify-content-between align-items-center mb-2">
+        <h2>User Invitations</h2>
+        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+      </div>
+    </div>
+
+    <InputText v-model="searchQuery" placeholder="Search invitations..." class="search-input" />
+
+    <div class="card">
+      <DataTable :value="filteredInvitations" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
+        <Column field="email" header="Email" sortable />
+        <Column field="username" header="Username" sortable />
+        <Column field="phoneNumber" header="Phone Number" sortable />
+        <Column field="status" header="Status" sortable>
+          <template #body="{ data }">
+            {{ statusDisplay(data.status) }}
+          </template>
+        </Column>
+        <Column :exportable="false" style="min-width: 12rem" header="Actions">
+          <template #body="slotProps">
+            <Button icon="pi pi-trash" class="p-button-danger p-button-sm"
+              :disabled="slotProps.data.status === 1"
+              @click="confirmDelete(slotProps.data)" />
+          </template>
+        </Column>
+        <template #empty>
+          <div class="text-center text-muted">No invitations found</div>
+        </template>
+      </DataTable>
+    </div>
+
+    <!-- Invite Dialog -->
+    <InviteDialog 
+      :visible="dialogVisible" 
+      :userId="userId"
+      @update:visible="dialogVisible = $event"
+      @save="handleSave"
+    />
+  </div>
+</template>
+
+<script setup>
+import { ref, onMounted, computed, inject } from 'vue'
+import api from '@/api'
+import Button from 'primevue/button'
+import DataTable from 'primevue/datatable'
+import Column from 'primevue/column'
+import InputText from 'primevue/inputtext'
+import InviteDialog from './Componant/InviteDialog.vue'
+
+const invitations = ref([])
+const dialogVisible = ref(false)
+const searchQuery = ref('')
+const userId = ref(null)
+const deleteDialogRef = inject('deleteDialog')
+
+const filteredInvitations = computed(() => {
+    if (!searchQuery.value) return invitations.value
+    const query = searchQuery.value.toLowerCase()
+    return invitations.value.filter(invite =>
+        (invite.email && invite.email.toLowerCase().includes(query)) ||
+        (invite.username && invite.username.toLowerCase().includes(query)) ||
+        (invite.phoneNumber && invite.phoneNumber.toLowerCase().includes(query))
+    )
+})
+
+const statusDisplay = (status) => {
+    switch (status) {
+        case 0: return 'Pending'
+        case 1: return 'Sent'
+        default: return 'Unknown'
+    }
+}
+
+const decodeJwt = (token) => {
+    try {
+        const base64Url = token.split('.')[1]
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
+        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
+            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
+        }).join(''))
+        return JSON.parse(jsonPayload)
+    } catch (error) {
+        console.error('Error decoding JWT:', error)
+        return null
+    }
+}
+
+onMounted(async () => {
+    console.log('UserInvitations mounted')
+    const accessToken = localStorage.getItem('accessToken')
+    if (accessToken) {
+        const decoded = decodeJwt(accessToken)
+        if (decoded && decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) {
+            userId.value = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+            await fetchInvitations()
+        } else {
+            console.error('User ID not found in token')
+        }
+    } else {
+        console.error('Access token not found')
+    }
+})
+
+const fetchInvitations = async () => {
+    try {
+        if (!userId.value) {
+            throw new Error('User ID is not available')
+        }
+        const { data } = await api.get(`/api/invitations?userId=${userId.value}`)
+        invitations.value = data.map(invite => ({ ...invite, status: invite.status || 0 }))
+        console.log('Invitations fetched:', data)
+    } catch (error) {
+        console.error('Error fetching invitations:', error)
+    }
+}
+
+const openAddDialog = () => {
+    console.log('Opening add dialog')
+    dialogVisible.value = true
+}
+
+const handleSave = (newInvite) => {
+    console.log('Handling save from dialog:', newInvite)
+    invitations.value.push(newInvite)
+    dialogVisible.value = false
+}
+
+const confirmDelete = (invite) => {
+    console.log('Confirming delete for invite:', invite)
+    if (deleteDialogRef?.value?.showDeleteDialog) {
+        deleteDialogRef.value.showDeleteDialog({
+            item: invite,
+            type: 'invitation',
+            name: invite.email || `ID ${invite.id}`,
+            onConfirm: async () => {
+                try {
+                    console.log('Deleting invite:', invite)
+                    await api.delete(`/api/invitations/${invite.id}`)
+                    invitations.value = invitations.value.filter(i => i.id !== invite.id)
+                } catch (error) {
+                    console.error('Error deleting invitation:', error)
+                }
+            }
+        })
+    } else {
+        console.error('DeleteDialog not injected or showDeleteDialog not exposed')
+    }
+}
+</script>
+
+<style scoped>
+.header-container {
+    margin-bottom: 1.5rem;
+}
+
+.flex {
+    display: flex;
+}
+
+.justify-content-between {
+    justify-content: space-between;
+}
+
+.align-items-center {
+    align-items: center;
+}
+
+.search-input {
+    border: 1px solid #ced4da !important;
+    border-radius: 4px !important;
+    width: 300px;
+    margin-bottom: 1rem;
+}
+
+h2 {
+    font-size: 2rem;
+    margin: 0;
+}
+
+.add-button {
+    align-items: right;
+}
+
+.card {
+    margin-top: 1rem;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.text-muted {
+    color: #6c757d;
+}
+</style>

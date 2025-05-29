@@ -171,11 +171,39 @@ public class TimeLogService : ITimeLogService
 
     public List<TimeLog> GetLogs(Guid accountId)
     {
-        return _context.TimeLogs
-                       .Where(log => log.UserId == accountId)
-                       .OrderBy(log => log.Time)
-                       .AsNoTracking()
-                       .ToList();
+        // Get today's date in UTC (since database likely uses UTC)
+        var currentDate = DateTime.UtcNow.Date;
+
+        // Get all logs for the user
+        var allLogs = _context.TimeLogs
+            .Where(log => log.UserId == accountId)
+            .OrderBy(log => log.Time)
+            .AsNoTracking()
+            .ToList();
+
+        // Check for logs from today
+        var todayLogs = allLogs
+            .Where(log => log.Time.Date == currentDate)
+            .ToList();
+
+        if (todayLogs.Any())
+        {
+            return todayLogs;
+        }
+
+        // If no logs for today, find the last active log from yesterday
+        var yesterday = currentDate.AddDays(-1);
+        var lastActiveLog = allLogs
+            .Where(log => log.Time.Date == yesterday && log.Activ)
+            .OrderByDescending(log => log.Time)
+            .FirstOrDefault();
+
+        if (lastActiveLog != null)
+        {
+            return new List<TimeLog> { lastActiveLog };
+        }
+
+        return new List<TimeLog>(); // Return empty list if no relevant logs
     }
 
 

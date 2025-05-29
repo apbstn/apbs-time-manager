@@ -171,4 +171,10 @@ public class InvitationService : IInvitationService
             return false;
         }
     }
+    public async Task<List<Invitation>> GetInvitationsByTenantIdAsync(string tenantId)
+    {
+        return await _tenantDbContext.Invitations
+            .Where(i => i.TenantId == Guid.Parse(tenantId))
+            .ToListAsync();
+    }
 }

@@ -51,6 +51,8 @@ public class InvitationController : ControllerBase
         return Ok();
     }
 
+
+
     [HttpGet("check/{data}")]
     public async Task<IActionResult> CheckInviteData(string data)
     {
@@ -79,6 +81,17 @@ public class InvitationController : ControllerBase
             accessToken,
             role
         });
+    }
+
+    [HttpGet("{tenantId}")]
+    public async Task<IActionResult> GetInvitations(string tenantId)
+    {
+        var invitations = await _invitationService.GetInvitationsByTenantIdAsync(tenantId);
+        if (invitations == null || !invitations.Any())
+        {
+            return Ok("No Invitation were found!!");
+        }
+        return Ok(invitations);
     }
 
 }

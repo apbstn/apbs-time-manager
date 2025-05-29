@@ -32,6 +32,11 @@ import Menu from 'primevue/menu';
 import Vue3Toastify from 'vue3-toastify'
 import 'vue3-toastify/dist/index.css'
 
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import ColumnGroup from 'primevue/columngroup';   // optional
+import Row from 'primevue/row';   
+
 // Then register it:
 
 
@@ -81,6 +86,10 @@ app.component('Dropdown', Dropdown);
 app.component('Select', Select);
 app.component('Textarea', Textarea);
 app.component('FloatLabel', FloatLabel);
+app.component('DataTable', DataTable);
+app.component('Column', Column);
+app.component('ColumnGroup', ColumnGroup);
+app.component('Row', Row);
 app.component('Menu', Menu);
 
 

@@ -61,7 +61,7 @@ const fullMenu = ref([
             {
                 label: 'Invitation',
                 icon: 'pi pi-fw pi-pencil',
-                to: '/invite',
+                to: '/invitation',
                 showFor: ['Owner', 'employee', 'all'] // 'all' to indicate visibility regardless of role
             }
         ]
