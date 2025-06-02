@@ -41,7 +41,7 @@ public class TenantService : ITenantService
         Tenant tenant = new()
         {
             Name = request.TenantName,
-            Code = request.Code,
+            //Code = request.Code,
             ConnectionString = newConnectionString,
             UserId = us.Id
         };
@@ -67,7 +67,7 @@ public class TenantService : ITenantService
             if (dbContext.Database.GetPendingMigrations().Any())
             {
                 Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine($"Applying ApplicationDB Migrations for New '{request.Code}' tenant.");
+                //Console.WriteLine($"Applying ApplicationDB Migrations for New '{request.Code}' tenant.");
                 Console.ResetColor();
                 dbContext.Database.Migrate();
             }
@@ -106,9 +106,9 @@ public class TenantService : ITenantService
         return tenant;
     }
 
-    public async Task<PaginatedResponse<ResponseTenantDto>> GetAll(int pageNumber, int pageSize = 10)
+    public async Task<PaginatedResponse<ResponseTenantDto>> GetAll(/*int pageNumber, int pageSize = 10*/)
     {
-        int itemsToSkip = (pageNumber - 1) * pageSize;
+        //int itemsToSkip = (pageNumber - 1) * pageSize;
 
         // Get total count of items
         int totalCount = await _context.Tenants.CountAsync();
@@ -118,15 +118,15 @@ public class TenantService : ITenantService
         var items = await _context.Tenants
             .Include(t=> t.Owner)
             .OrderBy(t => t.Id)
-            .Skip(itemsToSkip)
-            .Take(pageSize)
+            //.Skip(itemsToSkip)
+            //.Take(pageSize)
             .Select(t => mapper.ToResponseTenantDto(t))
             .ToListAsync();
 
         return new PaginatedResponse<ResponseTenantDto>
         {
-            PageNumber = pageNumber,
-            PageSize = pageSize,
+            //PageNumber = pageNumber,
+            //PageSize = pageSize,
             TotalCount = totalCount,
             Items = items
         };

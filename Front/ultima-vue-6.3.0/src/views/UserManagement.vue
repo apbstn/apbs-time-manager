@@ -1,366 +1,418 @@
 <template>
-    <div class="card">
-        <!-- Add Tenant Button -->
-        <button @click="openAddPopup" style="margin-bottom: 20px;">Add Tenant</button>
-
-        <DataTable :value="users" tableStyle="min-width: 50rem">
-            <Column field="code" header="Code"></Column>
-            <Column field="tenantname" header="Tenant Name"></Column>
-            <Column field="email" header="Email"></Column>
-            <Column field="username" header="Username"></Column>
-            <Column field="phonenumber" header="Phone Number"></Column>
-            <Column :exportable="false" style="min-width: 12rem">
-                <template #body="slotProps">
-                    <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="openEditPopup(slotProps.data)" />
-                    <Button icon="pi pi-trash" outlined rounded severity="danger" @click="deleteUser(slotProps.data)" />
-                </template>
-            </Column>
-        </DataTable>
-
-        <!-- Edit Tenant Popup -->
-        <div v-if="isEditing" class="popup">
-            <div class="popup-content">
-                <h3>Edit Tenant</h3>
-                <input v-model="editUserData.tenantname" placeholder="Tenant Name" />
-                <input v-model="editUserData.email" placeholder="Email" />
-                <input v-model="editUserData.username" placeholder="Username" />
-                <input v-model="editUserData.phonenumber" placeholder="Phone Number" />
-                <button @click="saveEditedUser">Save</button>
-                <button @click="closeEditPopup">Cancel</button>
-            </div>
-        </div>
-
-        <!-- Add Tenant Popup -->
-        <div v-if="isAdding" class="popup">
-            <div class="popup-content">
-                <h3>Add Tenant</h3>
-                <input v-model="newTenantData.tenantname" placeholder="Tenant Name" />
-                <input v-model="newTenantData.email" placeholder="Email" />
-                <input v-model="newTenantData.username" placeholder="Username" />
-                <input v-model="newTenantData.phonenumber" placeholder="Phone Number" />
-                <button @click="saveNewTenant">Save</button>
-                <button @click="closeAddPopup">Cancel</button>
-            </div>
-        </div>
+  <div class="users-page">
+    <div class="header-container">
+      <Toolbar class="header-toolbar">
+        <template #start>
+          <div class="flex align-items-center">
+            <h2>Users</h2>
+            <span class="p-input-icon-left search-container">
+              <i class="pi pi-search" />
+              <InputText
+                v-model="searchQuery"
+                placeholder="Search users..."
+                class="search-input"
+              />
+            </span>
+          </div>
+        </template>
+        <template #end>
+          <Button
+            label="Add User"
+            icon="pi pi-plus"
+            class="add-button"
+            @click="showAddDialog = true"
+            outlined
+          />
+        </template>
+      </Toolbar>
     </div>
+
+    <Message
+      v-if="error"
+      severity="error"
+      :closable="true"
+      class="error-message"
+    >
+      {{ error }}
+    </Message>
+
+    <Message
+      v-if="successMessage"
+      severity="success"
+      :closable="true"
+      class="success-message"
+      @close="successMessage = null"
+    >
+      Password reset done with success
+    </Message>
+
+    <Dialog v-model:visible="showAddDialog" header="Add New User" :modal="true" class="p-fluid">
+      <div class="p-field">
+        <label for="email">Email</label>
+        <InputText id="email" v-model="newUser.email" />
+      </div>
+      <div class="p-field">
+        <label for="username">Username</label>
+        <InputText id="username" v-model="newUser.username" />
+      </div>
+      <div class="p-field">
+        <label for="phoneNumber">Phone Number</label>
+        <InputText id="phoneNumber" v-model="newUser.phoneNumber" />
+      </div>
+      <template #footer>
+        <Button label="Cancel" icon="pi pi-times" @click="showAddDialog = false" class="p-button-text" />
+        <Button label="Save" icon="pi pi-check" @click="addUser" class="p-button-text p-button-success" />
+      </template>
+    </Dialog>
+
+    <div class="card">
+      <DataTable
+        :value="filteredUsers"
+        :loading="loading"
+        tableStyle="min-width: 100%"
+        :showGridlines="true"
+        responsiveLayout="scroll"
+        class="p-datatable-sm"
+      >
+        <template #empty>
+          <div class="text-center text-muted">No users found</div>
+        </template>
+        <Column field="email" header="Email" sortable style="min-width: 200px">
+          <template #body="{ data }">
+            {{ data.email }}
+          </template>
+        </Column>
+        <Column
+          field="username"
+          header="Username"
+          sortable
+          style="min-width: 150px"
+        />
+        <Column
+          field="phoneNumber"
+          header="Phone Number"
+          sortable
+          style="min-width: 150px"
+        >
+          <template #body="{ data }">
+            {{ data.phoneNumber || 'N/A' }}
+          </template>
+        </Column>
+        <Column
+          :exportable="false"
+          header="Actions"
+          style="min-width: 120px; text-align: center"
+        >
+          <template #body="slotProps">
+            <Button
+              icon="pi pi-key"
+              class="p-button-rounded p-button-warning p-button-text"
+              @click="resetPassword(slotProps.data)"
+            />
+          </template>
+        </Column>
+      </DataTable>
+    </div>
+  </div>
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue'
-import api from '../api'
+import { ref, onMounted, computed, inject } from 'vue';
+import axios from 'axios';
+import Button from 'primevue/button';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import Message from 'primevue/message';
+import Toolbar from 'primevue/toolbar';
+import Dialog from 'primevue/dialog';
 
-const users = ref([])
-const isEditing = ref(false)
-const isAdding = ref(false)
-const editUserData = ref({})
-const newTenantData = ref({
-    code: '',
-    tenantname: '',
-    email: '',
-    username: '',
-    phonenumber: ''
-})
+const deleteDialogRef = inject('deleteDialog');
+const users = ref([]);
+const loading = ref(false);
+const error = ref(null);
+const searchQuery = ref('');
+const showAddDialog = ref(false);
+const newUser = ref({
+  email: '',
+  username: '',
+  phoneNumber: ''
+});
+const successMessage = ref(null);
 
-// Fetch tenants from backend
-const fetchTenants = async () => {
-    try {
-        const response = await api.get('/api/tenant')
-        users.value = response.data.map(t => ({
-            code: t.code || t.T_CODE,
-            tenantname: t.tenantName || t.T_NAME,
-            email: t.email || t.Email,
-            username: t.username || t.Username,
-            phonenumber: t.phoneNumber || t.PhoneNumber
-        }))
-    } catch (error) {
-        console.error('Error fetching tenants:', error.response?.data || error.message)
+const filteredUsers = computed(() => {
+  if (!searchQuery.value) return users.value;
+  const query = searchQuery.value.toLowerCase();
+  return users.value.filter(
+    (user) =>
+      user.email?.toLowerCase().includes(query) ||
+      user.username?.toLowerCase().includes(query)
+  );
+});
+
+const fetchUsers = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      throw new Error('No access token found');
     }
-}
 
-// --- Edit logic ---
-const openEditPopup = (user) => {
-    isEditing.value = true
-    editUserData.value = { ...user }
-}
+    const response = await axios.get('http://localhost:58169/api/user', {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        Accept: 'application/json'
+      }
+    });
 
-const closeEditPopup = () => {
-    isEditing.value = false
-    editUserData.value = {}
-}
+    users.value = response.data;
+  } catch (err) {
+    console.error('Error fetching users:', err);
+    error.value =
+      'Failed to fetch users: ' +
+      (err.response?.data?.message || err.message || 'Unknown error');
+  } finally {
+    loading.value = false;
+  }
+};
 
-const saveEditedUser = async () => {
-    try {
-        await api.put(`/api/tenant/${editUserData.value.code}`, {
-            tenantName: editUserData.value.tenantname,
-            email: editUserData.value.email,
-            username: editUserData.value.username,
-            phoneNumber: editUserData.value.phonenumber
-        })
+const addUser = async () => {
+  try {
+    loading.value = true;
+    error.value = null;
+    const token = localStorage.getItem('accessToken');
 
-        const index = users.value.findIndex(u => u.code === editUserData.value.code)
-        if (index !== -1) {
-            users.value[index] = { ...editUserData.value }
-        }
-
-        closeEditPopup()
-    } catch (error) {
-        console.error('Error updating tenant:', error.response?.data || error.message)
+    if (!token) {
+      throw new Error('No access token found');
     }
-}
 
-// --- Add logic ---
-const openAddPopup = () => {
-    isAdding.value = true
-    newTenantData.value = {
-        tenantname: '',
-        email: '',
-        username: '',
-        phonenumber: ''
+    const response = await axios.post('http://localhost:58169/api/user', newUser.value, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    });
+
+    users.value = [...users.value, response.data];
+    showAddDialog.value = false;
+    newUser.value = {
+      email: '',
+      username: '',
+      phoneNumber: ''
+    };
+  } catch (err) {
+    console.error('Error adding user:', err);
+    error.value =
+      'Failed to add user: ' +
+      (err.response?.data?.message || err.message || 'Unknown error');
+  } finally {
+    loading.value = false;
+  }
+};
+
+const resetPassword = async (user) => {
+  try {
+    loading.value = true;
+    error.value = null;
+    const token = localStorage.getItem('accessToken');
+
+    if (!token) {
+      throw new Error('No access token found');
     }
-}
 
-const closeAddPopup = () => {
-    isAdding.value = false
-}
+    const payload = {
+      email: user.email,
+      username: user.username,
+      phoneNumber: user.phoneNumber || ''
+    };
 
-const saveNewTenant = async () => {
-    try {
-        const response = await api.post('/api/tenant', {
-            code : newTenantData.value.code,
-            tenantName: newTenantData.value.tenantname,
-            email: newTenantData.value.email,
-            username: newTenantData.value.username,
-            phoneNumber: newTenantData.value.phonenumber
-        })
+    await axios.patch('http://localhost:58169/api/user/resetPass', payload, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        'Content-Type': 'application/json',
+        Accept: 'application/json'
+      }
+    });
 
-        users.value.push({
-            code: response.data.code || response.data.T_CODE,
-            tenantname: response.data.tenantName || response.data.T_NAME,
-            email: response.data.email || response.data.Email,
-            username: response.data.username || response.data.Username,
-            phonenumber: response.data.phoneNumber || response.data.PhoneNumber
-        })
+    successMessage.value = true;
+    setTimeout(() => (successMessage.value = null), 3000); // Auto-close after 3 seconds
+  } catch (err) {
+    console.error('Error resetting password:', err);
+    error.value =
+      'Failed to reset password: ' +
+      (err.response?.data?.message || err.message || 'Unknown error');
+  } finally {
+    loading.value = false;
+  }
+};
 
-        closeAddPopup()
-    } catch (error) {
-        console.error('Error adding tenant:', error.response?.data || error.message)
-    }
-}
-
-const deleteUser = (user) => {
-    console.log('Delete:', user)
-    // TODO: Implement delete logic here
-}
-
-onMounted(() => {
-    fetchTenants()
-})
+onMounted(fetchUsers);
 </script>
 
-
-<style>
-/* Layout for the entire page */
-.wrapper {
-    display: flex;
-    min-height: 100vh;
+<style scoped>
+.users-page {
+  width: 100%;
+  min-height: 100vh;
+  padding: 2rem;
+  background-color: #f9fafb;
+  box-sizing: border-box;
 }
 
-/* Navbar styles */
-.navbar {
-    width: 250px;
-    background-color: #2c3e50;
-    color: white;
-    padding: 30px 20px;
-    height: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    box-shadow: 2px 0 8px rgba(0, 0, 0, 0.1);
+.header-container {
+  margin-bottom: 2rem;
 }
 
-.navbar h3 {
-    margin-bottom: 40px;
-    font-size: 24px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+.header-toolbar {
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  border: none;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  padding: 1rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.navbar ul {
-    list-style-type: none;
-    padding: 0;
-    width: 100%;
+.header-toolbar:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
-.navbar ul li {
-    width: 100%;
-    margin: 10px 0;
+.flex {
+  display: flex;
 }
 
-.navbar ul li a {
-    display: block;
-    width: 100%;
-    padding: 12px;
-    background-color: #34495e;
-    color: white;
-    text-decoration: none;
-    text-align: center;
-    font-size: 16px;
-    border-radius: 4px;
-    transition: background-color 0.3s ease;
+.align-items-center {
+  align-items: center;
+  gap: 1.5rem;
 }
 
-.navbar ul li a:hover {
-    background-color: #1abc9c;
+.search-container {
+  display: flex;
+  align-items: center;
 }
 
-/* Main content styling */
-.container {
-    flex-grow: 1;
-    max-width: 900px;
-    margin: auto;
-    padding: 40px;
-    background-color: #f4f6f9;
-    border-radius: 8px;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+.search-input {
+  width: 250px;
+  border-radius: 6px;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+}
+
+.search-input:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #3b82f6;
+  border-color: #3b82f6;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background: #e6f0ff;
+}
+
+.add-button:disabled {
+  color: #d1d5db;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.card {
+  width: 100%;
+  padding: 1.5rem;
+  background: linear-gradient(145deg, #ffffff, #f1f5f9);
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
+}
+
+:deep(.p-datatable .p-datatable-thead > tr > th) {
+  background: #f1f5f9;
+  color: #1f2937;
+  font-weight: 600;
+  padding: 1rem;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr > td) {
+  padding: 0.75rem 1rem;
+  color: #1f2937;
 }
 
 h2 {
-    font-size: 28px;
-    color: #2c3e50;
-    margin-bottom: 20px;
-    text-transform: uppercase;
-    letter-spacing: 1px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: #1f2937;
+  letter-spacing: -0.025rem;
 }
 
-/* Input and button styling */
-input {
-    margin: 10px;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 100%;
-    box-sizing: border-box;
+.text-center {
+  text-align: center;
 }
 
-input:focus {
-    border-color: #1abc9c;
-    outline: none;
+.text-muted {
+  color: #6b7280;
+  font-style: italic;
+  font-size: 0.95rem;
 }
 
-button {
-    padding: 12px 20px;
-    background-color: #1abc9c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-    transition: background-color 0.3s ease;
-    width: 100%;
-    margin-top: 20px;
+.error-message {
+  margin: 1rem 0;
+  border-radius: 8px;
+  border-left: 4px solid #ef4444;
+  background-color: #fef2f2;
 }
 
-button:hover {
-    background-color: #16a085;
+.success-message {
+  margin: 1rem 0;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+  background-color: #d1fae5;
 }
 
-/* Table styling */
-table {
-    width: 100%;
-    border-collapse: collapse;
-    margin-top: 20px;
-    background-color: white;
-    border-radius: 8px;
-    overflow: hidden;
+:deep(.p-button.p-button-text.p-button-warning) {
+  color: #ef4444;
 }
 
-th,
-td {
-    padding: 15px;
-    text-align: left;
-    font-size: 16px;
-    border-bottom: 1px solid #ddd;
+:deep(.p-button.p-button-text.p-button-danger) {
+  color: #ef4444;
 }
 
-th {
-    background-color: #34495e;
-    color: white;
+:deep(.p-button.p-button-text) {
+  margin: 0 0.25rem;
 }
 
-td {
-    background-color: #f9f9f9;
+:deep(.p-dialog) {
+  width: 30rem;
 }
 
-td button {
-    padding: 8px 16px;
-    background-color: #e67e22;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 14px;
-    margin-right: 10px;
-    transition: background-color 0.3s ease;
+:deep(.p-field) {
+  margin-bottom: 1rem;
 }
 
-td button:hover {
-    background-color: #d35400;
+:deep(.p-field label) {
+  font-weight: 500;
+  color: #1f2937;
 }
 
-/* Popup styling */
-/* ... (use your existing styles here) ... */
-
-.popup {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    display: flex;
-    align-items: center;
-    justify-content: center;
+:deep(.p-button-success) {
+  color: #22c55e;
+  border-color: #22c55e;
 }
 
-.popup-content {
-    background: white;
-    padding: 30px;
-    border-radius: 8px;
-    box-shadow: 0 0 20px rgba(0, 0, 0, 0.2);
-    text-align: center;
-    max-width: 500px;
-    width: 100%;
-}
-
-.popup h3 {
-    font-size: 24px;
-    color: #2c3e50;
-    margin-bottom: 20px;
-}
-
-.popup input {
-    margin: 10px 0;
-    padding: 12px;
-    font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 100%;
-    box-sizing: border-box;
-}
-
-.popup button {
-    padding: 12px 20px;
-    margin-top: 10px;
-    background-color: #1abc9c;
-    color: white;
-    border: none;
-    border-radius: 5px;
-    cursor: pointer;
-    font-size: 16px;
-}
-
-.popup button:hover {
-    background-color: #16a085;
+:deep(.p-button-success:hover) {
+  background: #d1fae5;
 }
 </style>

@@ -14,13 +14,13 @@ const fullMenu = ref([
                 label: 'Home',
                 icon: 'pi pi-fw pi-home',
                 to: '/home',
-                showFor: ['Owner', 'employee']
+                showFor: ['Owner', 'User']
             },
             {
                 label: 'Time Tracking',
                 icon: 'pi pi-fw pi-stopwatch',
                 to: '/time-tracking',
-                showFor: ['Owner', 'employee']
+                showFor: ['Owner', 'User']
             },
             {
                 label: 'Plan',
@@ -44,7 +44,7 @@ const fullMenu = ref([
                 label: 'List Demande',
                 icon: 'pi pi-fw pi-list',
                 to: '/listdemande',
-                showFor: ['Owner', 'employee']
+                showFor: ['Owner', 'User']
             },
             {
                 label: 'Conges',
@@ -56,7 +56,7 @@ const fullMenu = ref([
                 label: 'Edit',
                 icon: 'pi pi-fw pi-pencil',
                 to: '/edit',
-                showFor: ['employee']
+                showFor: ['']
             },
             {
                 label: 'Invitation',

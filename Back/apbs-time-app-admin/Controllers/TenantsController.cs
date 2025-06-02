@@ -30,10 +30,10 @@ public class TenantsController : ControllerBase
 
     [Authorize]
     [HttpGet]
-    public async Task<IActionResult> GetAll(PaginationParameters param)
+    public async Task<IActionResult> GetAll(/*PaginationParameters param*/)
     {
         _logger.LogInformation("ZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ");
-        var result = await _tenantService.GetAll(param.PageNumber, param.PageSize);
+        var result = await _tenantService.GetAll(/*param.PageNumber, param.PageSize*/);
         return Ok(result);
     }
 

@@ -11,9 +11,17 @@
 
     <div class="card">
       <DataTable :value="filteredInvitations" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="email" header="Email" sortable />
-        <Column field="username" header="Username" sortable />
-        <Column field="phoneNumber" header="Phone Number" sortable />
+        <Column field="email" header="Email" sortable>
+            <template #body="{ data }">
+                {{ data.email || 'N/A' }}
+            </template>
+        </Column>
+        <Column field="phone_Number" header="Phone Number" sortable>
+            <template #body="{ data }">
+                {{ console.log('Phone Number Data:', data.phone_Number) }}
+                {{ data.phone_Number || 'N/A' }}
+            </template>
+        </Column>
         <Column field="status" header="Status" sortable>
           <template #body="{ data }">
             {{ statusDisplay(data.status) }}
@@ -55,6 +63,7 @@ const invitations = ref([])
 const dialogVisible = ref(false)
 const searchQuery = ref('')
 const userId = ref(null)
+const tenantId = ref(null)
 const deleteDialogRef = inject('deleteDialog')
 
 const filteredInvitations = computed(() => {
@@ -62,15 +71,14 @@ const filteredInvitations = computed(() => {
     const query = searchQuery.value.toLowerCase()
     return invitations.value.filter(invite =>
         (invite.email && invite.email.toLowerCase().includes(query)) ||
-        (invite.username && invite.username.toLowerCase().includes(query)) ||
-        (invite.phoneNumber && invite.phoneNumber.toLowerCase().includes(query))
+        (invite.phone_Number && invite.phone_Number.toLowerCase().includes(query))
     )
 })
 
 const statusDisplay = (status) => {
     switch (status) {
         case 0: return 'Pending'
-        case 1: return 'Sent'
+        case 1: return 'Used'
         default: return 'Unknown'
     }
 }
@@ -96,6 +104,7 @@ onMounted(async () => {
         const decoded = decodeJwt(accessToken)
         if (decoded && decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) {
             userId.value = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+            tenantId.value = decoded['tenant_id']
             await fetchInvitations()
         } else {
             console.error('User ID not found in token')
@@ -110,9 +119,10 @@ const fetchInvitations = async () => {
         if (!userId.value) {
             throw new Error('User ID is not available')
         }
-        const { data } = await api.get(`/api/invitations?userId=${userId.value}`)
-        invitations.value = data.map(invite => ({ ...invite, status: invite.status || 0 }))
-        console.log('Invitations fetched:', data)
+        const { data } = await api.get(`/api/auth/invite/${tenantId.value}`)
+        console.log('Raw API response:', data) // Debug
+        invitations.value = data.map(invite => ({ ...invite, status: invite.isUsed ? 1 : 0 }))
+        console.log('Mapped invitations:', invitations.value) // Debug
     } catch (error) {
         console.error('Error fetching invitations:', error)
     }
@@ -195,5 +205,10 @@ h2 {
 
 .text-muted {
     color: #6c757d;
+}
+
+:deep(.p-datatable .p-datatable-tbody td) {
+    white-space: nowrap;
+    overflow: visible;
 }
 </style>
