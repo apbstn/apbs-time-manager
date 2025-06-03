@@ -9,23 +9,18 @@ const model = ref([
         items: [
             {
                 label: 'Home',
-                icon: 'pi pi-fw pi-chart-pie',
+                icon: 'pi pi-fw pi-home',
                 to: '/home'
             },
             {
                 label: 'Tenant Management',
-                icon: 'pi pi-fw pi-chart-pie',
+                icon: 'pi pi-fw pi-desktop',
                 to: '/tenant-management'
             },
             {
                 label: 'Account Creation',
-                icon: 'pi pi-fw pi-chart-pie',
-                to: '/phone'
-            },
-            {
-                label: 'Logout',
-                icon: 'pi pi-fw pi-chart-pie',
-                to: '/logout'
+                icon: 'pi pi-fw pi-user',
+                to: '/user-management'
             }
             
             

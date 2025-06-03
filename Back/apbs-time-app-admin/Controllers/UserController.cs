@@ -7,6 +7,7 @@ using Shared.Services.Generator;
 
 namespace apbs_time_app_admin.Controllers
 {
+    [Authorize]
     [Route("api/user")]
     [ApiController]
     public class UserController : ControllerBase
@@ -17,15 +18,15 @@ namespace apbs_time_app_admin.Controllers
             _userService = userService;
         }
 
-        [Authorize]
+        
         [HttpGet]
-        public async Task<IActionResult> GetAll(PaginationParameters param) 
+        public async Task<IActionResult> GetAll(/*PaginationParameters param*/) 
         { 
-            var list = await _userService.GetUsers(param.PageNumber, param.PageSize);
+            var list = await _userService.GetUsers(/*param.PageNumber, param.PageSize*/);
             return Ok(list);
         }
 
-        [Authorize]
+   
         [HttpPost]
         public async Task<IActionResult> Post(UserDto request) 
         {
@@ -35,7 +36,7 @@ namespace apbs_time_app_admin.Controllers
             return Ok(result);
         }
 
-        [Authorize]
+
         [HttpPatch]
         [Route("resetPass")]
         public async Task<IActionResult> Patch(UserDto request)

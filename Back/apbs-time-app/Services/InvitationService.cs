@@ -102,8 +102,8 @@ public class InvitationService : IInvitationService
         var encryptedData = _encryption.EncryptString(combined);
         var urlEncodedData = Uri.EscapeDataString(encryptedData);
         var applicationUrl = inv.UserExists
-            ? $"https://localhost:5173/invite/exists?token={token}&data={urlEncodedData}"
-            : $"https://localhost:5173/invite/dontExists?token={token}&data={urlEncodedData}";
+            ? $"http://localhost:5173/invite/exists?token={token}&data={urlEncodedData}"
+            : $"http://localhost:5173/invite/dontExists?token={token}&data={urlEncodedData}";
         string body = $@"
         <!DOCTYPE html>
         <html>

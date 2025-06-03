@@ -20,6 +20,7 @@ import Logout from '@/views/logout.vue';
 import Settings from '@/views/settings.vue';
 import Register from '@/views/register.vue';
 import Invitation from '@/views/invitation.vue';
+import Invite from '@/views/Invite.vue';
 
 
 const routes = [
@@ -99,6 +100,11 @@ const routes = [
                 name: 'invitation',
                 component: Invitation,
                 meta: { requiresAuth: true}
+            },
+            {
+                path: 'invite/exists',
+                name: 'exists',
+                component: Invite
             }
         ]
     },
@@ -112,6 +118,7 @@ const routes = [
         name: 'Register',
         component: Register
     }
+    
 ];
 
 const router = createRouter({

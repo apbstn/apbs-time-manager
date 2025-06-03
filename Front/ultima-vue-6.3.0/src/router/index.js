@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
 import AppLayout from '@/layout/AppLayout.vue';
-import UserManagement from '@/views/UserManagement.vue';
+import UserManagement from '@/views/TenantManagement.vue';
 import Login from '@/views/Login.vue';
 import Home from '@/views/Home.vue';
-import Phonetest from '@/views/Phonetest.vue';
+import Phonetest from '@/views/UserManagement.vue';
 import Logout from '@/views/logout.vue';
 
 const routes = [
@@ -25,8 +25,8 @@ const routes = [
                 meta: { requiresAuth: true }
             },
             {
-                path: 'phone', // Fix path
-                name: 'phone',
+                path: 'user-management', // Fix path
+                name: 'user-management',
                 component: Phonetest,
                 meta: { requiresAuth: true }
             },

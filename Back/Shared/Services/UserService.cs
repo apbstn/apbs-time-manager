@@ -60,18 +60,17 @@ public class UserService : IUserService
         return password == decryptedPassword;
     }
 
-    public async Task<IEnumerable<UserNoPassDto>> GetUsers(int pageNumber, int pageSize = 10)
+    public async Task<IEnumerable<UserNoPassDto>> GetUsers(/*int pageNumber, int pageSize = 10*/)
     {
         var mapper = new UserMapper();
-        int itemsToSkip = (pageNumber - 1) * pageSize;
 
         // Get total count of items
         int totalCount = await _tenantDbContext.Users.CountAsync();
 
         var items = await _tenantDbContext.Users
             .OrderBy(t => t.Id)
-            .Skip(itemsToSkip)
-            .Take(pageSize)
+            //.Skip(itemsToSkip)
+            //.Take(pageSize)
             .Select(t => mapper.ToUserNoPassDto(t))
             .ToListAsync();
         return items;

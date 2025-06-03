@@ -10,60 +10,60 @@
   </div>
 </template>
 
-<script>
-import api from "../api";
+<script setup>
+import { ref } from 'vue'
+import { useRouter } from 'vue-router'
+import api from '@/api'
 
-export default {
-  data() {
-    return {
-      email: "",
-      password: "",
-      errorMessage: "",
-    };
-  },
-  methods: {
-    async login() {
-      try {
-        console.log("Sending login data:", this.email, this.password);
-        const response = await api.post("/api/auth/login", {
-          email: this.email,
-          password: this.password,
-        },
-          {
-            headers: {
-              'Content-Type': 'application/json'
-            }
-      });
+const email = ref('')
+const password = ref('')
+const errorMessage = ref('')
+const router = useRouter()
+
+const login = async () => {
+  try {
+    console.log('Sending login data:', email.value, password.value)
+
+    const response = await api.post('/api/auth/login', {
+      email: email.value,
       
-        // Verify if accessToken is present
-        if (response.data && response.data.token) {
+      password: password.value
+    }, {
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': '*/*'
+      }
+    })
+    localStorage.setItem('email', email.value);
+
+    // Check if token exists in response
+    if (response.data && response.data.token) {
           
           // Store tokens in localStorage
           localStorage.setItem("accessToken", response.data.token.result);
-          localStorage.setItem("refreshToken", response.data.Token);
-          localStorage.setItem("token", response.data.token.result);
 
+      localStorage.setItem('username', response.data.username)
+     
 
-          // Set Authorization header
-          api.defaults.headers.common["Authorization"] = `Bearer ${response.data.result}`;
+      // Store tenants (check for both 'tenants' and 'lisTen' to handle potential naming)
+      
+      // Set Authorization header for future API calls
+      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.accessToken}`
 
-          // Redirect to timetracking page
-          this.$router.push("/home");
-        } else {
-          console.error("No access token found in response!");
-          this.errorMessage = "Login failed: No token received.";
-        }
-      } catch (error) {
-        console.error("Login Error:", error.response?.data || error.message);
-        this.errorMessage = error.response?.data?.message || "Invalid credentials!";
-      }
-    },
-  },
-};
+      // Redirect to Switch page to display tenants
+      router.push('/phone')
+    } else {
+      console.error('No access token found in response!')
+      errorMessage.value = 'Login failed: No token received.'
+    }
+  } catch (error) {
+    console.error('Login Error:', error.response?.data || error.message)
+    errorMessage.value = error.response?.data?.message || 'Invalid credentials!'
+  }
+}
 </script>
 
 <style scoped>
-/* Centering the login container */
 .login-container {
   display: flex;
   justify-content: center;
@@ -71,7 +71,6 @@ export default {
   height: 100vh;
   flex-direction: column;
   background-color: #f5f5f5;
-  /* Optional: set a background color */
 }
 
 h2 {
@@ -84,7 +83,6 @@ h2 {
   display: flex;
   flex-direction: column;
   width: 300px;
-  /* You can adjust the width as needed */
   padding: 20px;
   background-color: #fff;
   border-radius: 8px;
