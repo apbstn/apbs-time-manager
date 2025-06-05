@@ -100,8 +100,8 @@
         </Column>
         <Column
           :exportable="false"
-          header="Actions"
-          style="min-width: 120px; text-align: center"
+          header="Reset Password"
+          style="min-width: 20px; max-width: 40px; text-align: center"
         >
           <template #body="slotProps">
             <Button

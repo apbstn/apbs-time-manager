@@ -164,6 +164,8 @@ public class InvitationService : IInvitationService
 
         if (inv.Token == confirm.Token)
         {
+            inv.IsUsed = true; // Fix for CS0120: Accessing the instance property instead of the static property.  
+            await _tenantDbContext.SaveChangesAsync(); // Ensure changes are saved to the database.  
             return true;
         }
         else
