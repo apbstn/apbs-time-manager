@@ -1,132 +1,207 @@
-<template>
-  <div class="register-container">
-    <h2>Register</h2>
-    <form @submit.prevent="register" class="register-form">
-      <input v-model="username" type="text" placeholder="Username" required />
-      <input v-model="email" type="email" placeholder="Email" required />
-      <input v-model="phoneNumber" type="tel" placeholder="Phone Number" required />
-      <input v-model="password" type="password" placeholder="Password" required />
-      <input v-model="confirmPassword" type="password" placeholder="Confirm Password" required />
-      <button type="submit">Register</button>
-    </form>
-    <p v-if="errorMessage" class="error-message">{{ errorMessage }}</p>
-  </div>
-</template>
-
 <script setup>
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
-import api from '@/api'
+import { ref } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
+import api from '@/api'; // Axios instance
 
-const username = ref('')
-const email = ref('')
-const phoneNumber = ref('')
-const password = ref('')
-const confirmPassword = ref('')
-const errorMessage = ref('')
-const router = useRouter()
+const router = useRouter();
+const route = useRoute();
 
-const register = async () => {
-  // Validate password match
-  if (password.value !== confirmPassword.value) {
-    errorMessage.value = 'Passwords do not match!'
-    return
+const email = ref(route.query.email || '');
+const username = ref(route.query.username || '');
+const phoneNumber = ref(route.query.phoneNumber || '');
+const tenantId = ref(route.query.tenantId || '');
+const password = ref('');
+const errorMessage = ref('');
+
+const submitForm = async () => {
+  errorMessage.value = ''; // Clear previous errors
+
+  if (!password.value) {
+    errorMessage.value = 'Password is required';
+    console.warn('Password field is empty');
+    return;
+  }
+
+  const token = localStorage.getItem('inviteToken');
+  if (!token) {
+    errorMessage.value = 'No invitation token found';
+    console.warn('inviteToken missing in localStorage');
+    return;
   }
 
   try {
-    console.log('Sending registration data:', username.value, email.value, phoneNumber.value, password.value)
+    console.log('Starting registration for:', email.value);
 
-    const response = await api.post('/api/auth/register', {
-      username: username.value,
+    // Step 1: Register the user
+    console.log('Calling POST /api/auth/register');
+    const registerResponse = await api.post('/api/auth/register', {
       email: email.value,
+      username: username.value,
       phoneNumber: phoneNumber.value,
       password: password.value
-    }, {
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': '*/*'
-      }
-    })
+    });
+    console.log('Register response:', registerResponse.data);
+    localStorage.setItem('email', email.value);
+    // Step 2: Auto-login
+    console.log('Calling POST /api/auth/login');
+    const loginResponse = await api.post('/api/auth/login', {
+      email: email.value,
+      password: password.value
+    });
+    localStorage.setItem('username', loginResponse.data.username)
+    localStorage.setItem('accessToken', loginResponse.data.accessToken);
+    console.log('Login response:', loginResponse.data);
 
-    // Check if registration was successful
-    if (response.data && response.data.accessToken) {
-      localStorage.setItem('accessToken', response.data.accessToken)
-      localStorage.setItem('role', response.data.role)
-      localStorage.setItem('username', username.value)
-      localStorage.setItem('email', email.value)
+    const loginAccessToken = localStorage.getItem('accessToken');
 
-      // Set Authorization header for future API calls
-      api.defaults.headers.common['Authorization'] = `Bearer ${response.data.accessToken}`
-
-      // Backend does not return tenants, so store empty array
-      localStorage.setItem('tenants', JSON.stringify([]))
-
-      // Redirect to home page after successful registration
-      router.push('/home')
-    } else {
-      console.error('No access token found in response!')
-      errorMessage.value = 'Registration failed: No token received.'
+    if (!loginAccessToken) {
+      throw new Error('Invalid login response: missing accessToken or role');
     }
-  } catch (error) {
-    console.error('Registration Error:', error.response?.data || error.message)
-    errorMessage.value = error.response?.status === 401 
-      ? 'Email already registered!'
-      : error.response?.data?.message || 'Registration failed!'
+    // Step 3: Confirm invitation
+    console.log('Calling POST /api/auth/invite/confirmation');
+    const eemail = localStorage.getItem('email');
+    const tooken = localStorage.getItem('inviteToken');
+    const daata = localStorage.getItem('inviteData');
+    const confirmResponse = await api.post('/api/auth/invite/confirmation', {
+      email: eemail,
+      token: tooken,
+      tenantId: daata
+    }, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
   }
-}
+});
+    console.log('Confirmation response:', confirmResponse.data);
+
+    const { accessToken: confirmAccessToken } = confirmResponse.data;
+    const toooken = confirmResponse.data.token;
+    const User = confirmResponse.data.role;
+    if (!confirmAccessToken) {
+      throw new Error('Invalid confirmation response: missing accessToken');
+    }
+
+    // Store tokens and data
+    console.log('Storing tokens in localStorage');
+    localStorage.removeItem('accessToken');
+    localStorage.removeItem('role');
+    localStorage.removeItem('inviteToken');
+    localStorage.removeItem('inviteData');
+    localStorage.setItem('accessToken', toooken);
+    localStorage.setItem('role', User);
+
+
+    // Redirect to /home
+    console.log('Redirecting to /home');
+    window.location.href = '/home';
+  } catch (error) {
+    const message = error.response?.data?.message || error.message || 'Registration failed';
+    errorMessage.value = message;
+    console.error('Registration error:', {
+      message,
+      status: error.response?.status,
+      data: error.response?.data,
+      error
+    });
+  }
+};
 </script>
+
+<template>
+  <div class="register-container">
+    <h2>Register</h2>
+    <form @submit.prevent="submitForm">
+      <div class="form-group">
+        <label for="email">Email</label>
+        <input
+          id="email"
+          v-model="email"
+          type="text"
+          readonly="readonly"
+          placeholder="Email"
+        />
+      </div>
+      <div class="form-group">
+        <label for="username">Username</label>
+        <input
+          id="username"
+          v-model="username"
+          type="text"
+          readonly="readonly"
+          placeholder="Username"
+        />
+      </div>
+      <div class="form-group">
+        <label for="phoneNumber">Phone Number</label>
+        <input
+          id="phoneNumber"
+          v-model="phoneNumber"
+          type="text"
+          readonly="readonly"
+          placeholder="Phone Number"
+        />
+      </div>
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input
+          id="password"
+          v-model="password"
+          type="password"
+          placeholder="Enter password"
+          required
+        />
+      </div>
+      <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
+      <button type="submit">Register</button>
+    </form>
+  </div>
+</template>
 
 <style scoped>
 .register-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-  flex-direction: column;
-  background-color: #f5f5f5;
-}
-
-h2 {
-  margin-bottom: 20px;
-  font-size: 24px;
-  color: #333;
-}
-
-.register-form {
-  display: flex;
-  flex-direction: column;
-  width: 300px;
+  max-width: 400px;
+  margin: 50px auto;
   padding: 20px;
-  background-color: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+  border-radius: 5px;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+label {
+  display: block;
+  margin-bottom: 5px;
 }
 
 input {
-  padding: 10px;
-  margin-bottom: 15px;
+  width: 100%;
+  padding: 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
-  font-size: 16px;
+}
+
+input[readonly] {
+  background-color: #f0f0f0;
+  cursor: not-allowed;
 }
 
 button {
+  width: 100%;
   padding: 10px;
-  background-color: #007bff;
+  background-color: #3498db;
   color: white;
   border: none;
   border-radius: 4px;
-  font-size: 16px;
   cursor: pointer;
 }
 
 button:hover {
-  background-color: #0056b3;
+  background-color: #2980b9;
 }
 
-.error-mi {
-  margin-top: 10px;
+.error {
   color: red;
-  font-size: 14px;
+  margin-bottom: 15px;
 }
 </style>

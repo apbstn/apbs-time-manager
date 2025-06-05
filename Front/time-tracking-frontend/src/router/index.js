@@ -18,9 +18,10 @@ import EditCongé from '@/views/Edit Congé.vue';
 import Switch from '@/views/Switch.vue';
 import Logout from '@/views/logout.vue';
 import Settings from '@/views/settings.vue';
-import Register from '@/views/register.vue';
 import Invitation from '@/views/invitation.vue';
 import Invite from '@/views/Invite.vue';
+import Invitedoesntexist from '@/views/invitedoesntexist.vue';
+import Register from '@/views/register.vue';
 
 
 const routes = [
@@ -99,12 +100,13 @@ const routes = [
                 path: 'invitation',
                 name: 'invitation',
                 component: Invitation,
-                meta: { requiresAuth: true}
+                meta: { requiresAuth: true }
             },
             {
                 path: 'invite/exists',
                 name: 'exists',
-                component: Invite
+                component: Invite,
+                meta: { requiresAuth: true }
             }
         ]
     },
@@ -117,8 +119,13 @@ const routes = [
         path: '/register',
         name: 'Register',
         component: Register
+    },
+    {
+        path: '/invite/dontExists',
+        name: 'dontExists',
+        component: Invitedoesntexist
     }
-    
+
 ];
 
 const router = createRouter({

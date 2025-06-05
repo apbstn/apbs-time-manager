@@ -51,7 +51,8 @@ const login = async () => {
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.accessToken}`
 
       // Redirect to Switch page to display tenants
-      router.push('/phone')
+            window.location.href = '/home';
+
     } else {
       console.error('No access token found in response!')
       errorMessage.value = 'Login failed: No token received.'

@@ -95,7 +95,7 @@ const onRowClick = async (event) => {
 
         // Step 6: Refresh
         console.log('Step 6: Refreshing the page')
-        window.location.reload()
+        window.location.href = '/home'; // Redirect to home page
         
      
     } catch (err) {

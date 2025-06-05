@@ -74,7 +74,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
             [Authorize]
             public ActionResult<List<TimeLog>> GetLogs(Guid accountId)
             {
-                var logs = _timeLogService.GetLogs(accountId);
+                var logs = _timeLogService.GetLogs(accountId); 
                 if (logs == null || logs.Count == 0)
                 {
                     return Ok("No logs found.");

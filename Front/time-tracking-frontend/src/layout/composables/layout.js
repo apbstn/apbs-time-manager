@@ -1,12 +1,12 @@
 import { computed, reactive } from 'vue';
 
 const layoutConfig = reactive({
-    primary: 'indigo',
+    primary: 'green', // Attempt to set primary color to green
     surface: null,
     darkTheme: false, // Keep the app in light theme
     menuMode: 'static',
     menuTheme: 'light',
-    topbarTheme: 'dark', // Use a dark topbar theme (if supported by your layout)
+    topbarTheme: 'black', // Attempt to set topbar to black
     menuProfilePosition: 'end'
 });
 
