@@ -6,7 +6,7 @@ const layoutConfig = reactive({
     darkTheme: false, // Keep the app in light theme
     menuMode: 'static',
     menuTheme: 'light',
-    topbarTheme: 'black', // Attempt to set topbar to black
+    topbarTheme: 'dark', // Attempt to set topbar to black
     menuProfilePosition: 'end'
 });
 

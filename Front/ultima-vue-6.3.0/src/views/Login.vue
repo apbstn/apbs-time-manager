@@ -99,18 +99,19 @@ input {
 }
 
 button {
-  padding: 10px;
-  background-color: #007bff;
-  color: white;
-  border: none;
-  border-radius: 4px;
-  font-size: 16px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #0056b3;
-}
+    padding: 0.7rem 1.5rem;
+    font-size: 1.2rem;
+    cursor: pointer;
+    background-color: #007bff00 !important;
+    color: #35D300 !important;
+    border: 1px solid #35D300 !important;
+    border-radius: 10px;
+  }
+  
+  button:hover {
+    background-color: #35D300 !important;
+    color: white !important;
+  }
 
 .error-message {
   margin-top: 10px;

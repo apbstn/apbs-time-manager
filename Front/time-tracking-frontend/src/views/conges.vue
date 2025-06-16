@@ -11,29 +11,29 @@
     <div class="card">
       <DataTable :value="filteredRequests" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
         <!-- User Name Column -->
-        <Column field="username" header="Requested By" sortable />
-        <Column field="startDate" header="Start Date" sortable>
+        <Column field="username" header="Requested By" sortable style="max-width: 8rem;"/>
+        <Column field="startDate" header="Start Date" sortable style="max-width: 8rem;">
           <template #body="{ data }">
             {{ formatDate(data.startDate) }}
           </template>
         </Column>
-        <Column field="endDate" header="End Date" sortable>
+        <Column field="endDate" header="End Date" sortable style="max-width: 8rem;">
           <template #body="{ data }">
             {{ formatDate(data.endDate) }}
           </template>
         </Column>
-        <Column field="numberOfDays" header="Days" sortable />
-        <Column field="status" header="Status" sortable>
+        <Column field="numberOfDays" header="Days" sortable style="max-width: 8rem;" />
+        <Column field="status" header="Status" sortable style="max-width: 8rem;">
           <template #body="{ data }">
             {{ statusDisplay(data.status) }}
           </template>
         </Column>
-        <Column field="type" header="Type" sortable />
-        <Column field="reason" header="Reason" sortable />
-        <Column :exportable="false" style="min-width: 12rem" header="Actions">
+        <Column field="type" header="Type" sortable style="max-width: 8rem;"/>
+        <Column field="reason" header="Reason" sortable style="max-width: 8rem;" />
+        <Column :exportable="false" style="max-width: 6rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-check-circle" class="p-button-success p-button-sm mr-2" @click="showConfirmDialog(slotProps.data, 'accept')" />
-            <Button icon="pi pi-times-circle" class="p-button-danger p-button-sm" @click="showConfirmDialog(slotProps.data, 'deny')" />
+            <Button icon="pi pi-check-circle" class="add-button" @click="showConfirmDialog(slotProps.data, 'accept')" /> &nbsp;
+            <Button icon="pi pi-times-circle" class="add-button1" @click="showConfirmDialog(slotProps.data, 'deny')" />
           </template>
         </Column>
         <template #empty>
@@ -253,7 +253,37 @@ h2 {
 }
 
 .add-button {
-  align-items: right;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
 }
 
 .card {

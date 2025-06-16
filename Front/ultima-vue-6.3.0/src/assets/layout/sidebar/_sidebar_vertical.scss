@@ -53,11 +53,11 @@
 
         li.active-menuitem {
             > a {
-                color: var(--active-menuitem-text-color);
-                background-color: var(--active-menuitem-bg);
+                color: #3C3C3C;
+                background-color: #C9ECBD;
 
                 .layout-menuitem-icon {
-                    color: var(--active-menuitem-text-color);
+                    color: #3C3C3C;
                 }
 
                 .layout-submenu-toggler {
@@ -80,7 +80,7 @@
                 align-items: center;
                 position: relative;
                 outline: 0 none;
-                color: var(--menuitem-text-color);
+                color: black;
                 cursor: pointer;
                 padding: 0.75rem 1.5rem;
                 transition:
@@ -89,7 +89,7 @@
 
                 .layout-menuitem-icon {
                     margin-right: 0.5rem;
-                    color: var(--menuitem-text-color);
+                    color: black;
                 }
 
                 .layout-submenu-toggler {

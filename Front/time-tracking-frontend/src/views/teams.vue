@@ -6,18 +6,18 @@
         <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
       </div>
     </div>
-    
+
     <InputText v-model="searchQuery" placeholder="Search teams..." class="search-input" />
 
     <div class="card">
       <DataTable :value="filteredTeams" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="name" header="Name" sortable />
-        <Column field="description" header="Description" sortable />
-        <Column :exportable="false" style="min-width: 12rem" header="Actions">
+        <Column field="name" header="Name" sortable style="max-width: 6rem;" />
+        <Column field="description" header="Description" sortable style="max-width: 6rem;"/>
+        <Column :exportable="false" style="max-width: 1rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="p-button-warning p-button-sm mr-2"
-              @click="openEditDialog(slotProps.data)" />
-            <Button icon="pi pi-trash" class="p-button-danger p-button-sm" @click="confirmDelete(slotProps.data)" />
+            <Button icon="pi pi-pencil" class="add-button"
+              @click="openEditDialog(slotProps.data)" /> &nbsp;
+            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>
         <template #empty>
@@ -27,14 +27,8 @@
     </div>
 
     <!-- Add/Edit Dialog -->
-    <TeamDialog 
-        :visible="dialogVisible" 
-        :isEdit="isEdit" 
-        :team="selectedTeam" 
-        :currentId="currentId"
-        @update:visible="dialogVisible = $event"
-        @refresh="fetchTeams"
-        @close="closeDialog" />
+    <TeamDialog :visible="dialogVisible" :isEdit="isEdit" :team="selectedTeam" :currentId="currentId"
+      @update:visible="dialogVisible = $event" @refresh="fetchTeams" @close="closeDialog" />
   </div>
 </template>
 
@@ -58,18 +52,18 @@ const searchQuery = ref('')
 const selectedTeam = ref(null)
 
 watch(deleteDialogRef, (newVal) => {
-    console.log('teams.vue: DeleteDialog ref updated:', newVal?.value)
+  console.log('teams.vue: DeleteDialog ref updated:', newVal?.value)
 })
 
 onMounted(() => {
-    console.log('teams.vue: Initial DeleteDialog ref:', deleteDialogRef?.value)
+  console.log('teams.vue: Initial DeleteDialog ref:', deleteDialogRef?.value)
 })
 
 const filteredTeams = computed(() => {
   if (!searchQuery.value) return teams.value
   const query = searchQuery.value.toLowerCase()
-  return teams.value.filter(team => 
-    team.name.toLowerCase().includes(query) || 
+  return teams.value.filter(team =>
+    team.name.toLowerCase().includes(query) ||
     (team.description && team.description.toLowerCase().includes(query))
   )
 })
@@ -107,18 +101,18 @@ const closeDialog = () => {
 }
 
 const confirmDelete = (team) => {
-    console.log('teams.vue: deleteDialogRef:', deleteDialogRef?.value)
-    console.log('teams.vue: showDeleteDialog available:', !!deleteDialogRef?.value?.showDeleteDialog)
-    if (deleteDialogRef?.value && deleteDialogRef.value.showDeleteDialog) {
-        deleteDialogRef.value.showDeleteDialog({
-            item: team,
-            type: 'team',
-            name: team.name || `ID ${team.id}`,
-            onConfirm: () => deleteTeam(team)
-        })
-    } else {
-        console.error('DeleteDialog instance not found or showDeleteDialog not exposed')
-    }
+  console.log('teams.vue: deleteDialogRef:', deleteDialogRef?.value)
+  console.log('teams.vue: showDeleteDialog available:', !!deleteDialogRef?.value?.showDeleteDialog)
+  if (deleteDialogRef?.value && deleteDialogRef.value.showDeleteDialog) {
+    deleteDialogRef.value.showDeleteDialog({
+      item: team,
+      type: 'team',
+      name: team.name || `ID ${team.id}`,
+      onConfirm: () => deleteTeam(team)
+    })
+  } else {
+    console.error('DeleteDialog instance not found or showDeleteDialog not exposed')
+  }
 }
 
 const deleteTeam = async (team) => {
@@ -167,24 +161,41 @@ fetchTeams()
 
 h2 {
   font-size: 2rem;
-  margin: 0;
-  color: #1f2a44;
-  font-weight: 600;
+    margin: 0;
 }
 
 .add-button {
-    border-radius: 6px;
-    padding: 0.5rem 1rem;
-    font-weight: 500;
-    transition: background-color 0.2s, transform 0.1s;
-    background: #6366f1;
-    border-color: #6366f1;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
 }
 
 .add-button:hover {
-    transform: translateY(-1px);
-    background: #4f46e5;
-    border-color: #4f46e5;
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
 }
 
 .card {

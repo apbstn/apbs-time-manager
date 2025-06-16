@@ -36,7 +36,7 @@
                     height: 1.25rem;
                     border-radius: 50%;
                     border: 2px solid var(--topbar-menu-button-bg);
-                    background-color: transparent;
+                    background-color: #35D300;
                     transition:
                         background-color var(--transition-duration),
                         transform 0.3s;
@@ -272,7 +272,7 @@
 
             .layout-sidebar-top {
                 .layout-sidebar-anchor {
-                    background-color: var(--topbar-menu-button-bg);
+                    background-color: #35D300;
                 }
             }
 

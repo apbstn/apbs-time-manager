@@ -89,6 +89,7 @@ app.UseMiddleware<TenantResolver>();
 app.MapControllers();
 
 app.UseCors("AllowAll");
+builder.Services.AddLogging();
 //using (var scope = app.Services.CreateScope())
 //{
 //    try

@@ -42,8 +42,8 @@
             </div>
 
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" class="p-button-text p-button-secondary custom-button" @click="closeDialog" />
-                <Button label="Save" icon="pi pi-check" class="p-button-primary custom-button" :loading="isSaving" @click="saveRequest" />
+                <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="closeDialog" />
+                <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" />
             </template>
         </Dialog>
 
@@ -204,6 +204,38 @@ const onClose = (value) => {
 </script>
 
 <style scoped>
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
+}
 .leave-request-dialog {
     width: 90%;
     max-width: 650px;

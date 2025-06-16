@@ -1,6 +1,7 @@
 <template>
     <div class="layout-topbar">
         <div class="layout-topbar-start">
+            <img src="../assets/logo2.png" alt="logo">
             <a ref="menuButton" class="layout-menu-button" @click="toggleMenu">
                 <i class="pi pi-chevron-right"></i>
             </a>
@@ -19,10 +20,10 @@
                         <span v-if="isInitialized && (showStart || showStop)" class="chronometer">{{ chronometerTime }}</span>
                     </li>
                     <li>
-                        <button v-if="isInitialized && showStart" class="pi pi-play-circle" style="color: green; font-size: 2rem;" @click="customStartTracking"></button>
+                        <button v-if="isInitialized && showStart" class="pi pi-play-circle" style="color: #35D300; font-size: 2rem;" @click="customStartTracking"></button>
                     </li>
                     <li>
-                        <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: red; font-size: 2rem;" @click="customStopTracking"></button>
+                        <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: #FF0000; font-size: 2rem;" @click="customStopTracking"></button>
                     </li>
                     <li>
                         <a v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }" class="">
