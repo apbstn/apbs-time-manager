@@ -21,7 +21,6 @@
             <div class="flex justify-content-between">
               <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter"
                 class="add-button" />
-              
             </div>
           </template>
           <template #empty>
@@ -72,7 +71,7 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { useTimeTracking } from '../layout/composables/useTimeTracking';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import DataTable from 'primevue/datatable';
@@ -109,6 +108,11 @@ export default {
       { label: 'Pause', value: 1 },
       { label: 'Stop', value: 2 }
     ]);
+    const localState = ref({
+      currentStatus: 'stop',
+      statusMessage: '',
+      timeLogs: []
+    });
 
     const initFilters = () => {
       filters.value = {
@@ -121,7 +125,22 @@ export default {
 
     initFilters();
 
+    onMounted(async () => {
+      loading.value = true;
+      try {
+        await fetchTimeLogs();
+        const currentState = getState();
+        localState.value.timeLogs = currentState.timeLogs;
+        localState.value.currentStatus = currentState.currentStatus;
+        localState.value.statusMessage = currentState.statusMessage;
+      } catch (error) {
+        console.error('Error loading time tracking data:', error);
+      }
+      loading.value = false;
+    });
+
     return {
+      localState,
       initialize,
       fetchTimeLogs,
       getStatusPhrase,
@@ -133,15 +152,6 @@ export default {
       statuses,
       statusOptions,
       initFilters
-    };
-  },
-  data() {
-    return {
-      localState: {
-        currentStatus: 'stop',
-        statusMessage: '',
-        timeLogs: []
-      }
     };
   },
   computed: {
@@ -168,54 +178,45 @@ export default {
       return logs;
     }
   },
- methods: {
-  displayStatus(type) {
-    return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
-  },
-  getSeverity(status) {
-    switch (status) {
-      case 0:
-      case 'start':
-        return 'success';
-      case 1:
-      case 'pause':
-        return 'warning';
-      case 2:
-      case 'stop':
-        return 'danger';
-      default:
-        return null;
+  methods: {
+    displayStatus(type) {
+      return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
+    },
+    getSeverity(status) {
+      switch (status) {
+        case 0:
+        case 'start':
+          return 'success';
+        case 1:
+        case 'pause':
+          return 'warning';
+        case 2:
+        case 'stop':
+          return 'danger';
+        default:
+          return null;
+      }
+    },
+    clearFilter() {
+      this.initFilters();
+    },
+    async refreshData() {
+      this.loading = true;
+      try {
+        await this.fetchTimeLogs();
+        const currentState = this.getState();
+        this.localState.timeLogs = currentState.timeLogs;
+        this.localState.currentStatus = currentState.currentStatus;
+        this.localState.statusMessage = currentState.statusMessage;
+      } catch (error) {
+        console.error('Error refreshing data:', error);
+      }
+      this.loading = false;
     }
-  },
-  clearFilter() {
-    this.initFilters();
-  },
-  async mounted() {
-    this.loading = true;
-    try {
-      const initialState = await this.initialize();
-      this.localState.timeLogs = initialState.timeLogs; // Explicitly set timeLogs
-    } catch (error) {
-      console.error('Error loading time tracking data:', error);
-    }
-    this.loading = false;
-  },
-  async refreshData() {
-    this.loading = true;
-    try {
-      await this.fetchTimeLogs();
-      const currentState = this.getState();
-      this.localState.timeLogs = currentState.timeLogs; // Sync timeLogs
-      this.localState.currentStatus = currentState.currentStatus;
-      this.localState.statusMessage = currentState.statusMessage;
-    } catch (error) {
-      console.error('Error refreshing data:', error);
-    }
-    this.loading = false;
   }
-}
 };
 </script>
+
 <style scoped>
 .header-container {
   margin-bottom: 1.5rem;
@@ -358,4 +359,4 @@ h3 {
   border-color: #35D300 !important;
   box-shadow: 0 0 0 3px #35D300 !important;
 }
-</style> 
+</style>

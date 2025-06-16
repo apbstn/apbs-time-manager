@@ -199,8 +199,8 @@ const validateAndSave = () => {
 }
 
 .stunning-button-cancel {
-  color: #806b6b;
-  border: 1px solid #d1d5db;
+  color: #ff0000;
+  border: 1px solid #ff0000;
 }
 
 .stunning-button-cancel:hover {
@@ -213,10 +213,10 @@ const validateAndSave = () => {
 }
 
 .stunning-button-save {
-  background: #35D300;
+  background: #35d30000 !important;
   /* Green for save */
-  color: #ffffff;
-  border: none;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
 }
 
 .stunning-button-save:hover:not(:disabled) {
@@ -276,7 +276,7 @@ const validateAndSave = () => {
   /* Red hover for cancel */
   color: #ffffff !important;
   /* White text */
-  border-color: #FF0000 !important;
+  border-color: #ffffff !important;
   /* Match border */
 }
 </style>
