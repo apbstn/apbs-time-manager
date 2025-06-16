@@ -2,7 +2,7 @@
     <div class="home">
       <h1>Welcome To </h1>
       <h2>The Admin Console</h2>
-      <router-link to="/tenant-management">
+      <router-link to="/user-management">
         <button>Go to Management</button>
       </router-link>
     </div>
@@ -15,14 +15,13 @@
   </script>
   
   <style scoped>
-  .home {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 100vh;
-    text-align: center;
-  }
+.home {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 25vh 0; /* Use percentage of viewport height for vertical spacing */
+}
   
   h1 {
     font-size: 2rem;

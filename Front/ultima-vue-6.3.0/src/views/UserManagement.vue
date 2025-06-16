@@ -3,14 +3,14 @@
     <div class="header-container">
       <Toolbar class="header-toolbar">
         <template #start>
-                    <div class="flex align-items-center">
-                        <h2>Users</h2>
-                        <span class="p-input-icon-left search-container">
-                            <i class="pi pi-search" />
-                            <InputText v-model="searchQuery" placeholder="Search Users..." class="search-input" />
-                        </span>
-                    </div>
-                </template>
+          <div class="flex align-items-center">
+            <h2>Users</h2>
+            <span class="p-input-icon-left search-container">
+              <i class="pi pi-search" />
+              <InputText v-model="searchQuery" placeholder="Search Users..." class="search-input" />
+            </span>
+          </div>
+        </template>
         <template #end>
           <Button label="Add User" icon="pi pi-plus" class="add-button" @click="showAddDialog = true" outlined />
         </template>
@@ -26,24 +26,19 @@
       Password reset done with success
     </Message>
 
-    <Dialog v-model:visible="showAddDialog" header="Add New User" :modal="true" class="p-fluid">
-      <div class="p-field">
-        <label for="email">Email</label>
-        <InputText id="email" v-model="newUser.email" />
-      </div>
-      <div class="p-field">
-        <label for="username">Username</label>
-        <InputText id="username" v-model="newUser.username" />
-      </div>
-      <div class="p-field">
-        <label for="phoneNumber">Phone Number</label>
-        <InputText id="phoneNumber" v-model="newUser.phoneNumber" />
-      </div>
-      <template #footer>
-        <Button label="Cancel" icon="pi pi-times" @click="showAddDialog = false" class="p-button-text" />
-        <Button label="Save" icon="pi pi-check" @click="addUser" class="p-button-text p-button-success" />
-      </template>
-    </Dialog>
+    <AddUserDialog 
+      :showDialog="showAddDialog" 
+      :user="newUser"
+      @update:showDialog="showAddDialog = $event"
+      @save="addUser"
+    />
+
+    <ResetPasswordDialog
+      :showDialog="showResetDialog"
+      :user="selectedUser"
+      @update:showDialog="showResetDialog = $event"
+      @save="resetPassword"
+    />
 
     <div class="card">
       <DataTable :value="filteredUsers" :loading="loading" tableStyle="min-width: 100%" :showGridlines="true"
@@ -62,14 +57,11 @@
             {{ data.phoneNumber || 'N/A' }}
           </template>
         </Column>
-        <Column
-          :exportable="false"
-          header="Reset Password"
-          style="min-width: 20px; max-width: 40px; text-align: center"
-        >
+        <Column :exportable="false" header="Reset Password"
+          style="min-width: 20px; max-width: 40px; text-align: center">
           <template #body="slotProps">
-            <Button icon="pi pi-key" class="p-button-rounded p-button-warning p-button-text"
-              @click="resetPassword(slotProps.data)" />
+            <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
+              @click="openResetDialog(slotProps.data)" />
           </template>
         </Column>
       </DataTable>
@@ -78,7 +70,7 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed, inject } from 'vue';
+import { ref, onMounted, computed } from 'vue';
 import axios from 'axios';
 import Button from 'primevue/button';
 import DataTable from 'primevue/datatable';
@@ -86,25 +78,30 @@ import Column from 'primevue/column';
 import InputText from 'primevue/inputtext';
 import Message from 'primevue/message';
 import Toolbar from 'primevue/toolbar';
-import Dialog from 'primevue/dialog';
+import AddUserDialog from './componant/AddUserDialog.vue';
+import ResetPasswordDialog from './componant/ResetPasswordDialog.vue';
 
-const deleteDialogRef = inject('deleteDialog');
 const users = ref([]);
 const loading = ref(false);
 const error = ref(null);
 const searchQuery = ref('');
 const showAddDialog = ref(false);
+const showResetDialog = ref(false);
 const newUser = ref({
   email: '',
   username: '',
   phoneNumber: ''
 });
+const selectedUser = ref(null);
 const successMessage = ref(null);
 
 const filteredUsers = computed(() => {
-  if (!searchQuery.value) return users.value;
+  let filtered = users.value.filter(
+    (user) => user.email?.toLowerCase() !== 'admin@example.com'
+  );
+  if (!searchQuery.value) return filtered;
   const query = searchQuery.value.toLowerCase();
-  return users.value.filter(
+  return filtered.filter(
     (user) =>
       user.email?.toLowerCase().includes(query) ||
       user.username?.toLowerCase().includes(query)
@@ -139,7 +136,7 @@ const fetchUsers = async () => {
   }
 };
 
-const addUser = async () => {
+const addUser = async (userData) => {
   try {
     loading.value = true;
     error.value = null;
@@ -149,7 +146,7 @@ const addUser = async () => {
       throw new Error('No access token found');
     }
 
-    const response = await axios.post('http://localhost:58169/api/user', newUser.value, {
+    const response = await axios.post('http://localhost:58169/api/user', userData, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -174,7 +171,12 @@ const addUser = async () => {
   }
 };
 
-const resetPassword = async (user) => {
+const openResetDialog = (user) => {
+  selectedUser.value = { ...user };
+  showResetDialog.value = true;
+};
+
+const resetPassword = async (userData) => {
   try {
     loading.value = true;
     error.value = null;
@@ -185,9 +187,9 @@ const resetPassword = async (user) => {
     }
 
     const payload = {
-      email: user.email,
-      username: user.username,
-      phoneNumber: user.phoneNumber || ''
+      email: userData.email,
+      username: userData.username,
+      phoneNumber: userData.phoneNumber || ''
     };
 
     await axios.patch('http://localhost:58169/api/user/resetPass', payload, {
@@ -199,6 +201,7 @@ const resetPassword = async (user) => {
     });
 
     successMessage.value = true;
+    showResetDialog.value = false;
     setTimeout(() => (successMessage.value = null), 3000); // Auto-close after 3 seconds
   } catch (err) {
     console.error('Error resetting password:', err);
@@ -279,10 +282,7 @@ onMounted(fetchUsers);
   transform: translateY(-1px);
   background-color: #35D300 !important;
   color: #ffffff !important;
-  /* Changed from blue to green */
-  /* Ensure no blue hover from PrimeVue */
   box-shadow: none !important;
-  /* Override any blue shadow */
 }
 
 .add-button:disabled {
@@ -349,6 +349,16 @@ h2 {
   background-color: #d1fae5;
 }
 
+:deep(.p-button.p-button-text.reset-password-button) {
+  color: #35D300 !important;
+}
+
+:deep(.p-button.p-button-text.reset-password-button:hover) {
+  color: #ffffff !important;
+  background-color: #35D300 !important;
+  box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3) !important;
+}
+
 :deep(.p-button.p-button-text.p-button-warning) {
   color: #ef4444;
 }
@@ -359,27 +369,5 @@ h2 {
 
 :deep(.p-button.p-button-text) {
   margin: 0 0.25rem;
-}
-
-:deep(.p-dialog) {
-  width: 30rem;
-}
-
-:deep(.p-field) {
-  margin-bottom: 1rem;
-}
-
-:deep(.p-field label) {
-  font-weight: 500;
-  color: #1f2937;
-}
-
-:deep(.p-button-success) {
-  color: #22c55e;
-  border-color: #22c55e;
-}
-
-:deep(.p-button-success:hover) {
-  background: #d1fae5;
 }
 </style>

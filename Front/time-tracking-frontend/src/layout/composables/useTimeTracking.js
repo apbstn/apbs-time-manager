@@ -48,16 +48,17 @@ export function useTimeTracking() {
     return date ? new Date(date).toISOString().split('T')[0] : 'No Date';
   };
 
-  const formatDuration = (totalHours) => {
-    if (!totalHours || totalHours === 'null' || totalHours === '00:00:00') {
-      return 'N/A'; // Display 'N/A' if no valid duration
-    }
-    const [h = 0, m = 0, s = 0] = totalHours.split(':').map(Number);
-    if (isNaN(h) || isNaN(m) || isNaN(s)) {
-      return 'Invalid Format'; // Handle malformed duration
-    }
-    return `${h}h ${m}m ${s}s`;
-  };
+const formatDuration = (totalHours) => {
+  if (!totalHours || totalHours === 'null' || totalHours === '00:00:00') {
+    return 'N/A'; // Display 'N/A' if no valid duration
+  }
+  const [h = 0, m = 0, s = 0] = totalHours.split(':').map(Number);
+  if (isNaN(h) || isNaN(m) || isNaN(s)) {
+    return 'Invalid Format'; // Handle malformed duration
+  }
+  const roundedSeconds = Math.floor(s); // Round down seconds to remove decimals
+  return `${h}h ${m}m ${roundedSeconds}s`;
+};
 
   const getStatusPhrase = () => {
     const username = localStorage.getItem('username') || 'User';
