@@ -3,46 +3,26 @@
     <div class="header-container">
       <Toolbar class="header-toolbar">
         <template #start>
-          <div class="flex align-items-center">
-            <h2>Users</h2>
-            <span class="p-input-icon-left search-container">
-              <i class="pi pi-search" />
-              <InputText
-                v-model="searchQuery"
-                placeholder="Search users..."
-                class="search-input"
-              />
-            </span>
-          </div>
-        </template>
+                    <div class="flex align-items-center">
+                        <h2>Users</h2>
+                        <span class="p-input-icon-left search-container">
+                            <i class="pi pi-search" />
+                            <InputText v-model="searchQuery" placeholder="Search Users..." class="search-input" />
+                        </span>
+                    </div>
+                </template>
         <template #end>
-          <Button
-            label="Add User"
-            icon="pi pi-plus"
-            class="add-button"
-            @click="showAddDialog = true"
-            outlined
-          />
+          <Button label="Add User" icon="pi pi-plus" class="add-button" @click="showAddDialog = true" outlined />
         </template>
       </Toolbar>
     </div>
 
-    <Message
-      v-if="error"
-      severity="error"
-      :closable="true"
-      class="error-message"
-    >
+    <Message v-if="error" severity="error" :closable="true" class="error-message">
       {{ error }}
     </Message>
 
-    <Message
-      v-if="successMessage"
-      severity="success"
-      :closable="true"
-      class="success-message"
-      @close="successMessage = null"
-    >
+    <Message v-if="successMessage" severity="success" :closable="true" class="success-message"
+      @close="successMessage = null">
       Password reset done with success
     </Message>
 
@@ -66,14 +46,8 @@
     </Dialog>
 
     <div class="card">
-      <DataTable
-        :value="filteredUsers"
-        :loading="loading"
-        tableStyle="min-width: 100%"
-        :showGridlines="true"
-        responsiveLayout="scroll"
-        class="p-datatable-sm"
-      >
+      <DataTable :value="filteredUsers" :loading="loading" tableStyle="min-width: 100%" :showGridlines="true"
+        responsiveLayout="scroll" class="p-datatable-sm">
         <template #empty>
           <div class="text-center text-muted">No users found</div>
         </template>
@@ -82,18 +56,8 @@
             {{ data.email }}
           </template>
         </Column>
-        <Column
-          field="username"
-          header="Username"
-          sortable
-          style="min-width: 150px"
-        />
-        <Column
-          field="phoneNumber"
-          header="Phone Number"
-          sortable
-          style="min-width: 150px"
-        >
+        <Column field="username" header="Username" sortable style="min-width: 150px" />
+        <Column field="phoneNumber" header="Phone Number" sortable style="min-width: 150px">
           <template #body="{ data }">
             {{ data.phoneNumber || 'N/A' }}
           </template>
@@ -104,11 +68,8 @@
           style="min-width: 20px; max-width: 40px; text-align: center"
         >
           <template #body="slotProps">
-            <Button
-              icon="pi pi-key"
-              class="p-button-rounded p-button-warning p-button-text"
-              @click="resetPassword(slotProps.data)"
-            />
+            <Button icon="pi pi-key" class="p-button-rounded p-button-warning p-button-text"
+              @click="resetPassword(slotProps.data)" />
           </template>
         </Column>
       </DataTable>
@@ -309,13 +270,19 @@ onMounted(fetchUsers);
   padding: 0.5rem 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.1s;
-  color: #3b82f6;
-  border-color: #3b82f6;
+  color: #35D300 !important;
+  background-color: transparent !important;
+  border-color: #35D300 !important;
 }
 
 .add-button:hover {
   transform: translateY(-1px);
-  background: #e6f0ff;
+  background-color: #35D300 !important;
+  color: #ffffff !important;
+  /* Changed from blue to green */
+  /* Ensure no blue hover from PrimeVue */
+  box-shadow: none !important;
+  /* Override any blue shadow */
 }
 
 .add-button:disabled {

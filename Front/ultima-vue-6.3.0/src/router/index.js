@@ -5,6 +5,7 @@ import Login from '@/views/Login.vue';
 import Home from '@/views/Home.vue';
 import Phonetest from '@/views/UserManagement.vue';
 import Logout from '@/views/logout.vue';
+import Settings from '@/views/settings.vue';
 
 const routes = [
     {
@@ -34,6 +35,12 @@ const routes = [
                 path: 'logout',
                 name: 'Logout',
                 component: Logout,
+                meta: { requiresAuth: true }
+            },
+            {
+                path: 'settings',
+                name: 'settings',
+                component: Settings,
                 meta: { requiresAuth: true }
             }
         ]

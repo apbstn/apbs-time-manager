@@ -11,6 +11,7 @@ function onTopbarMenuToggle() {
 <template>
     <div class="layout-topbar">
         <div class="layout-topbar-start">
+            <img src="../assets/logo2.png" alt="logo">
             <a ref="menuButton" class="layout-menu-button" @click="toggleMenu">
                 <i class="pi pi-chevron-right"></i>
             </a>
@@ -28,7 +29,7 @@ function onTopbarMenuToggle() {
             <div class="layout-topbar-actions-start"></div>
             <div class="layout-topbar-actions-end">
                 <ul class="layout-topbar-items">
-                    <li>
+                  <!--   <li>
                         <button class="app-config-button" @click="toggleConfigSidebar">
                             <i class="pi pi-cog"></i>
                         </button>
@@ -45,7 +46,7 @@ function onTopbarMenuToggle() {
                         <a @click="layoutState.rightMenuActive = true" class="">
                             <i class="pi pi-arrow-left"></i>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </div>

@@ -42,6 +42,14 @@ namespace Shared.Services
 
         public async Task<LeaveRequest> AddAsync(LeaveRequest leaveRequest)
         {
+            // Ensure UTC for DateTime properties
+            leaveRequest.StartDate = leaveRequest.StartDate.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(leaveRequest.StartDate, DateTimeKind.Utc)
+                : leaveRequest.StartDate.ToUniversalTime();
+            leaveRequest.EndDate = leaveRequest.EndDate.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(leaveRequest.EndDate, DateTimeKind.Utc)
+                : leaveRequest.EndDate.ToUniversalTime();
+
             _context.LeaveRequests.Add(leaveRequest);
             await _context.SaveChangesAsync();
             return leaveRequest;
@@ -49,6 +57,14 @@ namespace Shared.Services
 
         public async Task<LeaveRequest> UpdateAsync(LeaveRequest leaveRequest)
         {
+            // Ensure UTC for DateTime properties
+            leaveRequest.StartDate = leaveRequest.StartDate.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(leaveRequest.StartDate, DateTimeKind.Utc)
+                : leaveRequest.StartDate.ToUniversalTime();
+            leaveRequest.EndDate = leaveRequest.EndDate.Kind == DateTimeKind.Unspecified
+                ? DateTime.SpecifyKind(leaveRequest.EndDate, DateTimeKind.Utc)
+                : leaveRequest.EndDate.ToUniversalTime();
+
             _context.LeaveRequests.Update(leaveRequest);
             await _context.SaveChangesAsync();
             return leaveRequest;

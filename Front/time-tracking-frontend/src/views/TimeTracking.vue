@@ -1,8 +1,9 @@
 <template>
-  <div class="time-tracking">
+  <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2>Time Tracking</h2>
+        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="add-button" />
       </div>
     </div>
 
@@ -12,26 +13,23 @@
         <p v-if="localState.statusMessage">{{ localState.statusMessage }}</p>
       </div>
       <div class="logs">
-        <div class="flex justify-content-between align-items-center">
-          <h3>Time Logs ({{ localState.timeLogs.length }})</h3>
-          <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" outlined />
-        </div>
+        <InputText v-model="filters['global'].value" placeholder="Search time logs..." class="search-input" />
         <DataTable v-model:filters="filters" :value="filteredTimeLogs" paginator showGridlines :rows="10"
           dataKey="tm_Id" filterDisplay="menu" :loading="loading"
           :globalFilterFields="['TM_TIME', 'TM_TYPE', 'TM_TOTALHOURS']">
           <template #header>
             <div class="flex justify-content-between">
-              <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter" />
-              <IconField>
-                <InputIcon>
-                  <i class="pi pi-search" />
-                </InputIcon>
-                <InputText v-model="filters['global'].value" placeholder="Keyword Search" />
-              </IconField>
+              <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter"
+                class="add-button" />
+              
             </div>
           </template>
-          <template #empty> No logs yet. Start tracking! </template>
-          <template #loading> Loading time logs. Please wait. </template>
+          <template #empty>
+            <div class="text-center text-muted">No logs yet. Start tracking!</div>
+          </template>
+          <template #loading>
+            <div class="text-center text-muted">Loading time logs. Please wait.</div>
+          </template>
           <Column field="TM_TIME" header="Time" style="min-width: 12rem" filterField="TM_TIME" dataType="date"
             :showFilterMatchModes="false">
             <template #body="{ data }">
@@ -43,7 +41,7 @@
           </Column>
           <Column field="TM_TYPE" header="Status" style="min-width: 10rem" filterField="TM_TYPE">
             <template #body="{ data }">
-              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="badge"/>
+              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="badge" />
             </template>
             <template #filter="{ filterModel }">
               <Select v-model="filterModel.value" :options="statusOptions" optionLabel="label" optionValue="value"
@@ -170,115 +168,57 @@ export default {
       return logs;
     }
   },
-  methods: {
-    displayStatus(type) {
-      return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
-    },
-    getSeverity(status) {
-      switch (status) {
-        case 0:
-        case 'start':
-          return 'success';
-        case 1:
-        case 'pause':
-          return 'warning';
-        case 2:
-        case 'stop':
-          return 'danger';
-        default:
-          return null;
-      }
-    },
-    clearFilter() {
-      this.initFilters();
-    },
-    async refreshData() {
-      this.loading = true;
-      try {
-        await this.fetchTimeLogs();
-        const currentState = this.getState();
-        console.log('Refreshed state:', currentState);
-        this.localState = { ...currentState };
-      } catch (error) {
-        console.error('Error refreshing data:', error);
-      }
-      this.loading = false;
+ methods: {
+  displayStatus(type) {
+    return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
+  },
+  getSeverity(status) {
+    switch (status) {
+      case 0:
+      case 'start':
+        return 'success';
+      case 1:
+      case 'pause':
+        return 'warning';
+      case 2:
+      case 'stop':
+        return 'danger';
+      default:
+        return null;
     }
+  },
+  clearFilter() {
+    this.initFilters();
   },
   async mounted() {
     this.loading = true;
     try {
       const initialState = await this.initialize();
-      console.log('Initial state:', initialState);
-      this.localState = { ...initialState };
-
-      // Also try to fetch logs explicitly
-      await this.fetchTimeLogs();
-      const currentState = this.getState();
-      console.log('Current state after fetchTimeLogs:', currentState);
-      this.localState = { ...currentState };
+      this.localState.timeLogs = initialState.timeLogs; // Explicitly set timeLogs
     } catch (error) {
       console.error('Error loading time tracking data:', error);
     }
     this.loading = false;
+  },
+  async refreshData() {
+    this.loading = true;
+    try {
+      await this.fetchTimeLogs();
+      const currentState = this.getState();
+      this.localState.timeLogs = currentState.timeLogs; // Sync timeLogs
+      this.localState.currentStatus = currentState.currentStatus;
+      this.localState.statusMessage = currentState.statusMessage;
+    } catch (error) {
+      console.error('Error refreshing data:', error);
+    }
+    this.loading = false;
   }
+}
 };
 </script>
 <style scoped>
-.time-tracking {
-  width: 100%;
-  min-height: 100vh;
-  padding: 2rem;
-  background-color: #f9fafb;
-  box-sizing: border-box;
-}
-
-.badge {
-  display: inline-flex;
-  align-items: center;
-  text-transform: uppercase;
-  font-weight: 500;
-  font-size: 12px;
-  padding: 0.25rem 0.5rem;
-  border-radius: 2px;
-  color: #1f2937; /* Text color */
-  background: none !important; /* Ensure no background on badge */
-}
-
-.badge::before {
-  content: '';
-  display: inline-block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  margin-right: 6px; /* Space between circle and text */
-}
-
-/* Success (start) */
-:deep(.p-tag-success).badge::before {
-  background-color: #22c55e; /* Green for success */
-}
-
-/* Warning (pause) */
-:deep(.p-tag-warning).badge::before {
-  background-color: #f59e0b; /* Yellow for warning */
-}
-
-/* Danger (stop) */
-:deep(.p-tag-danger).badge::before {
-  background-color: #ef4444; /* Red for danger */
-}
-
-/* Override PrimeVue Tag component background */
-:deep(.p-tag-success),
-:deep(.p-tag-warning),
-:deep(.p-tag-danger) {
-  background: none !important; /* Remove PrimeVue Tag background */
-  padding: 0; /* Remove default padding to align with badge */
-}
-
 .header-container {
-  margin-bottom: 2rem;
+  margin-bottom: 1.5rem;
 }
 
 .flex {
@@ -289,53 +229,71 @@ export default {
   justify-content: space-between;
 }
 
-.justify-content-end {
-  justify-content: flex-end;
-}
-
 .align-items-center {
   align-items: center;
 }
 
-.card {
-  width: 100%;
-  padding: 1.5rem;
-  background: linear-gradient(145deg, #ffffff, #f1f5f9);
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+.search-input {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  width: 300px;
+  margin-bottom: 1rem;
+  padding: 0.5rem;
+  transition: border-color 0.2s;
 }
 
-.card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
-}
-
-.status {
-  margin-bottom: 1.5rem;
-  padding: 1rem;
-  background-color: #e6f0ff;
-  border-radius: 8px;
-  border-left: 4px solid #3b82f6;
-}
-
-.logs {
-  margin-top: 1.5rem;
+.search-input:focus {
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
 }
 
 h2 {
-  font-size: 2.25rem;
-  font-weight: 700;
+  font-size: 2rem;
   margin: 0;
-  color: #1f2937;
-  letter-spacing: -0.025rem;
 }
 
 h3 {
   font-size: 1.5rem;
   font-weight: 600;
   margin: 0.5rem 0;
-  color: #1f2937;
+  color: #000000;
+}
+
+.card {
+  margin-top: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  background: #ffffff;
+  padding: 1.5rem;
+}
+
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.status {
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #e6f0ff;
+  border-radius: 8px;
+  border-left: 4px solid #35D300;
+}
+
+.logs {
+  margin-top: 1.5rem;
 }
 
 .text-center {
@@ -344,7 +302,60 @@ h3 {
 
 .text-muted {
   color: #6b7280;
-  font-style: italic;
-  font-size: 0.95rem;
 }
-</style> 
+
+.badge {
+  display: inline-flex;
+  align-items: center;
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 12px;
+  padding: 0.25rem 0.5rem;
+  border-radius: 2px;
+  color: #000000;
+  background-color: white; /* Default background for all badges */
+}
+
+.badge::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  margin-right: 6px;
+}
+
+:deep(.p-tag-success).badge::before {
+  background: #35D300;
+}
+
+:deep(.p-tag-warning).badge::before {
+  background: #ffaa00;
+}
+
+:deep(.p-tag-danger).badge::before {
+  background: #ff0000; /* Red circle for STOP */
+}
+
+:deep(.p-tag-success, .p-tag-warning, .p-tag-danger) {
+  background: none !important; /* Remove default PrimeVue backgrounds */
+  padding: 0 !important;
+}
+
+/* Override PrimeVue danger background to white */
+:deep(.p-tag-danger) {
+  background-color: white !important;
+  color: #000000; /* Ensure text is readable */
+}
+
+:deep(.p-inputtext) {
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  padding: 0.5rem;
+  transition: border-color 0.2s;
+}
+
+:deep(.p-inputtext:focus) {
+  border-color: #35D300 !important;
+  box-shadow: 0 0 0 3px #35D300 !important;
+}
+</style>

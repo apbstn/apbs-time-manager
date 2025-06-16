@@ -6,6 +6,7 @@ using Shared.Models.Join;
 using Shared.Models.Enumerations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Shared.Services;
+using Shared.Models;
 
 namespace apbs_time_app.Services;
 
@@ -44,6 +45,20 @@ public class TenantService : ITenantService
         });
 
         _context.SaveChanges();
+
+        await _currentTenant.SetTenant(tenantId);
+
+        _applicationDbContext.ForceReload();
+
+        await _applicationDbContext.Users.AddAsync(new UserTenant
+        {
+            Email = user.Email,
+            Username = user.Username,
+            PhoneNumber = user.PhoneNumber,
+            Role = RoleEnum.User
+        });
+
+        _applicationDbContext.SaveChanges();
 
     }
 }

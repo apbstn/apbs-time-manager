@@ -36,11 +36,10 @@ public class LeaveRequestsController : ControllerBase
         return Ok(leaveRequest);
     }
 
-    [HttpGet("user")]
-    public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetByUserId()
+    [HttpGet("user/{userId}")]
+    public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetByUserId(Guid userId)
     {
-        var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-        var leaveRequests = await _leaveRequestService.GetLeaveRequestsByUserIdAsync(Guid.Parse(userId));
+        var leaveRequests = await _leaveRequestService.GetLeaveRequestsByUserIdAsync(userId);
         return Ok(leaveRequests);
     }
 
