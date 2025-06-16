@@ -1,6 +1,7 @@
 <template>
     <div class="home">
-      <h1>Welcome, Admin Console</h1>
+      <h1>Welcome To </h1>
+      <h2>The Admin Console</h2>
       <router-link to="/tenant-management">
         <button>Go to Management</button>
       </router-link>
@@ -25,6 +26,10 @@
   
   h1 {
     font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+  h2{
+    font-size: 1.5rem;
     margin-bottom: 1.5rem;
   }
   
@@ -32,14 +37,15 @@
     padding: 0.7rem 1.5rem;
     font-size: 1.2rem;
     cursor: pointer;
-    background-color: #007bff;
-    color: white;
-    border: none;
-    border-radius: 5px;
+    background-color: #007bff00 !important;
+    color: #35D300 !important;
+    border: 1px solid #35D300 !important;
+    border-radius: 10px;
   }
   
   button:hover {
-    background-color: #0056b3;
+    background-color: #35D300 !important;
+    color: white !important;
   }
   </style>
   

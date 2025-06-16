@@ -5,8 +5,8 @@
             <span>Are you sure you want to delete this {{ itemType }} "{{ itemName }}"?</span>
         </div>
         <template #footer>
-            <Button label="No" icon="pi pi-times" class="p-button-text p-button-secondary custom-button" @click="hideDeleteDialog" />
-            <Button label="Yes" icon="pi pi-check" class="p-button-danger custom-button" @click="confirmDelete" />
+            <Button label="No" icon="pi pi-times" class="add-button1" @click="hideDeleteDialog" />
+            <Button label="Yes" icon="pi pi-check" class="add-button" @click="confirmDelete" />
         </template>
     </Dialog>
 </template>
@@ -59,6 +59,38 @@ onMounted(() => {
 </script>
 
 <style scoped>
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
+}
 :deep(.p-dialog) {
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);

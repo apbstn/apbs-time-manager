@@ -18,10 +18,14 @@
                     </div>
                 </template>
                 <template #end>
-                    <Button label="Add Tenant" icon="pi pi-plus" class="add-button" @click="openAddPopup" outlined />
+                    <Button label="Add Tenant" icon="pi pi-plus" class="add-button" @click="openAddPopup" outlined
+                        style="border-color: #35D300; color: #35D300;" />
                 </template>
             </Toolbar>
         </div>
+
+        <AddTenantDialog :showDialog="isAdding" :tenant="newTenantData" :usersList="usersList"
+            @update:showDialog="isAdding = $event" @save="saveNewTenant" />
 
         <div class="card">
             <DataTable :value="filteredTenants" :loading="loading" tableStyle="min-width: 100%" :showGridlines="true"
@@ -37,34 +41,8 @@
                         {{ data.phonenumber || 'N/A' }}
                     </template>
                 </Column>
-                <!-- <Column :exportable="false" header="Actions" style="min-width: 120px; text-align: center">
-                    <template #body="slotProps">
-                        <Button icon="pi pi-pencil" outlined rounded class="mr-2" @click="openEditPopup(slotProps.data)" />
-                        <Button icon="pi pi-trash" outlined rounded severity="danger" @click="deleteUser(slotProps.data)" />
-                    </template>
-                </Column> -->
             </DataTable>
         </div>
-        <!-- Add Tenant Popup -->
-        <Dialog v-model:visible="isAdding" header="Add Tenant" :modal="true" class="p-fluid">
-
-            <div class="p-field">
-                <Divider />
-                <label for="add-tenantname">Tenant Name</label>
-
-                <InputText id="add-tenantname" v-model="newTenantData.tenantname" />
-            </div>
-            <div class="p-field">
-                <label for="add-user">Owner</label>
-                <Dropdown v-model="newTenantData.userId" :options="usersList" optionLabel="username" optionValue="id"
-                    placeholder="Select Owner" class="w-full" filter />
-            </div>
-            <Divider  />
-            <div class="flex justify-content-end flex-wrap">
-                <Button label="Cancel" icon="pi pi-times" @click="closeAddPopup" class="p-button-text" />
-                <Button label="Save" icon="pi pi-check" @click="saveNewTenant" class="p-button-text p-button-success" />
-            </div>
-        </Dialog>
     </div>
 </template>
 
@@ -76,9 +54,8 @@ import Column from 'primevue/column';
 import Button from 'primevue/button';
 import Message from 'primevue/message';
 import Toolbar from 'primevue/toolbar';
-import Dialog from 'primevue/dialog';
 import InputText from 'primevue/inputtext';
-import Dropdown from 'primevue/dropdown';
+import AddTenantDialog from './componant/AddTenantDialog.vue';
 
 const users = ref([]);
 const loading = ref(false);
@@ -92,6 +69,17 @@ const newTenantData = ref({
     userId: null
 });
 const usersList = ref([]);
+
+const filteredTenants = computed(() => {
+    if (!searchQuery.value) return users.value;
+    const query = searchQuery.value.toLowerCase();
+    return users.value.filter(
+        (tenant) =>
+            tenant.tenantname?.toLowerCase().includes(query) ||
+            tenant.email?.toLowerCase().includes(query) ||
+            tenant.username?.toLowerCase().includes(query)
+    );
+});
 
 const fetchTenants = async () => {
     try {
@@ -158,17 +146,6 @@ const fetchUsers = async () => {
     }
 };
 
-const filteredTenants = computed(() => {
-    if (!searchQuery.value) return users.value;
-    const query = searchQuery.value.toLowerCase();
-    return users.value.filter(
-        (tenant) =>
-            tenant.tenantname?.toLowerCase().includes(query) ||
-            tenant.email?.toLowerCase().includes(query) ||
-            tenant.username?.toLowerCase().includes(query)
-    );
-});
-
 // --- Add logic ---
 const openAddPopup = () => {
     isAdding.value = true;
@@ -178,11 +155,7 @@ const openAddPopup = () => {
     };
 };
 
-const closeAddPopup = () => {
-    isAdding.value = false;
-};
-
-const saveNewTenant = async () => {
+const saveNewTenant = async (tenantData) => {
     try {
         loading.value = true;
         error.value = null;
@@ -193,8 +166,8 @@ const saveNewTenant = async () => {
         }
 
         const payload = {
-            tenantName: newTenantData.value.tenantname,
-            user: newTenantData.value.userId
+            tenantName: tenantData.tenantname,
+            user: tenantData.userId
         };
 
         const response = await api.post('/api/tenant', payload, {
@@ -213,7 +186,7 @@ const saveNewTenant = async () => {
             phonenumber: response.data.phoneNumber || 'N/A'
         });
 
-        closeAddPopup();
+        isAdding.value = false;
     } catch (error) {
         console.error('Error adding tenant:', error.response?.data || error.message);
         error.value = 'Failed to add tenant: ' + (error.response?.data?.message || error.message || 'Unknown error');
@@ -221,11 +194,6 @@ const saveNewTenant = async () => {
         loading.value = false;
     }
 };
-
-// const deleteUser = (user) => {
-//     console.log('Delete:', user);
-//     // TODO: Implement delete logic here
-// };
 
 onMounted(() => {
     fetchTenants();
@@ -272,17 +240,38 @@ onMounted(() => {
 .search-container {
     display: flex;
     align-items: center;
+    position: relative;
+    /* Ensure proper positioning context */
 }
 
 .search-input {
     width: 250px;
     border-radius: 6px;
-    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    padding: 0.5rem 0.5rem 0.5rem 2.5rem;
+    /* Increased left padding to accommodate icon */
+    border: 1px solid #d1d5db;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .search-input:focus {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    border-color: #35D300;
+    /* Changed from #3b82f6 (blue) to green */
+    box-shadow: 0 0 0 3px rgba(53, 211, 0, 0.2);
+    /* Changed from rgba(59, 130, 246, 0.2) to green */
+    outline: none;
+    /* Remove default blue outline */
+}
+
+:deep(.p-input-icon-left > i) {
+    position: absolute;
+    left: 0.75rem;
+    /* Position icon inside input */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    /* Match placeholder color */
+    pointer-events: none;
+    /* Prevent icon from interfering with input */
 }
 
 .add-button {
@@ -290,13 +279,20 @@ onMounted(() => {
     padding: 0.5rem 1rem;
     font-weight: 500;
     transition: background-color 0.2s, transform 0.1s;
-    color: #3b82f6;
-    border-color: #3b82f6;
+    color: #35D300;
+    /* Changed from #3b82f6 (blue) to green */
+    border-color: #35D300;
+    /* Changed from #3b82f6 (blue) to green */
 }
 
 .add-button:hover {
     transform: translateY(-1px);
-    background: #e6f0ff;
+    background-color: #35D300 !important;
+    color: #ffffff !important;
+    /* Changed from blue to green */
+    /* Ensure no blue hover from PrimeVue */
+    box-shadow: none !important;
+    /* Override any blue shadow */
 }
 
 .card {
@@ -317,12 +313,22 @@ onMounted(() => {
     background: #f1f5f9;
     color: #1f2937;
     font-weight: 600;
-    padding: 1rem;
+    padding: 1rem 1.5rem;
+    line-height: 2.5;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr) {
+    transition: background-color 0.2s ease;
+}
+
+:deep(.p-datatable .p-datatable-tbody > tr:hover) {
+    background-color: #f9fafb;
 }
 
 :deep(.p-datatable .p-datatable-tbody > tr > td) {
-    padding: 0.75rem 1rem;
+    padding: 2rem 2.5rem;
     color: #1f2937;
+    line-height: 3.5;
 }
 
 h2 {
@@ -354,37 +360,15 @@ h2 {
     margin: 0 0.25rem;
 }
 
-:deep(.p-dialog) {
-    width: 30rem;
-}
-
-:deep(.p-field) {
-    margin-bottom: 1rem;
-}
-
-:deep(.p-field label) {
-    font-weight: 500;
-    color: #1f2937;
-}
-
-:deep(.p-button-success) {
-    color: #22c55e;
-    border-color: #22c55e;
-}
-
-:deep(.p-button-success:hover) {
-    background: #d1fae5;
-}
-
-:deep(.p-dropdown) {
-    width: 100%;
-    padding: 0.5rem;
-    border-radius: 6px;
-    border: 1px solid #d1d5db;
-}
-
-:deep(.p-dropdown:focus) {
-    border-color: #3b82f6;
-    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+/* Specific override for InputText focus to remove blue */
+:deep(.p-inputtext:focus) {
+    border-color: #35D300 !important;
+    /* Ensure green border */
+    box-shadow: 0 0 0 3px rgba(53, 211, 0, 0.2) !important;
+    /* Green shadow */
+    outline: none !important;
+    /* Remove any default blue outline */
+    outline-offset: 0 !important;
+    /* Ensure no offset adds blue */
 }
 </style>

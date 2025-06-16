@@ -6,7 +6,11 @@ const layoutConfig = reactive({
     darkTheme: false, // Keep the app in light theme
     menuMode: 'static',
     menuTheme: 'light',
+<<<<<<< Updated upstream
     topbarTheme: 'dark', // Use a dark topbar theme (if supported by your layout)
+=======
+    topbarTheme: 'dark', // Attempt to set topbar to black
+>>>>>>> Stashed changes
     menuProfilePosition: 'end'
 });
 

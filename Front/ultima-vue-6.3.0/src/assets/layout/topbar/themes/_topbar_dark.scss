@@ -1,9 +1,9 @@
 .layout-topbar-dark {
-    --topbar-bg: var(--p-surface-900);
-    --topbar-start-bg: var(--p-surface-900);
-    --topbar-menu-button-bg: var(--p-primary-color);
-    --topbar-menu-button-hover-bg: var(--p-primary-hover-color);
-    --topbar-menu-button-text-color: var(--p-primary-contrast-color);
-    --topbar-item-text-color: var(--p-surface-0);
-    --topbar-item-hover-bg: var(--p-surface-800);
+    --topbar-bg: black;
+    --topbar-start-bg: black;
+    --topbar-menu-button-bg: green;
+    --topbar-menu-button-hover-bg: green;
+    --topbar-menu-button-text-color: rgb(255, 255, 255);
+    --topbar-item-text-color: green;
+    --topbar-item-hover-bg: rgba(76, 76, 76, 0.694);
 }

@@ -220,21 +220,26 @@ function getPresetExt() {
 function updateColors(type, color) {
     if (type === 'primary') {
         layoutConfig.primary = color.name;
+        // Set topbarTheme to match primary color if desired
+        const topbarMatch = topbarThemes.value.find(t => t.name === color.name);
+        if (topbarMatch) {
+            layoutConfig.topbarTheme = color.name;
+        }
     } else if (type === 'surface') {
         layoutConfig.surface = color.name;
     }
-
     applyTheme(type, color);
 }
 
 function applyTheme(type, color) {
     if (type === 'primary') {
         updatePreset(getPresetExt());
+        // Ensure topbar reflects primary color
+        document.querySelector('.layout-topbar').style.backgroundColor = color.palette['500'];
     } else if (type === 'surface') {
         updateSurfacePalette(color.palette);
     }
 }
-
 function setMenuMode(mode) {
     layoutConfig.menuMode = mode;
 
