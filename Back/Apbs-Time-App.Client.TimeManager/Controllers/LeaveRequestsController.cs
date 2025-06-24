@@ -17,7 +17,7 @@ public class LeaveRequestsController : ControllerBase
     {
         _leaveRequestService = leaveRequestService;
     }
-
+    
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetAll()
     {
@@ -46,8 +46,8 @@ public class LeaveRequestsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<LeaveRequestDto>> Create(CreateLeaveRequestDto createDto)
     {
-        var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-        var leaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(Guid.Parse(userId), createDto);
+        //var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
+        var leaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(createDto);
         return CreatedAtAction(nameof(GetById), new { id = leaveRequest.Id }, leaveRequest);
     }
 

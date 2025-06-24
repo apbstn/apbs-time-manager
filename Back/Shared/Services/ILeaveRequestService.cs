@@ -12,7 +12,7 @@ namespace Shared.Services
         Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync();
         Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id);
         Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId);
-        Task<LeaveRequestDto> CreateLeaveRequestAsync(Guid userId, CreateLeaveRequestDto createDto);
+        Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto);
         Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto);
         Task<bool> DeleteLeaveRequestAsync(Guid id);
     }

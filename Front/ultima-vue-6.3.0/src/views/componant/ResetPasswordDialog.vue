@@ -23,6 +23,7 @@
 import Dialog from 'primevue/dialog';
 import Button from 'primevue/button';
 import Divider from 'primevue/divider';
+import axios from 'axios';
 
 // Props
 const props = defineProps({
@@ -49,9 +50,26 @@ const emitCancel = () => {
 };
 
 // Emit confirm event to trigger password reset
-const emitConfirm = () => {
-  emit('confirm', props.user);
-  emit('update:showDialog', false);
+const emitConfirm = async () => {
+  try {
+    const token = localStorage.getItem('accessToken');
+    console.log(props.user.email)
+    const response = await axios.patch('http://localhost:58169/api/user/resetPass', {
+      email: props.user.email,
+      username: props.user.username,
+      phoneNumber: props.user.phoneNumber
+    }, {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    });
+    emit('confirm', { user: props.user, response: response.data });
+    emit('update:showDialog', false);
+  } catch (error) {
+    console.error('Error resetting password:', error);
+    emit('confirm', { user: props.user, error });
+    emit('update:showDialog', false);
+  }
 };
 </script>
 

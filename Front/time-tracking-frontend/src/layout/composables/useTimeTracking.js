@@ -12,34 +12,31 @@ export function useTimeTracking() {
   const showStart = ref(true); // Reactive state for Start button visibility
   const showStop = ref(false); // Reactive state for Stop button visibility
 
-  const decodeJwt = (token) => {
+  const getAccountId = async (email) => {
     try {
-      if (!token) return null;
-      const base64Url = token.split('.')[1];
-      const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
-      const jsonPayload = decodeURIComponent(atob(base64).split('').map(c =>
-        '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-      ).join(''));
-      return JSON.parse(jsonPayload);
+      console.log("email", email)
+      const response = await api.post('/api/UserTenants/get-id-by-email', email)
+      console.log('Account ID fetched:', response.data)
+      return response.data
     } catch (error) {
-      console.error('Failed to decode JWT:', error);
-      return null;
+      console.error('Error fetching account ID:', error)
+      throw error
     }
-  };
+  }
 
-  const initializeUserId = () => {
-    const token = localStorage.getItem('accessToken');
-    console.log('Token from localStorage:', token);
-    if (token) {
-      const decoded = decodeJwt(token);
-      if (decoded) {
-        state.userId = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier'] || 'guest';
+  const initializeUserId = async () => {
+    const email = localStorage.getItem('email');
+    console.log('Email from localStorage:', email);
+    if (email) {
+      try {
+        const accountId = await getAccountId(email);
+        state.userId = accountId || 'guest';
         console.log('Set state.userId to:', state.userId);
-      } else {
-        console.warn('Failed to decode token, using default userId:', state.userId);
+      } catch (error) {
+        console.warn('Failed to fetch account ID, using default userId:', state.userId);
       }
     } else {
-      console.warn('No accessToken found, using default userId:', state.userId);
+      console.warn('No email found, using default userId:', state.userId);
     }
     return state.userId;
   };
@@ -89,7 +86,7 @@ const formatDuration = (totalHours) => {
   };
 
   const fetchTimeLogs = async () => {
-    initializeUserId();
+    await initializeUserId();
     state.currentStatus = 'loading';
     console.log('Fetching logs for userId:', state.userId, 'at:', new Date().toLocaleString());
     try {
@@ -138,7 +135,7 @@ const formatDuration = (totalHours) => {
   };
 
   const startTracking = async () => {
-    initializeUserId();
+    await initializeUserId();
     state.currentStatus = 'start';
     console.log('Starting tracking for userId:', state.userId, 'at:', new Date().toLocaleString());
     try {
@@ -159,7 +156,7 @@ const formatDuration = (totalHours) => {
   };
 
   const pauseTracking = async () => {
-    initializeUserId();
+    await initializeUserId();
     state.currentStatus = 'pause';
     console.log('Pausing tracking for userId:', state.userId, 'at:', new Date().toLocaleString());
     try {
@@ -180,7 +177,7 @@ const formatDuration = (totalHours) => {
   };
 
   const stopTracking = async () => {
-    initializeUserId();
+    await initializeUserId();
     state.currentStatus = 'stop';
     console.log('Stopping tracking for userId:', state.userId, 'at:', new Date().toLocaleString());
     try {
@@ -201,7 +198,7 @@ const formatDuration = (totalHours) => {
   };
 
   const initialize = async () => {
-    initializeUserId();
+    await initializeUserId();
     const initialState = await fetchTimeLogs();
     console.log('Initialization complete - showStart:', showStart.value, 'showStop:', showStop.value, 'at:', new Date().toLocaleString());
     return initialState;

@@ -52,6 +52,7 @@ public class TenantService : ITenantService
 
         await _applicationDbContext.Users.AddAsync(new UserTenant
         {
+
             Email = user.Email,
             Username = user.Username,
             PhoneNumber = user.PhoneNumber,

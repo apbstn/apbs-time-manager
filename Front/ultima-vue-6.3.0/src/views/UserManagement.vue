@@ -46,19 +46,19 @@
         <template #empty>
           <div class="text-center text-muted">No users found</div>
         </template>
-        <Column field="email" header="Email" sortable style="min-width: 200px">
+        <Column field="email" header="Email" sortable style="max-width: 6rem">
           <template #body="{ data }">
             {{ data.email }}
           </template>
         </Column>
-        <Column field="username" header="Username" sortable style="min-width: 150px" />
-        <Column field="phoneNumber" header="Phone Number" sortable style="min-width: 150px">
+        <Column field="username" header="Username" sortable style="max-width: 6rem" />
+        <Column field="phoneNumber" header="Phone Number" sortable style="max-width: 6rem">
           <template #body="{ data }">
             {{ data.phoneNumber || 'N/A' }}
           </template>
         </Column>
         <Column :exportable="false" header="Reset Password"
-          style="min-width: 20px; max-width: 40px; text-align: center">
+          style="max-width: 1rem; text-align: center">
           <template #body="slotProps">
             <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
               @click="openResetDialog(slotProps.data)" />
@@ -255,17 +255,20 @@ onMounted(fetchUsers);
 .search-container {
   display: flex;
   align-items: center;
+  position: relative;
+  border-color: #35D300 !important; 
 }
 
 .search-input {
   width: 250px;
   border-radius: 6px;
   padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border-bottom-color: #35D300 !important;
 }
 
 .search-input:focus {
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+  border-color: #35D300 !important;
+  /* box-shadow: 0 0 0 3px #35D300 !important; */
 }
 
 .add-button {
@@ -347,6 +350,18 @@ h2 {
   border-radius: 8px;
   border-left: 4px solid #22c55e;
   background-color: #d1fae5;
+}
+
+:deep(.p-input-icon-left > i) {
+    position: absolute;
+    left: 0.75rem;
+    /* Position icon inside input */
+    top: 50%;
+    transform: translateY(-50%);
+    color: #6b7280;
+    /* Match placeholder color */
+    pointer-events: none;
+    /* Prevent icon from interfering with input */
 }
 
 :deep(.p-button.p-button-text.reset-password-button) {
