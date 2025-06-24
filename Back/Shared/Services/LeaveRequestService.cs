@@ -51,11 +51,11 @@ namespace Shared.Services
             return result;
         }
 
-        public async Task<LeaveRequestDto> CreateLeaveRequestAsync(Guid userId, CreateLeaveRequestDto createDto)
+        public async Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto)
         {
             var leaveRequest = new LeaveRequest
             {
-                UserId = userId,
+                UserId = createDto.UserId,
                 StartDate = createDto.StartDate,
                 EndDate = createDto.EndDate,
                 Type = createDto.Type,

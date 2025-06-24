@@ -2,97 +2,124 @@
   <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h2>Employee Management</h2>
-        <Button label="Add an employee" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+        <h2>User Accounts</h2>
+        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
       </div>
     </div>
 
-    <InputText v-model="searchQuery" placeholder="Search employees..." class="search-input" />
+    <InputText v-model="searchQuery" placeholder="Search users..." class="search-input" />
 
     <div class="card">
-      <DataTable :value="filteredEmployers" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="name" header="Name" sortable style="max-width: 6rem;" />
+      <DataTable :value="filteredUsers" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
+        <Column field="username" header="Username" sortable style="max-width: 6rem;" />
         <Column field="email" header="Email" sortable style="max-width: 6rem;" />
-        <Column field="role" header="Role" sortable style="max-width: 6rem;" />
-        <Column :exportable="false" style="max-width: 1rem" header="Actions">
+        <Column field="phoneNumber" header="Phone Number" sortable style="max-width: 6rem;" />
+        <Column field="team" header="Teams" sortable style="max-width: 6rem;"/>
+        <Column :exportable="false" style="max-width: 3rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" />&nbsp;
-            <Button icon="pi pi-trash" class="add-button1" @click="deleteEmployer(slotProps.data)" />
+            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" />  
+            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>
         <template #empty>
-          <div class="text-center text-muted">No employees found</div>
+          <div class="text-center text-muted">No users found</div>
         </template>
       </DataTable>
     </div>
 
     <!-- Add/Edit Dialog -->
-    <EmployeeDialog :visible="dialogVisible" :isEdit="isEdit" :employee="selectedEmployee" 
-                    @update:visible="dialogVisible = $event" @save="handleSave" @close="closeDialog" />
+    <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId"
+      @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
   </div>
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, onMounted, computed, inject } from 'vue'
+import api from '@/api'
 import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import EmployeeDialog from './Componant/EmployeeDialog.vue'
 
-const employers = ref([
-  { id: 1, name: 'Jean Dupont', email: 'jean@entreprise.com', role: 'Développeur' },
-  { id: 2, name: 'Alice Martin', email: 'alice@entreprise.com', role: 'Designer' }
-])
 
+// Inject the DeleteDialog instance
+const deleteDialogRef = inject('deleteDialog')
+
+const users = ref([])
 const dialogVisible = ref(false)
 const isEdit = ref(false)
-const selectedEmployee = ref(null)
+const currentId = ref(null)
 const searchQuery = ref('')
+const selectedUser = ref(null)
 
-const filteredEmployers = computed(() => {
-  if (!searchQuery.value) return employers.value
+const filteredUsers = computed(() => {
+  if (!searchQuery.value) return users.value
   const query = searchQuery.value.toLowerCase()
-  return employers.value.filter(employer =>
-    employer.name.toLowerCase().includes(query) ||
-    employer.email.toLowerCase().includes(query) ||
-    employer.role.toLowerCase().includes(query)
+  return users.value.filter(user =>
+    user.username.toLowerCase().includes(query) ||
+    user.email.toLowerCase().includes(query) ||
+    (user.phoneNumber && user.phoneNumber.toLowerCase().includes(query))
   )
 })
 
-const openEditDialog = (employer) => {
-  selectedEmployee.value = { ...employer }
+const fetchUsers = async () => {
+  try {
+    const response = await api.get('/api/UserTenants/accounts')
+    users.value = response.data
+    console.log('Users fetched:', response.data)
+  } catch (error) {
+    console.error('Error fetching users:', error)
+  }
+}
+
+const openEditDialog = (user) => {
+  console.log('Opening edit dialog for user:', user)
+  selectedUser.value = { ...user }
+  currentId.value = user.email // Assuming email is unique for users
   isEdit.value = true
   dialogVisible.value = true
 }
 
 const openAddDialog = () => {
+  console.log('Opening add dialog')
   isEdit.value = false
-  selectedEmployee.value = { name: '', email: '', role: '' }
+  selectedUser.value = null
+  currentId.value = null
   dialogVisible.value = true
 }
 
 const closeDialog = () => {
+  console.log('Closing add/edit dialog')
   dialogVisible.value = false
-  selectedEmployee.value = null
+  selectedUser.value = null
 }
 
-const handleSave = (employee) => {
-  if (isEdit.value) {
-    const index = employers.value.findIndex(e => e.id === employee.id)
-    if (index !== -1) {
-      employers.value[index] = { ...employee }
-    }
+const confirmDelete = (user) => {
+  console.log('UserAccounts.vue: deleteDialogRef:', deleteDialogRef?.value)
+  console.log('UserAccounts.vue: showDeleteDialog available:', !!deleteDialogRef?.value?.showDeleteDialog)
+  if (deleteDialogRef?.value && deleteDialogRef.value.showDeleteDialog) {
+    deleteDialogRef.value.showDeleteDialog({
+      item: user,
+      type: 'user',
+      name: user.username || `Email ${user.email}`,
+      onConfirm: () => deleteUser(user)
+    })
   } else {
-    const newId = Math.max(0, ...employers.value.map(e => e.id)) + 1
-    employers.value.push({ id: newId, ...employee })
+    console.error('DeleteDialog instance not found or showDeleteDialog not exposed')
   }
-  closeDialog()
 }
 
-const deleteEmployer = (employer) => {
-  employers.value = employers.value.filter(e => e.id !== employer.id)
+const deleteUser = async (user) => {
+  try {
+    console.log('Deleting user:', user)
+    await api.delete(`/api/UserTenants/accounts/${user.email}`)
+    await fetchUsers()
+  } catch (error) {
+    console.error('Error deleting user:', error)
+  }
 }
+
+fetchUsers()
 </script>
 
 <style scoped>

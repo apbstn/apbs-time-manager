@@ -167,7 +167,7 @@ function onTopbarMenuToggle() {
 .chronometer {
     font-size: 1.5rem;
     font-weight: 500;
-    color: #1f2937;
+    color: #000000;
     padding: 0.25rem 0.5rem;
     background-color: #f3f4f6;
     border-radius: 4px;

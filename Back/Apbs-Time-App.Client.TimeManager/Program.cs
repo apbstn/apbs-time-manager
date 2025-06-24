@@ -31,7 +31,8 @@ builder.Services.AddTransient<IMailService, SmtpMailService>();
 builder.Services.AddScoped<ICurrentTenantService, CurrentTenantService>();
 builder.Services.AddTransient<IEncryptionService, EncryptionService>();
 builder.Services.AddTransient<IPlannerService, PlannerService>();
-
+builder.Services.AddScoped<IUserTenantRepository, UserTenantRepository>();
+builder.Services.AddScoped<IUserTenantService, UserTenantService>();
 
 builder.Services.AddScoped<IExxception, Shared.Services.Exxception>();
 

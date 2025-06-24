@@ -33,7 +33,7 @@
           <template #body="slotProps">
             <Button icon="pi pi-pencil" class="add-button"
               :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
-              @click="openEditDialog(slotProps.data)" /> &nbsp;
+              @click="openEditDialog(slotProps.data)" />  
             <Button icon="pi pi-trash" class="add-button1"
               :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
               @click="confirmDelete(slotProps.data)" />
@@ -94,33 +94,31 @@ const statusDisplay = (status) => {
     }
 }
 
-const decodeJwt = (token) => {
+const getAccountId = async (email) => {
     try {
-        const base64Url = token.split('.')[1]
-        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
-        const jsonPayload = decodeURIComponent(atob(base64).split('').map(c => {
-            return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2)
-        }).join(''))
-        return JSON.parse(jsonPayload)
+      console.log("email", email)
+        const response = await api.post('/api/UserTenants/get-id-by-email', email)
+        console.log('Account ID fetched:', response.data)
+        return response.data
     } catch (error) {
-        console.error('Error decoding JWT:', error)
-        return null
+        console.error('Error fetching account ID:', error)
+        throw error
     }
 }
 
 onMounted(async () => {
     console.log('ListDemandeEmploye mounted')
-    const accessToken = localStorage.getItem('accessToken')
-    if (accessToken) {
-        const decoded = decodeJwt(accessToken)
-        if (decoded && decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']) {
-            userId.value = decoded['http://schemas.xmlsoap.org/ws/2005/05/identity/claims/nameidentifier']
+    // Assume email is stored in localStorage or user object
+    const userEmail = localStorage.getItem('email') // Replace with your email source
+    if (userEmail) {
+        try {
+            userId.value = await getAccountId(`"${userEmail}"`) // Send as raw string with quotes
             await fetchLeaveRequests()
-        } else {
-            console.error('User ID not found in token')
+        } catch (error) {
+            console.error('User ID not fetched:', error)
         }
     } else {
-        console.error('Access token not found')
+        console.error('User email not found')
     }
 })
 
@@ -129,7 +127,14 @@ const fetchLeaveRequests = async () => {
         if (!userId.value) {
             throw new Error('User ID is not available')
         }
-        const { data } = await api.get(`/api/LeaveRequests?userId=${userId.value}`)
+        const accessToken = localStorage.getItem('accessToken')
+        console.log("bla bla bla", userId.value)
+        localStorage.setItem("Id", userId.value) // Retrieve the token
+        const { data } = await api.get(`/api/LeaveRequests/user/${userId.value}`, {
+            headers: {
+                Authorization: `Bearer ${accessToken}` // Add token to Authorization header
+            }
+        })
         leaveRequests.value = data
         console.log('Leave requests fetched:', data)
     } catch (error) {

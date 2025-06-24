@@ -32,8 +32,8 @@
         <Column field="reason" header="Reason" sortable />
         <Column :exportable="false" style="min-width: 12rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-check-circle" class="p-button-success p-button-sm mr-2" @click="acceptRequest(slotProps.data)" />
-            <Button icon="pi pi-times-circle" class="p-button-warning p-button-sm" @click="denyRequest(slotProps.data)" />
+            <Button icon="pi pi-check-circle" class="add-button" @click="acceptRequest(slotProps.data)" />
+            <Button icon="pi pi-times-circle" class="add-button1" @click="denyRequest(slotProps.data)" />
           </template>
         </Column>
         <template #empty>
@@ -181,6 +181,38 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: white;
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
+}
 .header-container {
   margin-bottom: 1.5rem;
 }

@@ -1,143 +1,265 @@
 <template>
   <div>
-    <Dialog :visible="visible" modal :header="isEdit ? 'Edit an employee' : 'Add an employee'"
-            class="employee-dialog" :draggable="false" :style="{ maxWidth: '650px' }" @update:visible="onClose">
+    <!-- Add/Edit Dialog -->
+    <Dialog :visible="visible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'"
+      class="leave-request-dialog" :draggable="false" :style="{ maxWidth: '650px' }" @update:visible="onClose">
       <div class="p-fluid form-container">
         <div class="field mb-4">
-          <label for="name" class="field-label">Name</label>
-          <InputText v-model="form.name" id="name" :class="{ 'p-invalid': v$.name.$error }" />
-          <small v-if="v$.name.$error" class="p-error">
+          <label for="startDate" class="field-label">Start Date</label>
+          <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon
+            :class="{ 'p-invalid': v$.startDate.$error }" />
+          <small v-if="v$.startDate.$error" class="p-error">
             <i class="pi pi-exclamation-circle mr-1"></i>
-            {{ v$.name.$errors[0].$message }}
+            {{ v$.startDate.$errors[0].$message }}
           </small>
         </div>
-        <Divider />
         <div class="field mb-4">
-          <label for="email" class="field-label">Email</label>
-          <InputText v-model="form.email" id="email" :class="{ 'p-invalid': v$.email.$error }" />
-          <small v-if="v$.email.$error" class="p-error">
+          <label for="endDate" class="field-label">End Date</label>
+          <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon
+            :class="{ 'p-invalid': v$.endDate.$error }" />
+          <small v-if="v$.endDate.$error" class="p-error">
             <i class="pi pi-exclamation-circle mr-1"></i>
-            {{ v$.email.$errors[0].$message }}
+            {{ v$.endDate.$errors[0].$message }}
           </small>
         </div>
-        <Divider />
         <div class="field mb-4">
-          <label for="role" class="field-label">Role</label>
-          <Dropdown v-model="form.role" :options="roles" optionLabel="label" optionValue="value"
-                    placeholder="Select a role" id="role" :class="{ 'p-invalid': v$.role.$error }" />
-          <small v-if="v$.role.$error" class="p-error">
+          <label for="type" class="field-label">Type</label>
+          <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value"
+            placeholder="Select leave type" id="type" :class="{ 'p-invalid': v$.type.$error }" />
+          <small v-if="v$.type.$error" class="p-error">
             <i class="pi pi-exclamation-circle mr-1"></i>
-            {{ v$.role.$errors[0].$message }}
+            {{ v$.type.$errors[0].$message }}
+          </small>
+        </div>
+        <div class="field mb-4">
+          <label for="reason" class="field-label">Reason</label>
+          <InputText v-model="form.reason" id="reason" :class="{ 'p-invalid': v$.reason.$error }" />
+          <small v-if="v$.reason.$error" class="p-error">
+            <i class="pi pi-exclamation-circle mr-1"></i>
+            {{ v$.reason.$errors[0].$message }}
           </small>
         </div>
       </div>
 
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="closeDialog" />
-        <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveEmployee" />
+        <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" />
       </template>
     </Dialog>
+
+    <!-- Toast for notifications -->
+    <Toast />
   </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import { useVuelidate } from '@vuelidate/core'
-import { required, email, helpers } from '@vuelidate/validators'
-import InputText from 'primevue/inputtext'
-import Dropdown from 'primevue/dropdown'
-import Dialog from 'primevue/dialog'
-import Divider from 'primevue/divider'
-import Button from 'primevue/button'
+import { ref, watch } from 'vue';
+import api from '@/api';
+import { useVuelidate } from '@vuelidate/core';
+import { required, helpers, maxLength } from '@vuelidate/validators';
+import { useToast } from 'primevue/usetoast';
+
+const toast = useToast();
 
 const props = defineProps({
   visible: Boolean,
   isEdit: Boolean,
-  employee: Object
-})
+  request: Object,
+  showDelete: Boolean,
+  deleteRequest: Object
+});
 
-const emit = defineEmits(['update:visible', 'save', 'close'])
+const emit = defineEmits(['update:visible', 'save', 'update:showDelete', 'delete']);
 
-const roles = ref([
-  { label: 'Développeur', value: 'Développeur' },
-  { label: 'Designer', value: 'Designer' },
-  { label: 'Manager', value: 'Manager' },
-  { label: 'RH', value: 'RH' }
-])
+const leaveTypes = ref([
+  { label: 'Vacation', value: 'Vacation' },
+  { label: 'Sick Leave', value: 'Sick Leave' },
+  { label: 'Personal', value: 'Personal' },
+  { label: 'Bereavement', value: 'Bereavement' },
+  { label: 'Other', value: 'Other' }
+]);
 
 const form = ref({
-  id: null,
-  name: '',
-  email: '',
-  role: null
-})
+  startDate: null,
+  endDate: null,
+  type: null,
+  reason: ''
+});
 
-const isSaving = ref(false)
+const isSaving = ref(false);
 
+// Vuelidate rules
 const rules = {
-  name: { 
-    required: helpers.withMessage('Name is required.', required)
+  startDate: {
+    required: helpers.withMessage('Start date is required.', required)
   },
-  email: { 
-    required: helpers.withMessage('Email is required.', required),
-    email: helpers.withMessage('Invalid email format.', email)
+  endDate: {
+    required: helpers.withMessage('End date is required.', required),
+    validDate: helpers.withMessage(
+      'End date must be on or after start date.',
+      (value, { startDate }) => !startDate || !value || value >= startDate
+    )
   },
-  role: { 
-    required: helpers.withMessage('Role is required.', required)
+  type: {
+    required: helpers.withMessage('Leave type is required.', required),
+    maxLength: helpers.withMessage('Type must be 50 characters or less.', maxLength(50))
+  },
+  reason: {
+    required: helpers.withMessage('Reason is required.', required),
+    maxLength: helpers.withMessage('Reason must be 500 characters or less.', maxLength(500))
   }
-}
+};
 
-const v$ = useVuelidate(rules, form)
+const v$ = useVuelidate(rules, form);
 
-watch(() => props.employee, (newEmployee) => {
-  if (newEmployee) {
+watch(() => props.request, (newRequest) => {
+  console.log('Request prop changed:', newRequest);
+  if (newRequest) {
     form.value = {
-      id: newEmployee.id || null,
-      name: newEmployee.name || '',
-      email: newEmployee.email || '',
-      role: newEmployee.role || null
-    }
+      status: newRequest.status,
+      startDate: newRequest.startDate ? new Date(newRequest.startDate) : null,
+      endDate: newRequest.endDate ? new Date(newRequest.endDate) : null,
+      type: newRequest.type,
+      reason: newRequest.reason
+    };
   } else {
-    form.value = { id: null, name: '', email: '', role: null }
+    form.value = { startDate: null, endDate: null, type: null, reason: '' };
   }
-  v$.value.$reset()
-}, { immediate: true })
+  v$.value.$reset();
+}, { immediate: true });
 
 watch(() => props.visible, (newVisible) => {
+  console.log('Add/Edit dialog visibility changed:', newVisible);
   if (!newVisible) {
-    closeDialog()
+    closeDialog();
   }
-})
+});
+
+watch(() => props.showDelete, (newShowDelete) => {
+  console.log('Delete dialog visibility changed:', newShowDelete);
+});
 
 const closeDialog = () => {
-  emit('update:visible', false)
+  console.log('Emitting close add/edit dialog');
+  emit('update:visible', false);
   if (!props.isEdit) {
-    form.value = { id: null, name: '', email: '', role: null }
-    v$.value.$reset()
+    form.value = { startDate: null, endDate: null, type: null, reason: '' };
+    v$.value.$reset();
   }
-}
+};
 
-const saveEmployee = async () => {
-  await v$.value.$validate()
+const saveRequest = async () => {
+  console.log('Saving request with payload:', form.value);
+  await v$.value.$validate();
+
   if (v$.value.$invalid) {
-    return
+    console.log('Validation errors:', v$.value.$errors);
+    toast.add({
+      severity: 'error',
+      summary: 'Validation Error',
+      detail: 'Please correct the errors in the form.',
+      life: 3000
+    });
+    return;
   }
+
   try {
-    isSaving.value = true
-    emit('save', { ...form.value })
-    closeDialog()
+    isSaving.value = true;
+    const userId = localStorage.getItem('Id');
+    if (!userId) {
+      throw new Error('User ID is not available. Please ensure you are logged in.');
+    }
+
+    // Ensure token is set for this request
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      throw new Error('Authentication token is missing. Please log in again.');
+    }
+
+    // Format date as ISO 8601 for consistency with backend UTC conversion
+    const formatDate = (date) => {
+      if (!date) return null;
+      return date.toISOString(); // e.g., "2025-07-01T00:00:00.000Z"
+    };
+
+    // Payload for CreateLeaveRequestDto
+    const payload = {
+      userId: userId, // Matches CreateLeaveRequestDto
+      startDate: formatDate(form.value.startDate),
+      endDate: formatDate(form.value.endDate),
+      type: form.value.type,
+      reason: form.value.reason
+    };
+
+    // Alternative payload if backend sets userId from token
+    // const payload = {
+    //   startDate: formatDate(form.value.startDate),
+    //   endDate: formatDate(form.value.endDate),
+    //   type: form.value.type,
+    //   reason: form.value.reason
+    // };
+
+    let response;
+    if (props.isEdit) {
+      console.log('Editing request:', props.request?.id);
+      // Payload for UpdateLeaveRequestDto
+      const updatePayload = {
+        startDate: formatDate(form.value.startDate),
+        endDate: formatDate(form.value.endDate),
+        type: form.value.type,
+        reason: form.value.reason
+      };
+      response = await api.put(`/api/LeaveRequests/${props.request?.id}`, updatePayload);
+    } else {
+      console.log('Creating new request');
+      response = await api.post('/api/LeaveRequests', payload);
+    }
+
+    console.log('Save response:', response.data);
+    toast.add({
+      severity: 'success',
+      summary: 'Success',
+      detail: props.isEdit ? 'Leave request updated successfully.' : 'Leave request created successfully.',
+      life: 3000
+    });
+    emit('save', response.data);
+    closeDialog();
   } catch (error) {
-    console.error('Error saving employee:', error)
+    console.error('Error saving leave request:', error);
+    let errorMessage = 'An error occurred while saving the leave request.';
+    if (error.response) {
+      if (error.response.status === 401) {
+        errorMessage = 'Unauthorized: Please log in again.';
+        // Optionally redirect to login
+        // localStorage.removeItem('accessToken');
+        // localStorage.removeItem('Id');
+        // window.location.href = '/login';
+      } else if (error.response.status === 400) {
+        errorMessage = error.response.data.errors
+          ? Object.values(error.response.data.errors).flat().join(' ')
+          : 'Invalid input. Please check your data.';
+      }
+    } else if (error.request) {
+      errorMessage = 'No response from server. Please check your network connection.';
+    }
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: errorMessage,
+      life: 3000
+    });
   } finally {
-    isSaving.value = false
+    isSaving.value = false;
   }
-}
+};
 
 const onClose = (value) => {
-  emit('update:visible', value)
-  closeDialog()
-}
+  console.log('Add/Edit dialog close event:', value);
+  emit('update:visible', value);
+  closeDialog();
+};
 </script>
+
 
 <style scoped>
 .employee-dialog {

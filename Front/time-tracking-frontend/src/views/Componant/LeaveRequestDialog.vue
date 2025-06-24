@@ -46,28 +46,24 @@
                 <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" />
             </template>
         </Dialog>
-
-        <!-- Delete Confirmation Dialog -->
-        
     </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue'
-import api from '@/api'
-import { useVuelidate } from '@vuelidate/core'
-import { required, helpers } from '@vuelidate/validators'
+import { ref, watch } from 'vue';
+import api from '@/api';
+import { useVuelidate } from '@vuelidate/core';
+import { required, helpers } from '@vuelidate/validators';
 
 const props = defineProps({
     visible: Boolean,
     isEdit: Boolean,
     request: Object,
-    userId: String,
     showDelete: Boolean,
     deleteRequest: Object
-})
+});
 
-const emit = defineEmits(['update:visible', 'save', 'update:showDelete', 'delete'])
+const emit = defineEmits(['update:visible', 'save', 'update:showDelete', 'delete']);
 
 const leaveTypes = ref([
     { label: 'Vacation', value: 'Vacation' },
@@ -75,16 +71,16 @@ const leaveTypes = ref([
     { label: 'Personal', value: 'Personal' },
     { label: 'Bereavement', value: 'Bereavement' },
     { label: 'Other', value: 'Other' }
-])
+]);
 
 const form = ref({
     startDate: null,
     endDate: null,
     type: null,
     reason: ''
-})
+});
 
-const isSaving = ref(false)
+const isSaving = ref(false);
 
 // Vuelidate rules
 const rules = {
@@ -104,12 +100,12 @@ const rules = {
     reason: { 
         required: helpers.withMessage('Reason is required.', required)
     }
-}
+};
 
-const v$ = useVuelidate(rules, form)
+const v$ = useVuelidate(rules, form);
 
 watch(() => props.request, (newRequest) => {
-    console.log('Request prop changed:', newRequest)
+    console.log('Request prop changed:', newRequest);
     if (newRequest) {
         form.value = {
             status: newRequest.status,
@@ -117,90 +113,90 @@ watch(() => props.request, (newRequest) => {
             endDate: newRequest.endDate ? new Date(newRequest.endDate) : null,
             type: newRequest.type,
             reason: newRequest.reason
-        }
+        };
     } else {
-        form.value = { startDate: null, endDate: null, type: null, reason: '' }
+        form.value = { startDate: null, endDate: null, type: null, reason: '' };
     }
-    v$.value.$reset()
-}, { immediate: true })
+    v$.value.$reset();
+}, { immediate: true });
 
 watch(() => props.visible, (newVisible) => {
-    console.log('Add/Edit dialog visibility changed:', newVisible)
+    console.log('Add/Edit dialog visibility changed:', newVisible);
     if (!newVisible) {
-        closeDialog()
+        closeDialog();
     }
-})
+});
 
 watch(() => props.showDelete, (newShowDelete) => {
-    console.log('Delete dialog visibility changed:', newShowDelete)
-})
+    console.log('Delete dialog visibility changed:', newShowDelete);
+});
 
 const closeDialog = () => {
-    console.log('Emitting close add/edit dialog')
-    emit('update:visible', false)
+    console.log('Emitting close add/edit dialog');
+    emit('update:visible', false);
     if (!props.isEdit) {
-        form.value = { startDate: null, endDate: null, type: null, reason: '' }
-        v$.value.$reset()
+        form.value = { startDate: null, endDate: null, type: null, reason: '' };
+        v$.value.$reset();
     }
-}
+};
 
 const saveRequest = async () => {
-    console.log('Saving request with payload:', form.value)
-    await v$.value.$validate()
+    console.log('Saving request with payload:', form.value);
+    await v$.value.$validate();
     
     if (v$.value.$invalid) {
-        console.log('Validation errors:', v$.value.$errors)
-        return
+        console.log('Validation errors:', v$.value.$errors);
+        return;
     }
 
     try {
-        isSaving.value = true
-        if (!props.userId) {
-            throw new Error('User ID is not available. Please ensure you are logged in.')
+        isSaving.value = true;
+        const userId = localStorage.getItem('Id'); // Fetch userId from localStorage
+        if (!userId) {
+            throw new Error('User ID is not available. Please ensure you are logged in.');
         }
 
         // Helper function to format date as YYYY-MM-DD in local timezone
         const formatDate = (date) => {
-            if (!date) return null
-            const year = date.getFullYear()
-            const month = String(date.getMonth() + 1).padStart(2, '0')
-            const day = String(date.getDate()).padStart(2, '0')
-            return `${year}-${month}-${day}`
-        }
+            if (!date) return null;
+            const year = date.getFullYear();
+            const month = String(date.getMonth() + 1).padStart(2, '0');
+            const day = String(date.getDate()).padStart(2, '0');
+            return `${year}-${month}-${day}`;
+        };
 
         const payload = {
             startDate: formatDate(form.value.startDate),
             endDate: formatDate(form.value.endDate),
             type: form.value.type,
             reason: form.value.reason,
-            L_USER_ID: props.userId
-        }
+            UserId: userId // Use userId directly from localStorage
+        };
 
-        let response
+        let response;
         if (props.isEdit) {
-            console.log('Editing request:', props.request?.id)
-            response = await api.put(`/api/LeaveRequests/${props.request?.id}`, payload)
+            console.log('Editing request:', props.request?.id);
+            response = await api.put(`/api/LeaveRequests/${props.request?.id}`, payload);
         } else {
-            console.log('Creating new request')
-            response = await api.post('/api/LeaveRequests', payload)
+            console.log('Creating new request');
+            console.log('Payload:', payload);
+            response = await api.post('/api/LeaveRequests', payload);
         }
-        console.log('Save response:', response.data)
-        emit('save', response.data)
-        closeDialog()
+        console.log('Save response:', response.data);
+        emit('save', response.data);
+        closeDialog();
     } catch (error) {
-        console.error('Error saving leave request:', error)
+        console.error('Error saving leave request:', error);
     } finally {
-        isSaving.value = false
+        isSaving.value = false;
     }
-}
+};
 
 const onClose = (value) => {
-    console.log('Add/Edit dialog close event:', value)
-    emit('update:visible', value)
-    closeDialog()
-}
-
-
+    console.log('Add/Edit dialog close event:', value);
+    emit('update:visible', value);
+    closeDialog();
+};
 </script>
 
 <style scoped>
@@ -305,49 +301,5 @@ const onClose = (value) => {
 :deep(.p-button-primary:hover) {
     background: #4f46e5;
     border-color: #4f46e5;
-}
-
-:deep(.p-button-secondary) {
-    color: #6b7280;
-}
-
-:deep(.p-button-secondary:hover) {
-    background: #f3f4f6;
-}
-
-:deep(.p-button-danger) {
-    background: #dc3545;
-    border-color: #dc3545;
-}
-
-:deep(.p-button-danger:hover) {
-    background: #b91c1c;
-    border-color: #b91c1c;
-}
-
-:deep(.p-dialog-header) {
-    background: #ffffff;
-    border-bottom: 1px solid #e5e7eb;
-    padding: 1rem 1.5rem;
-    font-size: 1.25rem;
-    font-weight: 600;
-}
-
-:deep(.p-dialog-content) {
-    padding: 0;
-}
-
-:deep(.p-dialog-footer) {
-    border-top: 1px solid #e5e7eb;
-    padding: 1rem 1.5rem;
-    display: flex;
-    justify-content: flex-end;
-    gap: 0.5rem;
-}
-
-@keyframes shake {
-    0%, 100% { transform: translateX(0); }
-    25% { transform: translateX(-5px); }
-    75% { transform: translateX(5px); }
 }
 </style>

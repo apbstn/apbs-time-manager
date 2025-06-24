@@ -238,28 +238,22 @@ onMounted(() => {
 }
 
 .search-container {
-    display: flex;
-    align-items: center;
-    position: relative;
-    /* Ensure proper positioning context */
+  display: flex;
+  align-items: center;
+  position: relative;
+  border-color: #35D300 !important; 
 }
 
 .search-input {
-    width: 250px;
-    border-radius: 6px;
-    padding: 0.5rem 0.5rem 0.5rem 2.5rem;
-    /* Increased left padding to accommodate icon */
-    border: 1px solid #d1d5db;
-    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  width: 250px;
+  border-radius: 6px;
+  padding: 0.5rem 0.5rem 0.5rem 2rem;
+  border-bottom-color: #35D300 !important;
 }
 
 .search-input:focus {
-    border-color: #35D300;
-    /* Changed from #3b82f6 (blue) to green */
-    box-shadow: 0 0 0 3px rgba(53, 211, 0, 0.2);
-    /* Changed from rgba(59, 130, 246, 0.2) to green */
-    outline: none;
-    /* Remove default blue outline */
+  border-color: #35D300 !important;
+  /* box-shadow: 0 0 0 3px #35D300 !important; */
 }
 
 :deep(.p-input-icon-left > i) {

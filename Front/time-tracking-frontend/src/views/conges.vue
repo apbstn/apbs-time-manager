@@ -61,8 +61,8 @@
         <p>Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request?</p>
       </div>
       <template #footer>
-        <Button label="Cancel" icon="pi pi-times" class="p-button-text" @click="confirmDialogVisible = false" />
-        <Button 
+        <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="confirmDialogVisible = false" />
+        <Button class="add-button"
           :label="confirmAction === 'accept' ? 'Approve' : 'Deny'" 
           :icon="confirmAction === 'accept' ? 'pi pi-check' : 'pi pi-times'" 
           :class="confirmAction === 'accept' ? 'p-button-success' : 'p-button-danger'" 
@@ -92,19 +92,15 @@ const confirmAction = ref('')
 const selectedRequest = ref(null)
 
 const filteredRequests = computed(() => {
-  // First, filter by userId to show only the logged-in user's leave requests
-  let userRequests = leaveRequests.value.filter(request => request.userId === userId.value)
-  
-  // Then apply the search filter
-  if (!searchQuery.value) return userRequests
-  const query = searchQuery.value.toLowerCase()
-  return userRequests.filter(request =>
+  if (!searchQuery.value) return leaveRequests.value;
+  const query = searchQuery.value.toLowerCase();
+  return leaveRequests.value.filter(request =>
     (request.type && request.type.toLowerCase().includes(query)) ||
     (request.reason && request.reason.toLowerCase().includes(query)) ||
     (request.status && request.status.toLowerCase().includes(query)) ||
     (request.username && request.username.toLowerCase().includes(query))
-  )
-})
+  );
+});
 
 const statusDisplay = (status) => {
   switch (status) {
