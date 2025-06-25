@@ -1,13 +1,14 @@
 <template>
     <div>
         <!-- Add/Edit Dialog -->
-        <Dialog :visible="visible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'"
-            class="leave-request-dialog" :draggable="false" :style="{ maxWidth: '650px' }" @update:visible="onClose">
+        <Dialog :visible="visible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'" class="leave-request-dialog" :draggable="false" @update:visible="onClose">
+            <p class="dialog-subtitle">{{ isEdit ? 'Update the LeaveRequest Details Below' : 'Enter LeaveRequest Details Below' }}</p>
+      
+            <Divider/>
             <div class="p-fluid form-container">
                 <div class="field mb-4">
                     <label for="startDate" class="field-label">Start Date</label>
-                    <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon
-                        :class="{ 'p-invalid': v$.startDate.$error }" />
+                    <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.startDate.$error }" />
                     <small v-if="v$.startDate.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.startDate.$errors[0].$message }}
@@ -15,8 +16,7 @@
                 </div>
                 <div class="field mb-4">
                     <label for="endDate" class="field-label">End Date</label>
-                    <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon
-                        :class="{ 'p-invalid': v$.endDate.$error }" />
+                    <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.endDate.$error }" />
                     <small v-if="v$.endDate.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.endDate.$errors[0].$message }}
@@ -24,8 +24,7 @@
                 </div>
                 <div class="field mb-4">
                     <label for="type" class="field-label">Type</label>
-                    <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value"
-                        placeholder="Select leave type" id="type" :class="{ 'p-invalid': v$.type.$error }" />
+                    <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value" placeholder="Select leave type" id="type" :class="{ 'p-invalid': v$.type.$error }" />
                     <small v-if="v$.type.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.type.$errors[0].$message }}
@@ -40,17 +39,17 @@
                     </small>
                 </div>
             </div>
-
+<Divider/>
             <template #footer>
                 <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="closeDialog" />
-                <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" />
+                <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" :disabled="!isSavable || isSaving" />
             </template>
         </Dialog>
     </div>
 </template>
 
 <script setup>
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import api from '@/api';
 import { useVuelidate } from '@vuelidate/core';
 import { required, helpers } from '@vuelidate/validators';
@@ -103,6 +102,11 @@ const rules = {
 };
 
 const v$ = useVuelidate(rules, form);
+
+// Computed property to enable Save button only when all fields are valid
+const isSavable = computed(() => {
+    return !v$.value.$invalid && form.value.startDate && form.value.endDate && form.value.type && form.value.reason.trim()
+});
 
 watch(() => props.request, (newRequest) => {
     console.log('Request prop changed:', newRequest);
@@ -234,7 +238,7 @@ const onClose = (value) => {
 }
 .leave-request-dialog {
     width: 90%;
-    max-width: 650px;
+    max-width: 800px; /* Increased from 650px to 800px */
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     background: #ffffff;
