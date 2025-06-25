@@ -44,4 +44,21 @@ public class UserTenantsController : ControllerBase
 
         return Ok(accounts);
     }
+
+    [HttpPut("{id}/team")]
+    public async Task<IActionResult> EditUserTeam(Guid id, [FromBody] string team)
+    {
+        if (string.IsNullOrWhiteSpace(team))
+        {
+            return BadRequest("Team is required.");
+        }
+
+        var result = await _userTenantService.EditUserTeamAsync(id, team);
+        if (!result)
+        {
+            return NotFound("User not found or update failed.");
+        }
+
+        return Ok("Team updated successfully.");
+    }
 }
