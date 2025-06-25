@@ -17,7 +17,7 @@
         <Column field="team" header="Teams" sortable style="max-width: 6rem;"/>
         <Column :exportable="false" style="max-width: 3rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" />  
+            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> 
             <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>

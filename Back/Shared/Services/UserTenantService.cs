@@ -1,6 +1,8 @@
 ﻿using Shared.Services;
+using Shared.Repositories;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
+using Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Threading.Tasks;
@@ -32,5 +34,29 @@ public class UserTenantService : IUserTenantService
             results.Add(_mapper.ToUserDto(account));
         }
         return results;
+    }
+
+    public async Task<bool> EditUserTeamAsync(Guid id, string team)
+    {
+        var userTenant = await _repository.GetByIdAsync(id);
+        if (userTenant == null)
+        {
+            return false;
+        }
+
+        // Find or create a Team
+        var existingTeam = await _repository.GetTeamByNameAsync(team);
+        if (existingTeam == null)
+        {
+            var newTeam = new Team { Name = team, Description = $"Team {team} description" }; // Default description
+            await _repository.AddTeamAsync(newTeam);
+            userTenant.TeamId = newTeam.Id;
+        }
+        else
+        {
+            userTenant.TeamId = existingTeam.Id;
+        }
+
+        return await _repository.UpdateUserAsync(userTenant);
     }
 }

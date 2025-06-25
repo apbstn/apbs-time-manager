@@ -4,6 +4,7 @@ using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.Extensions;
 using Shared.Middleware;
+using Shared.Repositories;
 using Shared.Services;
 using Shared.Services.Mailing;
 using Shared.Services.Seeds;
