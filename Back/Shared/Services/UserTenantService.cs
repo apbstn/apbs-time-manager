@@ -27,7 +27,7 @@ public class UserTenantService : IUserTenantService
     public async Task<IEnumerable<object>> GetAllAccountsAsync()
     {
         var accounts = await _repository.GetAllAccountsAsync();
-        var results = new List<UserDto>();
+        var results = new List<UserTenantDto>();
         var _mapper = new UserMapper();
         foreach (var account in accounts)
         {

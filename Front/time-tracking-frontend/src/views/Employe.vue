@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2>User Accounts</h2>
-        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+
       </div>
     </div>
 
@@ -14,10 +14,14 @@
         <Column field="username" header="Username" sortable style="max-width: 6rem;" />
         <Column field="email" header="Email" sortable style="max-width: 6rem;" />
         <Column field="phoneNumber" header="Phone Number" sortable style="max-width: 6rem;" />
-        <Column field="team" header="Teams" sortable style="max-width: 6rem;"/>
+        <Column field="teamId" header="Teams" sortable style="max-width: 6rem;">
+          <template #body="slotProps">
+            {{ getTeamName(slotProps.data.teamId) || 'No team' }}
+          </template>
+        </Column>
         <Column :exportable="false" style="max-width: 3rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> 
+            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> &nbsp;
             <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>
@@ -28,7 +32,7 @@
     </div>
 
     <!-- Add/Edit Dialog -->
-    <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId"
+    <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId" :teams="availableTeams"
       @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
   </div>
 </template>
@@ -40,7 +44,7 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-
+import UserDialog from './Componant/userdialog.vue'
 
 // Inject the DeleteDialog instance
 const deleteDialogRef = inject('deleteDialog')
@@ -51,6 +55,7 @@ const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
 const selectedUser = ref(null)
+const availableTeams = ref([]) // Store available teams for the dropdown
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
@@ -65,17 +70,45 @@ const filteredUsers = computed(() => {
 const fetchUsers = async () => {
   try {
     const response = await api.get('/api/UserTenants/accounts')
-    users.value = response.data
-    console.log('Users fetched:', response.data)
+    users.value = response.data.map(user => ({
+      ...user,
+      id: user.email // Use email as a temporary id since id is missing
+    }))
+    console.log('Raw users response:', users.value)
+    console.log('Users fetched:', users.value)
   } catch (error) {
     console.error('Error fetching users:', error)
   }
 }
 
+const fetchTeams = async () => {
+  try {
+    const response = await api.get('/api/teams')
+    console.log('Raw teams response:', response.data)
+    availableTeams.value = response.data.map(team => ({
+      id: team.id,
+      name: team.name
+    }))
+    if (availableTeams.value.length === 0) {
+      console.warn('No teams fetched from /api/teams')
+    } else {
+      console.log('Teams fetched:', availableTeams.value)
+    }
+  } catch (error) {
+    console.error('Error fetching teams:', error)
+  }
+}
+
+const getTeamName = (teamId) => {
+  if (!teamId) return null
+  const team = availableTeams.value.find(t => t.id === teamId)
+  return team ? team.name : 'Unknown team'
+}
+
 const openEditDialog = (user) => {
   console.log('Opening edit dialog for user:', user)
   selectedUser.value = { ...user }
-  currentId.value = user.email // Assuming email is unique for users
+  currentId.value = user.email // Use email as currentId since id is missing
   isEdit.value = true
   dialogVisible.value = true
 }
@@ -119,7 +152,10 @@ const deleteUser = async (user) => {
   }
 }
 
-fetchUsers()
+onMounted(() => {
+  fetchUsers()
+  fetchTeams()
+})
 </script>
 
 <style scoped>

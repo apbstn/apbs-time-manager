@@ -22,7 +22,7 @@ public partial class UserMapper
     [MapperIgnoreTarget(nameof(UserNoPassDto.Id))]
     public partial User ToUserNoId(UserNoPassDto user);
 
-    [MapProperty(nameof(UserTenant.Username), nameof(UserDto.Username))]
-    [MapProperty(nameof(UserTenant.Team), nameof(UserDto.Team))] // Ensure Team is mapped
-    public partial UserDto ToUserDto(UserTenant account);
+    [MapProperty(nameof(UserTenant.Username), nameof(UserTenantDto.Username))]
+    [MapProperty(nameof(UserTenant.TeamId), nameof(UserTenantDto.TeamId))] // Ensure Team is mapped
+    public partial UserTenantDto ToUserDto(UserTenant account);
 }
