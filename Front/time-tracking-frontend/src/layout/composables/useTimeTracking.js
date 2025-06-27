@@ -11,10 +11,11 @@ export function useTimeTracking() {
 
   const showStart = ref(true); // Reactive state for Start button visibility
   const showStop = ref(false); // Reactive state for Stop button visibility
-
+ // Get email from local storage
   const getAccountId = async (email) => {
     try {
-      console.log("email", email)
+
+      
       const response = await api.post('/api/UserTenants/get-id-by-email', email)
       console.log('Account ID fetched:', response.data)
       return response.data

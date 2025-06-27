@@ -96,10 +96,14 @@ public class AuthController : ControllerBase
         var ss = await _userService.RegisterAsync(newUser, request.Password);
 
         (var accessToken, var role) = await _jwtGen.GenerateAccessToken(newUser);
+        var listTen = await _tenantService.GetListTenantOfUser(newUser.Id);
 
         return Ok(new
         {
             accessToken,
+            ss.Id,
+            listTen,
+            ss.Username,
             role
         });
     }

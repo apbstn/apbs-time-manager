@@ -44,7 +44,7 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
-import UserDialog from './Componant/userdialog.vue'
+import UserDialog from './Componant/UserDialog.vue'
 
 // Inject the DeleteDialog instance
 const deleteDialogRef = inject('deleteDialog')

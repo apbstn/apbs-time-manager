@@ -42,16 +42,16 @@ public class UserService : IUserService
     }
 
 
-    public async Task<bool> RegisterAsync(User user, string password)
+    public async Task<User> RegisterAsync(User user, string password)
     {
         if (await _tenantDbContext.Users.AnyAsync(u => u.Email == user.Email))
-            return false;
+            return null;
 
         user.PasswordHash = _encryptionService.Encrypt(password);
-        _tenantDbContext.Users.Add(user);
+        var result = _tenantDbContext.Users.Add(user);
         await _tenantDbContext.SaveChangesAsync();
 
-        return true;
+        return result.Entity;
     }
 
     private bool VerifyPassword(string password, string storedHash)
@@ -135,7 +135,7 @@ public class UserService : IUserService
                     <p>For security reasons, we recommend you change your password after first login.</p>
                     <p>You can access the system by clicking the button below:</p>
                     <p>
-                        <a href='{applicationUrl}' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                        <a href='{applicationUrl}' style='background-color: #35D300; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
                             Go to Application
                         </a>
                     </p>
@@ -201,7 +201,7 @@ public class UserService : IUserService
                     <p>For security reasons, we recommend you change your password after first login.</p>
                     <p>You can access the system by clicking the button below:</p>
                     <p>
-                        <a href='{applicationUrl}' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                        <a href='{applicationUrl}' style='background-color: #35D300; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
                             Go to Application
                         </a>
                     </p>
