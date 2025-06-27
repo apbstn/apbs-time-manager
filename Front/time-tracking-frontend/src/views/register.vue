@@ -47,10 +47,11 @@ const submitForm = async () => {
     const loginResponse = await api.post('/api/auth/login', {
       email: email.value,
       password: password.value
-    });
-    localStorage.setItem('username', loginResponse.data.username)
-    localStorage.setItem('accessToken', loginResponse.data.accessToken);
-    console.log('Login response:', loginResponse.data);
+    }); 
+    localStorage.setItem('username', registerResponse.data.username)
+    localStorage.setItem('accessToken', registerResponse.data.accessToken);
+    console.log('accessToken : ', loginResponse.data.accessToken);
+    console.log('Login response:', registerResponse.data);
 
     const loginAccessToken = localStorage.getItem('accessToken');
 
@@ -67,14 +68,15 @@ const submitForm = async () => {
       token: tooken,
       tenantId: daata
     }, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-  }
-});
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    });
     console.log('Confirmation response:', confirmResponse.data);
+    console.log("token : ", confirmResponse.data.token)
 
     const { accessToken: confirmAccessToken } = confirmResponse.data;
-    const toooken = confirmResponse.data.token;
+    const toooken = confirmResponse.data.accessToken;
     const User = confirmResponse.data.role;
     if (!confirmAccessToken) {
       throw new Error('Invalid confirmation response: missing accessToken');
@@ -112,43 +114,19 @@ const submitForm = async () => {
     <form @submit.prevent="submitForm">
       <div class="form-group">
         <label for="email">Email</label>
-        <input
-          id="email"
-          v-model="email"
-          type="text"
-          readonly="readonly"
-          placeholder="Email"
-        />
+        <input id="email" v-model="email" type="text" readonly="readonly" placeholder="Email" />
       </div>
       <div class="form-group">
         <label for="username">Username</label>
-        <input
-          id="username"
-          v-model="username"
-          type="text"
-          readonly="readonly"
-          placeholder="Username"
-        />
+        <input id="username" v-model="username" type="text" readonly="readonly" placeholder="Username" />
       </div>
       <div class="form-group">
         <label for="phoneNumber">Phone Number</label>
-        <input
-          id="phoneNumber"
-          v-model="phoneNumber"
-          type="text"
-          readonly="readonly"
-          placeholder="Phone Number"
-        />
+        <input id="phoneNumber" v-model="phoneNumber" type="text" readonly="readonly" placeholder="Phone Number" />
       </div>
       <div class="form-group">
         <label for="password">Password</label>
-        <input
-          id="password"
-          v-model="password"
-          type="password"
-          placeholder="Enter password"
-          required
-        />
+        <input id="password" v-model="password" type="password" placeholder="Enter password" required />
       </div>
       <div v-if="errorMessage" class="error">{{ errorMessage }}</div>
       <button type="submit">Register</button>

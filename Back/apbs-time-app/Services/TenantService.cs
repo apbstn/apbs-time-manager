@@ -50,16 +50,22 @@ public class TenantService : ITenantService
 
         _applicationDbContext.ForceReload();
 
-        await _applicationDbContext.Users.AddAsync(new UserTenant
+        var existingUserTenant = await _applicationDbContext.Users
+    .OfType<UserTenant>()
+    .FirstOrDefaultAsync(ut => ut.Email == user.Email /* && ut.TenantId == tenantId if applicable */);
+
+        if (existingUserTenant == null)
         {
+            _applicationDbContext.Users.AddAsync(new UserTenant
+            {
+                Email = user.Email,
+                Username = user.Username,
+                PhoneNumber = user.PhoneNumber,
+                Role = RoleEnum.User
+            });
 
-            Email = user.Email,
-            Username = user.Username,
-            PhoneNumber = user.PhoneNumber,
-            Role = RoleEnum.User
-        });
-
-        _applicationDbContext.SaveChanges();
+            _applicationDbContext.SaveChanges();
+        }
 
     }
 }
