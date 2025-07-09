@@ -94,10 +94,10 @@ h1 {
   border: 1px solid #ced4da;
   border-radius: 8px;
 
-  margin: 10px;
+  margin: 30px;
   width: 270px;
   height: 120px;
-  box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.224);
+  /* box-shadow: 10px 10px 10px rgba(0, 0, 0, 0.224); */
   text-align: left;
   position: relative; /* Enable absolute positioning for child elements */
 }
