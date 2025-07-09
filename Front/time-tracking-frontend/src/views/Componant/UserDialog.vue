@@ -1,34 +1,43 @@
 <template>
-  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)" :header="props.isEdit ? 'Edit User Team' : 'Add New User'" :modal="true" class="p-fluid stunning-dialog">
+  <Dialog :visible="visible" @update:visible="emit('update:visible', $event)"
+    :header="props.isEdit ? 'Edit User Team' : 'Add New User'" :modal="true" class="p-fluid stunning-dialog"
+    :draggable="false" :style="{ width: '650px' }">
+    <Divider class="dialog-divider" />
     <div class="dialog-content">
       <p class="dialog-subtitle">{{ props.isEdit ? 'Update the user\'s team below' : 'Enter user details below to create a new account' }}</p>
-      <Divider class="dialog-divider" />
-      <Message v-if="validationError" severity="error" :closable="true" class="error-message" @close="validationError = ''">
+      <Message v-if="validationError" severity="error" :closable="true" class="error-message"
+        @close="validationError = ''">
         {{ validationError }}
       </Message>
       <div class="p-field" v-if="!props.isEdit">
         <label for="email" class="field-label">Email</label>
-        <InputText id="email" v-model.trim="localUser.email" placeholder="Enter email address" class="stunning-input" :class="{ 'p-invalid': validationError && !localUser.email }" />
+        <InputText id="email" v-model.trim="localUser.email" placeholder="Enter email address" class="stunning-input"
+          :class="{ 'p-invalid': validationError && !localUser.email }" />
       </div>
       <br v-if="!props.isEdit" />
       <div class="p-field" v-if="!props.isEdit">
         <label for="username" class="field-label">Username</label>
-        <InputText id="username" v-model.trim="localUser.username" placeholder="Enter username" class="stunning-input" :class="{ 'p-invalid': validationError && !localUser.username }" />
+        <InputText id="username" v-model.trim="localUser.username" placeholder="Enter username" class="stunning-input"
+          :class="{ 'p-invalid': validationError && !localUser.username }" />
       </div>
       <br v-if="!props.isEdit" />
       <div class="p-field" v-if="!props.isEdit">
         <label for="phoneNumber" class="field-label">Phone Number</label>
-        <InputText id="phoneNumber" v-model.trim="localUser.phoneNumber" placeholder="Enter phone number" class="stunning-input" :class="{ 'p-invalid': validationError && !localUser.phoneNumber }" />
+        <InputText id="phoneNumber" v-model.trim="localUser.phoneNumber" placeholder="Enter phone number"
+          class="stunning-input" :class="{ 'p-invalid': validationError && !localUser.phoneNumber }" />
       </div>
       <div class="p-field">
         <label for="team" class="field-label">Team</label>
-        <Dropdown id="team" v-model="selectedTeamName" :options="props.teams" optionLabel="name" optionValue="name" placeholder="Select a team" class="stunning-input" :disabled="!props.isEdit || !props.teams.length" />
+        <Dropdown id="team" v-model="selectedTeamName" :options="props.teams" optionLabel="name" optionValue="name"
+          placeholder="Select a team" class="stunning-input" :disabled="!props.isEdit || !props.teams.length" />
       </div>
     </div>
     <Divider class="dialog-divider" />
     <div class="footer-buttons">
-      <Button label="Cancel" icon="pi pi-times" @click="closeDialog" class="p-button-text stunning-button stunning-button-cancel" />
-      <Button label="Save" icon="pi pi-check" @click="handleSave" class="stunning-button stunning-button-save" :disabled="!isSavable" />
+      <Button label="Cancel" icon="pi pi-times" @click="closeDialog"
+        class="p-button-text stunning-button stunning-button-cancel" />
+      <Button label="Save" icon="pi pi-check" @click="handleSave" class="stunning-button stunning-button-save"
+        :disabled="!isSavable" />
     </div>
   </Dialog>
 </template>

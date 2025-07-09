@@ -1,5 +1,5 @@
 <template>
-    <Dialog :visible="isVisible" modal header="Confirm Delete" :style="{ width: '350px' }" @update:visible="hideDeleteDialog">
+    <Dialog :visible="isVisible" modal header="Confirm Delete" :style="{ width: '650px' }" @update:visible="hideDeleteDialog">
         <div class="flex align-items-center gap-3 p-3">
             <i class="pi pi-exclamation-triangle" style="font-size: 2rem; color: #dc3545;"></i>
             <span>Are you sure you want to delete this {{ itemType }} "{{ itemName }}"?</span>

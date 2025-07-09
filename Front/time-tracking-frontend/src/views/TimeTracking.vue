@@ -3,7 +3,7 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2>Time Tracking</h2>
-        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="add-button" />
+        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" />
       </div>
     </div>
 
@@ -20,7 +20,7 @@
           <template #header>
             <div class="flex justify-content-between">
               <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter"
-                class="add-button" />
+                class="refresh-button" />
             </div>
           </template>
           <template #empty>
@@ -268,17 +268,17 @@ h3 {
   padding: 1.5rem;
 }
 
-.add-button {
+.refresh-button {
   border-radius: 6px;
   padding: 0.5rem 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.1s;
   color: #35D300 !important;
   border-color: #35D300 !important;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0);
 }
 
-.add-button:hover {
+.refresh-button:hover {
   transform: translateY(-1px);
   background-color: #35D300 !important;
   color: white !important;

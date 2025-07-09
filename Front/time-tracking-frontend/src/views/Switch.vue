@@ -12,7 +12,7 @@
         <div class="card">
             <div v-if="isLoading" class="text-center">Loading tenants...</div>
             <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
-            <DataTable v-else :value="filteredTenants" paginator :rows="10" tableStyle="min-width: 50rem"
+            <DataTable  responsiveLayout="stack"v-else :value="filteredTenants" paginator :rows="10" tableStyle="min-width: 50rem"
                 :showGridlines="true" @row-click="onRowClick" class="clickable-rows">
                 <Column field="name" header="Name" sortable>
                     <template #body="{ data }">

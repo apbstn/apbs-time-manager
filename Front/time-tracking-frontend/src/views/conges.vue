@@ -55,11 +55,13 @@
       header="Confirm Action" 
       :modal="true" 
       :closable="false"
-      :style="{ width: '400px' }"
+      :style="{ width: '650px' }"
     >
-      <div class="confirmation-content">
-        <p>Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request?</p>
-      </div>
+
+        <Divider class="dialog-divider" />
+<span class="tte">Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request for </span><span class="ttee"> {{ selectedRequest.username }}</span> <span class="tte">with the duration : {{ selectedRequest.numberOfDays }} Days?</span>
+        <Divider class="dialog-divider" />
+
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="confirmDialogVisible = false" />
         <Button class="add-button"
@@ -220,6 +222,13 @@ onMounted(async () => {
 </script>
 
 <style scoped>
+.tte{
+  font-size: medium;
+}
+.ttee{
+  font-size: medium;
+font-weight: bold;
+}
 .header-container {
   margin-bottom: 1.5rem;
 }

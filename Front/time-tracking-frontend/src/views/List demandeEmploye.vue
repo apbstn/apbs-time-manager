@@ -234,7 +234,7 @@ h2 {
   transition: background-color 0.2s, transform 0.1s;
   color: #35D300 !important;
   border-color: #35D300 !important;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0);
 }
 
 .add-button:hover {
