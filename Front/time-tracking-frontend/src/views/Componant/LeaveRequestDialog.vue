@@ -1,14 +1,15 @@
 <template>
     <div>
         <!-- Add/Edit Dialog -->
-        <Dialog :visible="visible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'" class="leave-request-dialog" :draggable="false" @update:visible="onClose">
+        <Dialog :visible="visible" modal :header="isEdit ? 'Edit Leave Request' : 'Add Leave Request'" class="leave-request-dialog" :draggable="false" :style="{ width: '650px' }" @update:visible="onClose">
+                <Divider class="dialog-divider" />
             <p class="dialog-subtitle">{{ isEdit ? 'Update the LeaveRequest Details Below' : 'Enter LeaveRequest Details Below' }}</p>
       
-            <Divider/>
+
             <div class="p-fluid form-container">
                 <div class="field mb-4">
                     <label for="startDate" class="field-label">Start Date</label>
-                    <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.startDate.$error }" />
+                    <Calendar v-model="form.startDate" id="startDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.startDate.$error }" style="width: 570px;" />
                     <small v-if="v$.startDate.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.startDate.$errors[0].$message }}
@@ -16,7 +17,7 @@
                 </div>
                 <div class="field mb-4">
                     <label for="endDate" class="field-label">End Date</label>
-                    <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.endDate.$error }" />
+                    <Calendar v-model="form.endDate" id="endDate" dateFormat="yy-mm-dd" showIcon :class="{ 'p-invalid': v$.endDate.$error }" style="width: 570px;" />
                     <small v-if="v$.endDate.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.endDate.$errors[0].$message }}
@@ -24,15 +25,15 @@
                 </div>
                 <div class="field mb-4">
                     <label for="type" class="field-label">Type</label>
-                    <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value" placeholder="Select leave type" id="type" :class="{ 'p-invalid': v$.type.$error }" />
+                    <Dropdown v-model="form.type" :options="leaveTypes" optionLabel="label" optionValue="value" placeholder="Select leave type" id="type" :class="{ 'p-invalid': v$.type.$error }" style="width: 570px;" />
                     <small v-if="v$.type.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.type.$errors[0].$message }}
                     </small>
                 </div>
                 <div class="field mb-4">
-                    <label for="reason" class="field-label">Reason</label>
-                    <InputText v-model="form.reason" id="reason" :class="{ 'p-invalid': v$.reason.$error }" />
+                    <FloatLabel for="reason" class="field-label">Reason</FloatLabel>
+                    <Textarea style="resize: none;" cols="75" rows="3" v-model="form.reason" id="reason" :class="{ 'p-invalid': v$.reason.$error }" />
                     <small v-if="v$.reason.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.reason.$errors[0].$message }}
@@ -213,7 +214,9 @@ const onClose = (value) => {
   border-color: #35D300 !important;
   background-color: white;
 }
-
+.dialog-divider {
+  margin: 1rem 0;
+}
 .add-button:hover {
   transform: translateY(-1px);
   background-color: #35D300 !important;
@@ -236,12 +239,20 @@ const onClose = (value) => {
   color: white !important;
   border-color: white !important;
 }
+.dialog-subtitle {
+  margin: 0 0 1rem 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-align: center;
+}
 .leave-request-dialog {
     width: 90%;
     max-width: 800px; /* Increased from 650px to 800px */
     border-radius: 12px;
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
     background: #ffffff;
+    text-align: center !important;
 }
 
 .form-container {

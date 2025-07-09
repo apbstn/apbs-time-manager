@@ -1,8 +1,9 @@
 <template>
-  <Dialog :visible="visible" modal :header="isEdit ? 'Edit Team' : 'Add Team'" class="stunning-dialog" :draggable="false" :style="{ maxWidth: '550px' }" @update:visible="onClose">
+  <Dialog :visible="visible" modal :header="isEdit ? 'Edit Team' : 'Add Team'" class="stunning-dialog" :draggable="false" :style="{ width: '650px' }" @update:visible="onClose">
+    <Divider class="dialog-divider" />
     <div class="dialog-content">
       <p class="dialog-subtitle">{{ isEdit ? 'Update the team details below' : 'Enter team details to create a new team' }}</p>
-      <Divider class="dialog-divider" />
+      
       <Message v-if="validationError" severity="error" :closable="true" class="error-message" @close="validationError = ''">
         {{ validationError }}
       </Message>
@@ -16,8 +17,8 @@
       </div>
       <br />
       <div class="p-field">
-        <label for="description" class="field-label">Description</label>
-        <InputText id="description" v-model="form.description" :class="{ 'p-invalid': v$.description.$error || validationError }" class="stunning-input" />
+        <FloatLabel variant="on" for="description" class="field-label">Description</FloatLabel>
+        <Textarea style="resize: none" cols="30" rows="5" id="description" v-model="form.description" :class="{ 'p-invalid': v$.description.$error || validationError }" class="stunning-input" />
         <small v-if="v$.description.$error" class="p-error">
           <i class="pi pi-exclamation-circle mr-1"></i>
           {{ v$.description.$errors[0].$message }}
@@ -182,6 +183,8 @@ const onClose = (value) => {
   width: 100%;
   padding: 0.75rem;
   border: 1px solid #d1d5db;
+  border-bottom-color: #35D300 !important;
+  /* border-bottom-width: 2px !important; */
   border-radius: 8px;
   transition: all 0.2s ease;
 }
@@ -193,7 +196,7 @@ const onClose = (value) => {
 }
 
 .stunning-input::placeholder {
-  color: #9ca3af;
+  color: #35D300 !important;
 }
 
 .stunning-input.p-invalid {
@@ -242,7 +245,7 @@ const onClose = (value) => {
 .stunning-button-save:hover:not(:disabled) {
   background: #35D300;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3);
+  box-shadow: 0 2px 4px #35d300;
 }
 
 .stunning-button-save:disabled {

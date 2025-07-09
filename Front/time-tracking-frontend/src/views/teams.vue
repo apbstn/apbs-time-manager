@@ -10,13 +10,13 @@
     <InputText v-model="searchQuery" placeholder="Search teams..." class="search-input" />
 
     <div class="card">
-      <DataTable :value="filteredTeams" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
+      <DataTable responsiveLayout="stack" breakpoint="960px" :value="filteredTeams" paginator :rows="10"
+        tableStyle="min-width: 50rem" :showGridlines="true">
         <Column field="name" header="Name" sortable style="max-width: 6rem;" />
-        <Column field="description" header="Description" sortable style="max-width: 6rem;"/>
+        <Column field="description" header="Description" sortable style="max-width: 6rem;" />
         <Column :exportable="false" style="max-width: 1rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button"
-              @click="openEditDialog(slotProps.data)" /> &nbsp;
+            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> &nbsp;
             <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
           </template>
         </Column>
@@ -161,7 +161,7 @@ fetchTeams()
 
 h2 {
   font-size: 2rem;
-    margin: 0;
+  margin: 0;
 }
 
 .add-button {
@@ -171,7 +171,7 @@ h2 {
   transition: background-color 0.2s, transform 0.1s;
   color: #35D300 !important;
   border-color: #35D300 !important;
-  background-color: white;
+  background-color: rgba(255, 255, 255, 0);
 }
 
 .add-button:hover {
@@ -212,4 +212,5 @@ h2 {
 .text-muted {
   color: #6b7280;
 }
+
 </style>

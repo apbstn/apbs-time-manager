@@ -1,10 +1,10 @@
 <template>
     <div>
         <!-- Add Invitation Dialog -->
-        <Dialog :visible="visible" modal header="Add Invitation" class="stunning-dialog" :draggable="false" @update:visible="onClose">
+        <Dialog :visible="visible" modal header="Add Invitation" class="stunning-dialog" :style="{ width: '650px' }" :draggable="false" @update:visible="onClose">
+            <Divider class="dialog-divider" />
             <div class="dialog-content">
                 <p class="dialog-subtitle">Enter invitation details below</p>
-                <Divider class="dialog-divider" />
                 <Message v-if="validationError" severity="error" :closable="true" class="error-message" @close="validationError = ''">
                     {{ validationError }}
                 </Message>
