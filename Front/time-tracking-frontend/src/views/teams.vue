@@ -2,7 +2,7 @@
   <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h2>Teams</h2>
+        <h2 style="font-size: 22px; color: #6B7280;">Teams</h2>
         <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
       </div>
     </div>

@@ -1,7 +1,9 @@
 <template>
+  <h2 style="font-size: 22px; color: #6B7280;">Plan Of Work</h2>
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-10">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
+      
       <div class="space-y-1">
         <InputText v-if="isEditing" v-model="scheduleName" placeholder="Nom de l’horaire"
           class="text-xl font-bold text-slate-700 border-b border-slate-300 focus:outline-none focus:border-blue-500" />

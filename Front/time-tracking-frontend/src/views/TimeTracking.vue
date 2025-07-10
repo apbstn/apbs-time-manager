@@ -2,7 +2,7 @@
   <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h2>Time Tracking</h2>
+        <h2 style="font-size: 22px; color: #6B7280;">Time Tracking</h2>
         <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" />
       </div>
     </div>
