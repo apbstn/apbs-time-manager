@@ -1,4 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Npgsql;
 using Shared.Context;
 using Shared.DTOs.TenantDtos;
 using Shared.DTOs.TenantDtos.Mappers;
@@ -153,12 +154,68 @@ public class TenantService : ITenantService
 
     public async Task<bool> DeleteTenant(Guid tenantId)
     {
+        // Step 1: Find the tenant using TenantDbContext
         var tenant = await _context.Tenants.FindAsync(tenantId);
         if (tenant == null)
             return false;
 
+        // Step 2: Read the ConnectionString from Tenants table
+        string connectionString = tenant.ConnectionString;
+        string dbName = null;
+
+        if (!string.IsNullOrEmpty(connectionString))
+        {
+            // Step 3: Extract the database name from the connection string
+            var builder = new NpgsqlConnectionStringBuilder(connectionString);
+            dbName = builder.Database;
+        }
+
+        // Step 4 & 5: Use ApplicationDbContext with MasterConnection to delete the database
+        if (!string.IsNullOrEmpty(dbName))
+        {
+            try
+            {
+                // Temporarily set the connection string to MasterConnection for ApplicationDbContext
+                var originalConnectionString = _applicationDbContext.Database.GetDbConnection().ConnectionString;
+                _applicationDbContext.Database.GetDbConnection().ConnectionString = _configuration.GetConnectionString("DefaultConnection");
+                await _applicationDbContext.Database.OpenConnectionAsync();
+
+                // Terminate active connections to the database
+                await _applicationDbContext.Database.ExecuteSqlRawAsync(
+                    $"SELECT pg_terminate_backend(pg_stat_activity.pid) " +
+                    $"FROM pg_stat_activity " +
+                    $"WHERE pg_stat_activity.datname = '{dbName}' AND pid <> pg_backend_pid()");
+
+                // Drop the database
+                await _applicationDbContext.Database.ExecuteSqlRawAsync($"DROP DATABASE IF EXISTS \"{dbName}\"");
+
+                // Restore the original connection string
+                //_applicationDbContext.Database.GetDbConnection().ConnectionString = originalConnectionString;
+                await _applicationDbContext.Database.CloseConnectionAsync();
+            }
+            catch (Exception ex)
+            {
+                throw new Exception($"Failed to delete database '{dbName}': {ex.Message}");
+            }
+        }
+
+        // Step 6: Switch back to TenantDbContext (implicitly handled by _tenantDbContext)
+
+        // Step 2 (moved): Delete related records from JOIN_TENANT_USER
+        var userTenantRecords = await _context.Set<UserTenantRole>()
+            .Where(ut => ut.TenantId == tenantId)
+            .ToListAsync();
+
+        if (userTenantRecords.Any())
+        {
+            _context.Set<UserTenantRole>().RemoveRange(userTenantRecords);
+            await _context.SaveChangesAsync();
+        }
+
+        // Step 7: Delete the tenant record from Tenants table
         _context.Tenants.Remove(tenant);
         await _context.SaveChangesAsync();
+
         return true;
     }
 

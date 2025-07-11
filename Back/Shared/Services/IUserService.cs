@@ -12,4 +12,6 @@ public interface IUserService
     public Task<User> GetUser(string Email);
     public Task<UserNoPassDto> ResetPass(UserDto user);
     public Task<bool> CheckAccess(Guid UserId, Guid TenantId);
+    public Task<User> DeleteUser(Guid UserId);
+    public Task<User> EditUser(Guid UserId, User updatedUser);
 }

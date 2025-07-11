@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Http.HttpResults;
+using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
@@ -231,5 +232,86 @@ public class UserService : IUserService
         if (ss != null)
             return true;
         return false;
+    }
+
+    public async Task<User> DeleteUser(Guid userId)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        try
+        {
+            using var transaction = await _tenantDbContext.Database.BeginTransactionAsync();
+            var user = await _tenantDbContext.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return null; // User not found
+            }
+
+            _tenantDbContext.Users.Remove(user);
+            await _tenantDbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return user; // Return the deleted user
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            // Handle concurrency conflicts (e.g., log and rethrow or resolve)
+            throw new InvalidOperationException("Concurrency conflict occurred while deleting the user.", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            // Handle foreign key or other database constraints
+            throw new InvalidOperationException("An error occurred while deleting the user due to database constraints.", ex);
+        }
+        catch (Exception ex)
+        {
+            // Handle other unexpected errors
+            throw new InvalidOperationException("An unexpected error occurred while deleting the user.", ex);
+        }
+    }
+
+    public async Task<User> EditUser(Guid userId, User updatedUser)
+    {
+        if (userId == Guid.Empty)
+        {
+            throw new ArgumentException("User ID cannot be empty.", nameof(userId));
+        }
+
+        try
+        {
+            using var transaction = await _tenantDbContext.Database.BeginTransactionAsync();
+            var user = await _tenantDbContext.Users.FindAsync(userId);
+
+            if (user == null)
+            {
+                return null; // User not found
+            }
+
+            // Update user properties
+            user.Email = updatedUser.Email;
+            user.Username = updatedUser.Username;
+            user.PhoneNumber = updatedUser.PhoneNumber;
+
+            await _tenantDbContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+
+            return user; // Return the updated user
+        }
+        catch (DbUpdateConcurrencyException ex)
+        {
+            throw new InvalidOperationException("Concurrency conflict occurred while editing the user.", ex);
+        }
+        catch (DbUpdateException ex)
+        {
+            throw new InvalidOperationException("An error occurred while editing the user due to database constraints.", ex);
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException("An unexpected error occurred while editing the user.", ex);
+        }
     }
 }
