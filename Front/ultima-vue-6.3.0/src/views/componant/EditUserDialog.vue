@@ -1,9 +1,9 @@
 <template>
-  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Add New User" :modal="true"
-    class="p-fluid stunning-dialog">
-          <Divider class="dialog-divider" />
+  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Edit User"
+    :modal="true" class="p-fluid stunning-dialog">
+    <Divider class="dialog-divider" />
     <div class="dialog-content">
-      <p class="dialog-subtitle">Enter user details below to create a new account</p>
+      <p class="dialog-subtitle">Update the user details below</p>
       <Message v-if="validationError" severity="error" :closable="true" class="error-message"
         @close="validationError = ''">
         {{ validationError }}
@@ -27,15 +27,11 @@
       </div>
     </div>
     <Divider class="dialog-divider" />
-    
-      
-      <div class="footer-buttons">
-        <Button label="Cancel" icon="pi pi-times" @click="emitCancel"
-          class="p-button-text stunning-button stunning-button-cancel" />
-        <Button label="Save" icon="pi pi-check" @click="validateAndSave" class="stunning-button stunning-button-save"
-          :disabled="!isFormValid" />
-      </div>
-    
+    <div class="footer-buttons">
+      <Button label="Cancel" icon="pi pi-times" @click="emitCancel" class="p-button-text stunning-button stunning-button-cancel" />
+      <Button label="Save" icon="pi pi-check" @click="validateAndSave" class="stunning-button stunning-button-save"
+        :disabled="!isFormValid" />
+    </div>
   </Dialog>
 </template>
 

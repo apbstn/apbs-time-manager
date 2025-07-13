@@ -1,6 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
@@ -16,6 +17,7 @@ public class UserService : IUserService
     private readonly TenantDbContext _tenantDbContext;
     private readonly IEncryptionService _encryptionService;
     private readonly IMailService _mailService;
+    private readonly IConfiguration _configuration;
 
     public UserService(ApplicationDbContext appContext, IEncryptionService encryptionService, TenantDbContext tenantDbContext, IMailService mailService)
     {
@@ -23,6 +25,7 @@ public class UserService : IUserService
         _encryptionService = encryptionService;
         _tenantDbContext = tenantDbContext;
         _mailService = mailService;
+
     }
 
     public async Task<User> AuthenticateAsync(string email, string password)
@@ -284,18 +287,84 @@ public class UserService : IUserService
         try
         {
             using var transaction = await _tenantDbContext.Database.BeginTransactionAsync();
-            var user = await _tenantDbContext.Users.FindAsync(userId);
 
+            // Find the user in the tenant context
+            var user = await _tenantDbContext.Users.FindAsync(userId);
             if (user == null)
             {
                 return null; // User not found
             }
 
-            // Update user properties
+            // Store the old email before updating
+            string oldEmail = user.Email;
+
+            // Update user properties in the tenant context (but don't save yet)
             user.Email = updatedUser.Email;
             user.Username = updatedUser.Username;
             user.PhoneNumber = updatedUser.PhoneNumber;
 
+            // Retrieve the tenant's connection string
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.UserId == userId);
+            if (tenant == null || string.IsNullOrEmpty(tenant.ConnectionString))
+            {
+                throw new InvalidOperationException("Tenant or connection string not found for the user.");
+            }
+
+            // Store the original connection string
+            var originalConnectionString = _appContext.Database.GetDbConnection().ConnectionString;
+
+            // Ensure the connection is closed before changing the connection string
+            if (_appContext.Database.GetDbConnection().State == System.Data.ConnectionState.Open)
+            {
+                await _appContext.Database.CloseConnectionAsync();
+            }
+
+            // Set the tenant's connection string and validate it
+            if (string.IsNullOrWhiteSpace(tenant.ConnectionString))
+            {
+                throw new InvalidOperationException("Tenant connection string is empty or invalid.");
+            }
+            _appContext.Database.GetDbConnection().ConnectionString = tenant.ConnectionString;
+
+            try
+            {
+                // Verify the connection string is set
+                if (string.IsNullOrWhiteSpace(_appContext.Database.GetDbConnection().ConnectionString))
+                {
+                    throw new InvalidOperationException("Failed to set the connection string for _appContext.");
+                }
+
+                // Open the connection
+                await _appContext.Database.OpenConnectionAsync();
+
+                // Find the account in T_ACCOUNT using the old email
+                var account = await _appContext.Users
+                    .FirstOrDefaultAsync(a => a.Email == oldEmail);
+                if (account == null)
+                {
+                    throw new InvalidOperationException($"No T_ACCOUNT record found for email: {oldEmail}");
+                }
+
+                // Update the account details
+                account.Email = updatedUser.Email;
+                account.Username = updatedUser.Username;
+                account.PhoneNumber = updatedUser.PhoneNumber;
+
+                // Save changes to T_ACCOUNT
+                await _appContext.SaveChangesAsync();
+            }
+            finally
+            {
+                // Close the connection and restore the original connection string
+                if (_appContext.Database.GetDbConnection().State == System.Data.ConnectionState.Open)
+                {
+                    await _appContext.Database.CloseConnectionAsync();
+                }
+                _appContext.Database.GetDbConnection().ConnectionString = originalConnectionString;
+            }
+
+            // Save changes to the tenant context
             await _tenantDbContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
@@ -315,3 +384,6 @@ public class UserService : IUserService
         }
     }
 }
+
+   
+
