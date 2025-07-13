@@ -1,13 +1,14 @@
 <template>
+  <h2>List Of Users</h2>
   <div class="users-page">
     <div class="header-container">
       <Toolbar class="header-toolbar">
         <template #start>
           <div class="flex align-items-center">
-            <h2>Users</h2>
+            <h3>Search User : </h3>
             <span class="p-input-icon-left search-container">
               <i class="pi pi-search" />
-              <InputText v-model="searchQuery" placeholder="Search Users..." class="search-input" />
+              <InputText v-model="searchQuery" class="search-input" />
             </span>
           </div>
         </template>
@@ -23,7 +24,7 @@
 
     <Message v-if="successMessage" severity="success" :closable="true" class="success-message"
       @close="successMessage = null">
-      Password reset done with success
+      {{ successMessage }}
     </Message>
 
     <AddUserDialog 
@@ -40,13 +41,27 @@
       @save="resetPassword"
     />
 
+    <EditUserDialog 
+      :showDialog="showEditDialog" 
+      :user="selectedUser"
+      @update:showDialog="showEditDialog = $event"
+      @save="editUser"
+    />
+
+    <DeleteUserDialog 
+      :showDialog="showDeleteDialog" 
+      :user="selectedUser"
+      @update:showDialog="showDeleteDialog = $event"
+      @save="deleteUser"
+    />
+
     <div class="card">
       <DataTable :value="filteredUsers" :loading="loading" tableStyle="min-width: 100%" :showGridlines="true"
         responsiveLayout="scroll" class="p-datatable-sm">
         <template #empty>
           <div class="text-center text-muted">No users found</div>
         </template>
-        <Column field="email" header="Email" sortable style="max-width: 6rem">
+        <Column field="email" header="Email" sortable style="max-width: 6rem;">
           <template #body="{ data }">
             {{ data.email }}
           </template>
@@ -57,11 +72,14 @@
             {{ data.phoneNumber || 'N/A' }}
           </template>
         </Column>
-        <Column :exportable="false" header="Reset Password"
-          style="max-width: 1rem; text-align: center">
+        <Column :exportable="false" header="Actions" style="max-width: 3rem; text-align: center">
           <template #body="slotProps">
             <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
               @click="openResetDialog(slotProps.data)" />
+            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+              @click="openEditDialog(slotProps.data)" />
+            <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+              @click="openDeleteDialog(slotProps.data)" />
           </template>
         </Column>
       </DataTable>
@@ -80,6 +98,8 @@ import Message from 'primevue/message';
 import Toolbar from 'primevue/toolbar';
 import AddUserDialog from './componant/AddUserDialog.vue';
 import ResetPasswordDialog from './componant/ResetPasswordDialog.vue';
+import EditUserDialog from './componant/EditUserDialog.vue';
+import DeleteUserDialog from './componant/DeleteUserDialog.vue'; // New component
 
 const users = ref([]);
 const loading = ref(false);
@@ -87,6 +107,8 @@ const error = ref(null);
 const searchQuery = ref('');
 const showAddDialog = ref(false);
 const showResetDialog = ref(false);
+const showEditDialog = ref(false);
+const showDeleteDialog = ref(false); // New state for delete dialog
 const newUser = ref({
   email: '',
   username: '',
@@ -176,7 +198,37 @@ const openResetDialog = (user) => {
   showResetDialog.value = true;
 };
 
-const resetPassword = async (userData) => {
+const resetPassword = async (data) => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    showResetDialog.value = false;
+    successMessage.value = 'Password has been reset with success';
+    console.log('Success message set to:', successMessage.value);
+  } catch (err) {
+    console.error('Error resetting password:', err.message);
+    error.value = 'Failed to reset password: ' + err.message;
+  } finally {
+    loading.value = false;
+    if (successMessage.value) {
+      setTimeout(() => {
+        successMessage.value = null;
+      }, 7000); // Auto-close after 7 seconds
+    }
+  }
+};
+
+const openEditDialog = (user) => {
+  selectedUser.value = { ...user };
+  showEditDialog.value = true;
+};
+
+const editUser = async (userData) => {
   try {
     loading.value = true;
     error.value = null;
@@ -186,13 +238,8 @@ const resetPassword = async (userData) => {
       throw new Error('No access token found');
     }
 
-    const payload = {
-      email: userData.email,
-      username: userData.username,
-      phoneNumber: userData.phoneNumber || ''
-    };
-
-    await axios.patch('http://localhost:58169/api/user/resetPass', payload, {
+    const userId = selectedUser.value.id; // Assuming the user object has an 'id' field
+    await axios.put(`http://localhost:58169/api/user/edit/${userId}`, userData, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -200,16 +247,57 @@ const resetPassword = async (userData) => {
       }
     });
 
-    successMessage.value = true;
-    showResetDialog.value = false;
-    setTimeout(() => (successMessage.value = null), 3000); // Auto-close after 3 seconds
+    const index = users.value.findIndex(user => user.id === userId);
+    if (index !== -1) {
+      users.value[index] = { ...users.value[index], ...userData };
+    }
+
+    showEditDialog.value = false;
+    successMessage.value = userData.username + '\'s account has updated successfully';
+    setTimeout(() => (successMessage.value = null), 7000); // Auto-close after 3 seconds
   } catch (err) {
-    console.error('Error resetting password:', err);
+    console.error('Error editing user:', err);
     error.value =
-      'Failed to reset password: ' +
+      'Failed to edit user: ' +
       (err.response?.data?.message || err.message || 'Unknown error');
   } finally {
     loading.value = false;
+  }
+};
+
+const openDeleteDialog = (user) => {
+  selectedUser.value = { ...user };
+  showDeleteDialog.value = true;
+};
+
+const deleteUser = async (data) => {
+  try {
+    loading.value = true;
+    error.value = null;
+
+    if (data.error) {
+      throw new Error(data.error);
+    }
+
+    showDeleteDialog.value = false;
+    successMessage.value = `${data.user.username} has been deleted successfully`;
+    console.log('Success message set to:', successMessage.value);
+
+    // Remove the user from the local users array
+    const index = users.value.findIndex(user => user.id === data.user.id);
+    if (index !== -1) {
+      users.value.splice(index, 1);
+    }
+  } catch (err) {
+    console.error('Error deleting user:', err.message);
+    error.value = 'Failed to delete user: ' + err.message;
+  } finally {
+    loading.value = false;
+    if (successMessage.value) {
+      setTimeout(() => {
+        successMessage.value = null;
+      }, 7000); // Auto-close after 7 seconds
+    }
   }
 };
 
@@ -321,11 +409,19 @@ onMounted(fetchUsers);
 }
 
 h2 {
-  font-size: 2.25rem;
-  font-weight: 700;
-  margin: 0;
-  color: #1f2937;
-  letter-spacing: -0.025rem;
+    font-size: 2.1rem;
+    font-weight: 450;
+    margin: 0;
+    color: #000000;
+    letter-spacing: -0.025rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 150;
+    margin: 0;
+    color: #000000;
+    letter-spacing: -0.025rem;
 }
 
 .text-center {
@@ -372,6 +468,28 @@ h2 {
   color: #ffffff !important;
   background-color: #35D300 !important;
   box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3) !important;
+}
+
+:deep(.p-button.p-button-text.edit-button) {
+  color: #35D300 !important;
+  margin-left: 0.25rem;
+}
+
+:deep(.p-button.p-button-text.edit-button:hover) {
+  color: #ffffff !important;
+  background-color: #35D300 !important;
+  box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3) !important;
+}
+
+:deep(.p-button.p-button-text.delete-button) {
+  color: #35D300 !important;
+  margin-left: 0.25rem;
+}
+
+:deep(.p-button.p-button-text.delete-button:hover) {
+  color: #ffffff !important;
+  background-color: #35D300 !important;
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
 }
 
 :deep(.p-button.p-button-text.p-button-warning) {

@@ -1,41 +1,40 @@
 <template>
-  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Add New User" :modal="true"
-    class="p-fluid stunning-dialog">
-          <Divider class="dialog-divider" />
+  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Edit Tenant"
+    :modal="true" class="p-fluid stunning-dialog">
+    <Divider class="dialog-divider" />
     <div class="dialog-content">
-      <p class="dialog-subtitle">Enter user details below to create a new account</p>
+      <p class="dialog-subtitle">Update the tenant details below</p>
       <Message v-if="validationError" severity="error" :closable="true" class="error-message"
         @close="validationError = ''">
         {{ validationError }}
       </Message>
       <div class="p-field">
-        <label for="email" class="field-label">Email</label>
-        <InputText id="email" v-model.trim="localUser.email" placeholder="Enter email address" class="stunning-input"
-          :class="{ 'p-invalid': validationError && !localUser.email }" />
+        <label for="tenantname" class="field-label">Tenant Name</label>
+        <InputText id="tenantname" v-model.trim="localTenant.tenantname" placeholder="Enter tenant name" class="stunning-input"
+          :class="{ 'p-invalid': validationError && !localTenant.tenantname }" />
       </div>
       <br />
       <div class="p-field">
-        <label for="username" class="field-label">Username</label>
-        <InputText id="username" v-model.trim="localUser.username" placeholder="Enter username" class="stunning-input"
-          :class="{ 'p-invalid': validationError && !localUser.username }" />
+        <label for="email" class="field-label">Email (Read-only)</label>
+        <InputText id="email" v-model.trim="localTenant.email" placeholder="Email" class="stunning-input" disabled />
       </div>
       <br />
       <div class="p-field">
-        <label for="phoneNumber" class="field-label">Phone Number</label>
-        <InputText id="phoneNumber" v-model.trim="localUser.phoneNumber" placeholder="Enter phone number"
-          class="stunning-input" :class="{ 'p-invalid': validationError && !localUser.phoneNumber }" />
+        <label for="username" class="field-label">Username (Read-only)</label>
+        <InputText id="username" v-model.trim="localTenant.username" placeholder="Username" class="stunning-input" disabled />
+      </div>
+      <br />
+      <div class="p-field">
+        <label for="phonenumber" class="field-label">Phone Number (Read-only)</label>
+        <InputText id="phonenumber" v-model.trim="localTenant.phonenumber" placeholder="Phone number" class="stunning-input" disabled />
       </div>
     </div>
     <Divider class="dialog-divider" />
-    
-      
-      <div class="footer-buttons">
-        <Button label="Cancel" icon="pi pi-times" @click="emitCancel"
-          class="p-button-text stunning-button stunning-button-cancel" />
-        <Button label="Save" icon="pi pi-check" @click="validateAndSave" class="stunning-button stunning-button-save"
-          :disabled="!isFormValid" />
-      </div>
-    
+    <div class="footer-buttons">
+      <Button label="Cancel" icon="pi pi-times" @click="emitCancel" class="p-button-text stunning-button stunning-button-cancel" />
+      <Button label="Save" icon="pi pi-check" @click="validateAndSave" class="stunning-button stunning-button-save"
+        :disabled="!isFormValid" />
+    </div>
   </Dialog>
 </template>
 
@@ -53,12 +52,13 @@ const props = defineProps({
     type: Boolean,
     required: true
   },
-  user: {
+  tenant: {
     type: Object,
     default: () => ({
+      tenantname: '',
       email: '',
       username: '',
-      phoneNumber: ''
+      phonenumber: ''
     })
   }
 });
@@ -66,27 +66,23 @@ const props = defineProps({
 // Emits
 const emit = defineEmits(['update:showDialog', 'save']);
 
-// Local reactive user object to manage form data
-const localUser = ref({ ...props.user });
+// Local reactive tenant object to manage form data
+const localTenant = ref({ ...props.tenant });
 
 // Validation error message
 const validationError = ref('');
 
-// Computed property to check if all fields are filled
+// Computed property to check if tenantname is filled
 const isFormValid = computed(() => {
-  return (
-    localUser.value.email.trim() &&
-    localUser.value.username.trim() &&
-    localUser.value.phoneNumber.trim()
-  );
+  return localTenant.value.tenantname.trim();
 });
 
-// Sync localUser with props.user when it changes
+// Sync localTenant with props.tenant when it changes
 watch(
-  () => props.user,
-  (newUser) => {
-    localUser.value = { ...newUser };
-    validationError.value = ''; // Reset error when user prop changes
+  () => props.tenant,
+  (newTenant) => {
+    localTenant.value = { ...newTenant };
+    validationError.value = ''; // Reset error when tenant prop changes
   },
   { deep: true }
 );
@@ -110,10 +106,10 @@ const emitCancel = () => {
 // Validate and emit save event
 const validateAndSave = () => {
   if (!isFormValid.value) {
-    validationError.value = 'Please fill in all fields.';
+    validationError.value = 'Please fill in the tenant name.';
     return;
   }
-  emit('save', localUser.value);
+  emit('save', localTenant.value);
   validationError.value = ''; // Reset error after successful save
 };
 </script>
@@ -121,7 +117,6 @@ const validateAndSave = () => {
 <style scoped>
 .stunning-dialog {
   max-width: 650px;
-  /* Increased from 32rem to make dialog wider */
   border-radius: 12px;
   background: linear-gradient(145deg, #ffffff, #f8fafc);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -129,7 +124,7 @@ const validateAndSave = () => {
 }
 
 .dialog-content {
-  padding: 1.5rem;
+  padding: 0.5rem;
 }
 
 .dialog-subtitle {
@@ -141,7 +136,8 @@ const validateAndSave = () => {
 }
 
 .dialog-divider {
-  margin: 1rem 0;
+  margin: 2px 0;
+  margin-top: 2px 0;
 }
 
 .field-label {
@@ -160,11 +156,14 @@ const validateAndSave = () => {
   transition: all 0.2s ease;
 }
 
-.stunning-input:focus {
+.stunning-input:disabled {
+  background-color: #f3f4f6;
+  color: #6b7280;
+}
+
+.stunning-input:focus:not(:disabled) {
   border-color: #35D300;
-  /* Changed from #3b82f6 (blue) to green */
   box-shadow: 0 0 0 3px rgba(53, 211, 0, 0.2);
-  /* Changed from rgba(59, 130, 246, 0.2) to green */
   outline: none;
 }
 
@@ -205,26 +204,20 @@ const validateAndSave = () => {
 
 .stunning-button-cancel:hover {
   background: #FF0000;
-  /* Red for cancel hover */
   color: #ffffff;
-  /* White text for contrast */
   border-color: #FF0000;
-  /* Match border to hover */
 }
 
 .stunning-button-save {
   background: #35d30000 !important;
-  /* Green for save */
   color: #35D300 !important;
   border-color: #35D300 !important;
 }
 
 .stunning-button-save:hover:not(:disabled) {
   background: #35D300;
-  /* Ensure green hover */
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3);
-  /* Green shadow */
 }
 
 .stunning-button-save:disabled {
@@ -255,28 +248,19 @@ const validateAndSave = () => {
 
 :deep(.p-button:hover) {
   background-color: #35D300 !important;
-  /* Override blue hover for all buttons */
   box-shadow: 0 3px 6px rgba(53, 211, 0, 0.2) !important;
-  /* Green shadow */
   color: #ffffff !important;
-  /* White text on hover for contrast */
 }
 
 :deep(.p-button.p-button-text:hover) {
   background-color: transparent !important;
-  /* Keep text buttons transparent */
   color: #35D300 !important;
-  /* Green text on hover for text buttons */
   box-shadow: none !important;
-  /* No shadow for text buttons */
 }
 
 :deep(.p-button.p-button-text.stunning-button-cancel:hover) {
   background-color: #FF0000 !important;
-  /* Red hover for cancel */
   color: #ffffff !important;
-  /* White text */
-  border-color: #ffffff !important;
-  /* Match border */
+  border-color: #FF0000 !important;
 }
 </style>

@@ -1,17 +1,18 @@
 <template>
-  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Reset Password"
+  <Dialog :visible="showDialog" @update:visible="emit('update:showDialog', $event)" :style="{ width: '650px' }" header="Delete User"
     :modal="true" class="p-fluid stunning-dialog">
     <Divider class="dialog-divider" />
     <div class="dialog-content">
       <p class="dialog-subtitle">
-        Are you sure you want to reset the password for
-        <strong>{{ localUser.email }}</strong>?
+        Are you sure you want to delete
+        <strong>{{ localUser.username }}</strong>? <br/>
+        This action cannot be undone.
       </p>
     </div>
     <Divider class="dialog-divider" />
     <div class="footer-buttons">
       <Button label="Cancel" icon="pi pi-times" @click="emitCancel" class="p-button-text stunning-button stunning-button-cancel" />
-      <Button label="Confirm" icon="pi pi-check" @click="save" class="stunning-button stunning-button-save" />
+      <Button label="Delete" icon="pi pi-trash" @click="save" class="stunning-button stunning-button-delete" />
     </div>
   </Dialog>
 </template>
@@ -32,6 +33,7 @@ const props = defineProps({
   user: {
     type: Object,
     default: () => ({
+      id: '',
       email: '',
       username: '',
       phoneNumber: ''
@@ -69,7 +71,7 @@ const emitCancel = () => {
   emit('update:showDialog', false);
 };
 
-// Save (confirm) password reset
+// Save (confirm) user deletion
 const save = async () => {
   try {
     const token = localStorage.getItem('accessToken');
@@ -77,14 +79,8 @@ const save = async () => {
       throw new Error('No access token found');
     }
 
-    const payload = {
-      email: localUser.value.email,
-      username: localUser.value.username,
-      phoneNumber: localUser.value.phoneNumber || ''
-    };
-
-    console.log('Resetting password for:', payload);
-    const response = await axios.patch('http://localhost:58169/api/user/resetPass', payload, {
+    console.log('Deleting user with ID:', localUser.value.id);
+    const response = await axios.delete(`http://localhost:58169/api/user/delete/${localUser.value.id}`, {
       headers: {
         Authorization: `Bearer ${token}`,
         'Content-Type': 'application/json',
@@ -92,11 +88,11 @@ const save = async () => {
       }
     });
 
-    console.log('Reset password response:', response.status, response.data);
+    console.log('Delete user response:', response.status, response.data);
     emit('save', { user: localUser.value, response: response.data });
     emit('update:showDialog', false);
   } catch (error) {
-    console.error('Error resetting password:', error.response ? error.response.data : error.message);
+    console.error('Error deleting user:', error.response ? error.response.data : error.message);
     emit('save', { user: localUser.value, error: error.response?.data?.message || error.message });
     emit('update:showDialog', false);
   }
@@ -154,29 +150,24 @@ const save = async () => {
 
 .stunning-button-cancel:hover {
   background: #FF0000;
-  /* Red for cancel hover */
   color: #ffffff;
-  /* White text for contrast */
   border-color: #FF0000;
-  /* Match border to hover */
 }
 
-.stunning-button-save {
-  background: #35d30000 !important;
-  /* Green for save */
+.stunning-button-delete {
+  background: #ef444400 !important;
   color: #35D300 !important;
   border-color: #35D300 !important;
 }
 
-.stunning-button-save:hover:not(:disabled) {
-  background: #35D300;
-  /* Ensure green hover */
+.stunning-button-delete:hover:not(:disabled) {
+  background: #35D300 !important;
+  border-color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3);
-  /* Green shadow */
+  box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3);
 }
 
-.stunning-button-save:disabled {
+.stunning-button-delete:disabled {
   background: #d1d5db;
   cursor: not-allowed;
 }
@@ -204,28 +195,25 @@ const save = async () => {
 
 :deep(.p-button:hover) {
   background-color: #35D300 !important;
-  /* Override blue hover for all buttons */
   box-shadow: 0 3px 6px rgba(53, 211, 0, 0.2) !important;
-  /* Green shadow */
   color: #ffffff !important;
-  /* White text on hover for contrast */
 }
 
 :deep(.p-button.p-button-text:hover) {
   background-color: transparent !important;
-  /* Keep text buttons transparent */
   color: #35D300 !important;
-  /* Green text on hover for text buttons */
   box-shadow: none !important;
-  /* No shadow for text buttons */
 }
 
 :deep(.p-button.p-button-text.stunning-button-cancel:hover) {
   background-color: #FF0000 !important;
-  /* Red hover for cancel */
   color: #ffffff !important;
-  /* White text */
   border-color: #ffffff !important;
-  /* Match border */
+}
+
+:deep(.p-button.p-button-text.stunning-button-delete:hover) {
+  background-color: #ef4444 !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
 }
 </style>

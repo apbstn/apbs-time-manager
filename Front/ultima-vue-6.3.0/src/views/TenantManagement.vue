@@ -1,8 +1,15 @@
 <template>
+    <h2>List Of Tenants</h2>
     <div class="users-page">
         <!-- Error Message -->
         <Message v-if="error" severity="error" :closable="true" class="error-message">
             {{ error }}
+        </Message>
+
+        <!-- Success Message -->
+        <Message v-if="successMessage" severity="success" :closable="true" class="success-message"
+            @close="successMessage = null">
+            {{ successMessage }}
         </Message>
 
         <!-- Add Tenant Button and Search -->
@@ -10,10 +17,10 @@
             <Toolbar class="header-toolbar">
                 <template #start>
                     <div class="flex align-items-center">
-                        <h2>Tenants</h2>
+                        <h3>Search Tenant : </h3>
                         <span class="p-input-icon-left search-container">
                             <i class="pi pi-search" />
-                            <InputText v-model="searchQuery" placeholder="Search tenants..." class="search-input" />
+                            <InputText v-model="searchQuery" class="search-input" />
                         </span>
                     </div>
                 </template>
@@ -24,8 +31,17 @@
             </Toolbar>
         </div>
 
+        <!-- Add Tenant Dialog -->
         <AddTenantDialog :showDialog="isAdding" :tenant="newTenantData" :usersList="usersList"
             @update:showDialog="isAdding = $event" @save="saveNewTenant" />
+
+        <!-- Edit Tenant Dialog -->
+        <EditTenantDialog :showDialog="showEditDialog" :tenant="selectedTenant"
+            @update:showDialog="showEditDialog = $event" @save="editTenant" />
+
+        <!-- Delete Tenant Dialog -->
+        <DeleteTenantDialog :showDialog="showDeleteDialog" :tenant="selectedTenant"
+            @update:showDialog="showDeleteDialog = $event" @save="deleteTenant" />
 
         <div class="card">
             <DataTable :value="filteredTenants" :loading="loading" tableStyle="min-width: 100%" :showGridlines="true"
@@ -33,12 +49,20 @@
                 <template #empty>
                     <div class="text-center text-muted">No tenants found</div>
                 </template>
-                <Column field="tenantname" header="Tenant Name" sortable style="min-width: 200px"></Column>
-                <Column field="email" header="Email" sortable style="min-width: 200px"></Column>
-                <Column field="username" header="Username" sortable style="min-width: 150px"></Column>
-                <Column field="phonenumber" header="Phone Number" sortable style="min-width: 150px">
+                <Column field="tenantname" header="Tenant Name" sortable style="max-width: 8rem"></Column>
+                <Column field="email" header="Email" sortable style="max-width: 8rem"></Column>
+                <Column field="username" header="Username" sortable style="max-width: 8rem"></Column>
+                <Column field="phonenumber" header="Phone Number" sortable style="max-width: 8rem">
                     <template #body="{ data }">
                         {{ data.phonenumber || 'N/A' }}
+                    </template>
+                </Column>
+                <Column :exportable="false" header="Actions" style="max-width: 5rem; text-align: center">
+                    <template #body="slotProps">
+                        <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+                            @click="openEditDialog(slotProps.data)" />
+                        <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+                            @click="openDeleteDialog(slotProps.data)" />
                     </template>
                 </Column>
             </DataTable>
@@ -56,24 +80,28 @@ import Message from 'primevue/message';
 import Toolbar from 'primevue/toolbar';
 import InputText from 'primevue/inputtext';
 import AddTenantDialog from './componant/AddTenantDialog.vue';
+import EditTenantDialog from './componant/EditTenantDialog.vue';
+import DeleteTenantDialog from './componant/DeleteTenantDialog.vue';
 
-const users = ref([]);
+const tenants = ref([]);
 const loading = ref(false);
 const error = ref(null);
-const isEditing = ref(false);
 const isAdding = ref(false);
 const searchQuery = ref('');
-const editUserData = ref({});
 const newTenantData = ref({
     tenantname: '',
     userId: null
 });
 const usersList = ref([]);
+const showEditDialog = ref(false);
+const showDeleteDialog = ref(false);
+const selectedTenant = ref(null);
+const successMessage = ref(null);
 
 const filteredTenants = computed(() => {
-    if (!searchQuery.value) return users.value;
+    if (!searchQuery.value) return tenants.value;
     const query = searchQuery.value.toLowerCase();
-    return users.value.filter(
+    return tenants.value.filter(
         (tenant) =>
             tenant.tenantname?.toLowerCase().includes(query) ||
             tenant.email?.toLowerCase().includes(query) ||
@@ -98,12 +126,12 @@ const fetchTenants = async () => {
             }
         });
 
-        users.value = response.data.items.map(item => ({
+        tenants.value = response.data.items.map(item => ({
             code: item.code,
             tenantname: item.tenantName || 'N/A',
-            email: item.email,
-            username: item.username,
-            phonenumber: item.phoneNumber
+            email: item.email || 'N/A',
+            username: item.username || 'N/A',
+            phonenumber: item.phoneNumber || 'N/A'
         }));
     } catch (err) {
         console.error('Error fetching tenants:', err);
@@ -178,7 +206,7 @@ const saveNewTenant = async (tenantData) => {
             }
         });
 
-        users.value.push({
+        tenants.value.push({
             code: response.data.code || response.data.T_CODE,
             tenantname: response.data.tenantName || response.data.T_NAME || 'N/A',
             email: response.data.email || 'N/A',
@@ -187,9 +215,111 @@ const saveNewTenant = async (tenantData) => {
         });
 
         isAdding.value = false;
+        successMessage.value = `Tenant ${tenantData.tenantname} added successfully`;
+        setTimeout(() => (successMessage.value = null), 7000);
     } catch (error) {
         console.error('Error adding tenant:', error.response?.data || error.message);
         error.value = 'Failed to add tenant: ' + (error.response?.data?.message || error.message || 'Unknown error');
+    } finally {
+        loading.value = false;
+    }
+};
+
+// --- Edit logic ---
+const openEditDialog = (tenant) => {
+    selectedTenant.value = { ...tenant };
+    showEditDialog.value = true;
+};
+
+const editTenant = async (tenantData) => {
+    try {
+        loading.value = true;
+        error.value = null;
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            throw new Error('No access token found');
+        }
+
+        const tenantId = selectedTenant.value.code; // Assuming 'code' is the tenantId
+        const payload = {
+            Name: tenantData.tenantname,
+            Email: selectedTenant.value.email || 'N/A',
+            Username: selectedTenant.value.username || 'N/A',
+            PhoneNumber: selectedTenant.value.phonenumber || 'N/A'
+        };
+
+        const response = await api.put(`/api/tenant/${tenantId}`, payload, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+                Accept: 'application/json'
+            }
+        });
+
+        // Update the tenant in the local array
+        const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
+        if (index !== -1) {
+            tenants.value[index] = {
+                ...tenants.value[index],
+                tenantname: response.data.tenantName || tenantData.tenantname,
+                email: response.data.email || selectedTenant.value.email,
+                username: response.data.username || selectedTenant.value.username,
+                phonenumber: response.data.phoneNumber || selectedTenant.value.phonenumber
+            };
+        }
+
+        showEditDialog.value = false;
+        successMessage.value = `Tenant ${tenantData.tenantname} updated successfully`;
+        setTimeout(() => (successMessage.value = null), 7000);
+    } catch (err) {
+        console.error('Error editing tenant:', err);
+        error.value =
+            'Failed to edit tenant: ' +
+            (err.response?.data?.message || err.message || 'Unknown error');
+    } finally {
+        loading.value = false;
+    }
+};
+
+// --- Delete logic ---
+const openDeleteDialog = (tenant) => {
+    selectedTenant.value = { ...tenant };
+    showDeleteDialog.value = true;
+};
+
+const deleteTenant = async () => {
+    try {
+        loading.value = true;
+        error.value = null;
+        const token = localStorage.getItem('accessToken');
+
+        if (!token) {
+            throw new Error('No access token found');
+        }
+
+        const tenantId = selectedTenant.value.code; // Assuming 'code' is the tenantId
+        await api.delete(`/api/tenant/${tenantId}`, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                Accept: 'application/json'
+            }
+        });
+
+        // Remove the tenant from the local array
+        const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
+        if (index !== -1) {
+            tenants.value.splice(index, 1);
+        }
+
+        showDeleteDialog.value = false;
+        successMessage.value = `Tenant ${selectedTenant.value.tenantname} deleted successfully`;
+        setTimeout(() => (successMessage.value = null), 7000);
+    } catch (err) {
+        console.error('Error deleting tenant:', err);
+        error.value =
+            'Failed to delete tenant: ' +
+            (err.response?.data?.message || err.message || 'Unknown error');
     } finally {
         loading.value = false;
     }
@@ -238,34 +368,30 @@ onMounted(() => {
 }
 
 .search-container {
-  display: flex;
-  align-items: center;
-  position: relative;
-  border-color: #35D300 !important; 
+    display: flex;
+    align-items: center;
+    position: relative;
+    border-color: #35D300 !important;
 }
 
 .search-input {
-  width: 250px;
-  border-radius: 6px;
-  padding: 0.5rem 0.5rem 0.5rem 2rem;
-  border-bottom-color: #35D300 !important;
+    width: 250px;
+    border-radius: 6px;
+    padding: 0.5rem 0.5rem 0.5rem 2rem;
+    border-bottom-color: #35D300 !important;
 }
 
 .search-input:focus {
-  border-color: #35D300 !important;
-  /* box-shadow: 0 0 0 3px #35D300 !important; */
+    border-color: #35D300 !important;
 }
 
 :deep(.p-input-icon-left > i) {
     position: absolute;
     left: 0.75rem;
-    /* Position icon inside input */
     top: 50%;
     transform: translateY(-50%);
     color: #6b7280;
-    /* Match placeholder color */
     pointer-events: none;
-    /* Prevent icon from interfering with input */
 }
 
 .add-button {
@@ -274,19 +400,15 @@ onMounted(() => {
     font-weight: 500;
     transition: background-color 0.2s, transform 0.1s;
     color: #35D300;
-    /* Changed from #3b82f6 (blue) to green */
-    border-color: #35D300;
-    /* Changed from #3b82f6 (blue) to green */
+    background-color: transparent !important;
+    border-color: #35D300 !important;
 }
 
 .add-button:hover {
     transform: translateY(-1px);
     background-color: #35D300 !important;
     color: #ffffff !important;
-    /* Changed from blue to green */
-    /* Ensure no blue hover from PrimeVue */
     box-shadow: none !important;
-    /* Override any blue shadow */
 }
 
 .card {
@@ -326,10 +448,18 @@ onMounted(() => {
 }
 
 h2 {
-    font-size: 2.25rem;
-    font-weight: 700;
+    font-size: 2.1rem;
+    font-weight: 450;
     margin: 0;
-    color: #1f2937;
+    color: #000000;
+    letter-spacing: -0.025rem;
+}
+
+h3 {
+    font-size: 1.25rem;
+    font-weight: 150;
+    margin: 0;
+    color: #000000;
     letter-spacing: -0.025rem;
 }
 
@@ -350,19 +480,32 @@ h2 {
     background-color: #fef2f2;
 }
 
-:deep(.p-button.p-button-text) {
-    margin: 0 0.25rem;
+.success-message {
+    margin: 1rem 0;
+    border-radius: 8px;
+    border-left: 4px solid #22c55e;
+    background-color: #d1fae5;
 }
 
-/* Specific override for InputText focus to remove blue */
-:deep(.p-inputtext:focus) {
-    border-color: #35D300 !important;
-    /* Ensure green border */
-    box-shadow: 0 0 0 3px rgba(53, 211, 0, 0.2) !important;
-    /* Green shadow */
-    outline: none !important;
-    /* Remove any default blue outline */
-    outline-offset: 0 !important;
-    /* Ensure no offset adds blue */
+:deep(.p-button.p-button-text.edit-button) {
+    color: #35D300 !important;
+    margin-left: 0.25rem;
+}
+
+:deep(.p-button.p-button-text.edit-button:hover) {
+    color: #ffffff !important;
+    background-color: #35D300 !important;
+    box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3) !important;
+}
+
+:deep(.p-button.p-button-text.delete-button) {
+    color: #35D300 !important;
+    margin-left: 0.25rem;
+}
+
+:deep(.p-button.p-button-text.delete-button:hover) {
+    color: #ffffff !important;
+    background-color: #35D300 !important;
+    box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
 }
 </style>
