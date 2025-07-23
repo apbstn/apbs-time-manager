@@ -39,7 +39,6 @@ public class LeaveRequestService : ILeaveRequestService
 
     public async Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto)
     {
-        // Ensure balance is allocated for the current month
         await _repository.AllocateMonthlyLeaveAsync(createDto.UserId, _monthlyAllocation);
 
         var leaveRequest = new LeaveRequest
@@ -67,7 +66,6 @@ public class LeaveRequestService : ILeaveRequestService
 
         Console.WriteLine($"Updating leave request {id}. Old StartDate: {existingRequest.StartDate}, Old EndDate: {existingRequest.EndDate}, Old NumberOfDays: {existingRequest.NumberOfDays}");
 
-        // Create a new LeaveRequest to ensure all fields are set
         var updatedRequest = new LeaveRequest
         {
             Id = existingRequest.Id,
@@ -79,12 +77,10 @@ public class LeaveRequestService : ILeaveRequestService
             Status = updateDto.Status.HasValue ? updateDto.Status.Value : existingRequest.Status
         };
 
-        // Recalculate NumberOfDays if dates changed
         if (updateDto.StartDate.HasValue || updateDto.EndDate.HasValue)
         {
             var newNumberOfDays = (updatedRequest.EndDate.Date - updatedRequest.StartDate.Date).Days + 1;
             Console.WriteLine($"Recalculated NumberOfDays: {newNumberOfDays}");
-            // Assuming NumberOfDays is settable; adjust if read-only
             updatedRequest.GetType().GetProperty("NumberOfDays")?.SetValue(updatedRequest, newNumberOfDays);
         }
         else
@@ -105,7 +101,6 @@ public class LeaveRequestService : ILeaveRequestService
 
     public async Task<LeaveBalanceDto> GetLeaveBalanceByUserIdAsync(Guid userId)
     {
-        // Ensure balance is allocated for the current month
         await _repository.AllocateMonthlyLeaveAsync(userId, _monthlyAllocation);
 
         var balance = await _repository.GetLeaveBalanceByUserIdAsync(userId);
@@ -127,6 +122,17 @@ public class LeaveRequestService : ILeaveRequestService
     public async Task<bool> AllocateMonthlyLeaveAsync(Guid userId, decimal monthlyAllocation)
     {
         return await _repository.AllocateMonthlyLeaveAsync(userId, monthlyAllocation);
+    }
+
+    public async Task<int?> GetLastLeaveRequestStatusAsync(Guid userId)
+    {
+        var leaveRequests = await _repository.GetByUserIdAsync(userId);
+        if (leaveRequests == null || !leaveRequests.Any())
+        {
+            return null;
+        }
+        var latestRequest = leaveRequests.OrderByDescending(lr => lr.Id).FirstOrDefault();
+        return (int?)(latestRequest?.Status ?? null);
     }
 
     private LeaveRequestDto MapToDto(LeaveRequest leaveRequest)

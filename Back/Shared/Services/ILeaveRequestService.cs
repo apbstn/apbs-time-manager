@@ -16,4 +16,5 @@ public interface ILeaveRequestService
     Task<LeaveBalanceDto> GetLeaveBalanceByUserIdAsync(Guid userId);
     Task<bool> UpdateLeaveBalanceAsync(Guid userId, decimal newBalance);
     Task<bool> AllocateMonthlyLeaveAsync(Guid userId, decimal monthlyAllocation);
+    Task<int?> GetLastLeaveRequestStatusAsync(Guid userId); // New method
 }

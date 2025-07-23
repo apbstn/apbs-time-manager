@@ -17,7 +17,7 @@
         </div>
         <div class="card last-request">
           <h3><i class="pi pi-history icon-with-bg4" style="margin-right: 0.5rem;"></i>Last Leave Request</h3>
-          <p v-if="lastLeaveRequest">{{ lastLeaveRequest.status }}</p>
+          <p v-if="lastLeaveRequest">{{ getStatusLabel(lastLeaveRequest.status) }}</p>
           <p v-else>No recent requests.</p>
         </div>
       </div>
@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { ref, onMounted } from "vue";
+import { ref, onMounted, computed } from "vue";
 import api from '@/api';
 
 export default {
@@ -39,8 +39,9 @@ export default {
     const chartData = ref();
     const chartOptions = ref();
     const errorMessage = ref(null);
-    const Id = ref(null);
-    const leaveBalance = ref(); // Moved from data() to setup as a reactive reference
+    const userId = ref(null);
+    const leaveBalance = ref();
+    const lastLeaveRequest = ref(null);
 
     // JWT decoding function
     const decodeJwt = (token) => {
@@ -62,7 +63,21 @@ export default {
       }
     };
 
-    // Decode token and fetch ID and leave balance on component mount
+    // Computed property to map status codes to labels
+    const getStatusLabel = computed(() => (status) => {
+      switch (status) {
+        case 0:
+          return "Pending";
+        case 1:
+          return "Approved";
+        case 2:
+          return "Rejected";
+        default:
+          return "Unknown";
+      }
+    });
+
+    // Decode token and fetch data on component mount
     onMounted(async () => {
       chartData.value = setChartData();
       chartOptions.value = setChartOptions();
@@ -88,25 +103,34 @@ export default {
                 }
               }
             );
-            Id.value = response.data;
-            if (!Id.value) {
-              errorMessage.value = 'Invalid response: ID not found';
-              console.error('Invalid response: ID not found');
+            userId.value = response.data;
+            if (!userId.value) {
+              errorMessage.value = 'Invalid response: userId not found';
+              console.error('Invalid response: userId not found');
             } else {
-              console.log('Extracted Id:', Id.value);
+              console.log('Extracted userId:', userId.value);
 
-              // Fetch leave balance after ID is set
-              const balanceResponse = await api.get(`/api/LeaveRequests/balance/${Id.value}`, {
+              // Fetch leave balance
+              const balanceResponse = await api.get(`/api/LeaveRequests/balance/${userId.value}`, {
                 headers: {
                   Authorization: `Bearer ${token}`
                 }
               });
-              leaveBalance.value = balanceResponse.data.balance; // Update reactive reference
+              leaveBalance.value = balanceResponse.data.balance;
               console.log('Leave Balance:', leaveBalance.value);
+
+              // Fetch last leave request status
+              const lastResponse = await api.get(`/api/LeaveRequests/last/${userId.value}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              });
+              lastLeaveRequest.value = { status: lastResponse.data };
+              console.log('Last Leave Request Status:', lastLeaveRequest.value);
             }
           } catch (error) {
-            errorMessage.value = 'Error fetching ID or balance from API';
-            console.error('Error fetching ID or balance:', error);
+            errorMessage.value = 'Error fetching data from API';
+            console.error('Error fetching data:', error);
           }
         } else {
           errorMessage.value = 'Invalid token';
@@ -191,27 +215,21 @@ export default {
       };
     };
 
-    return { chartData, chartOptions, errorMessage, Id, leaveBalance }; // Return leaveBalance for use in template
+    return { chartData, chartOptions, errorMessage, userId, leaveBalance, lastLeaveRequest, getStatusLabel };
   },
   data() {
     return {
       aname: localStorage.getItem('username') || 'Guest',
-      // Removed leaveBalance from data() since it's now in setup
       hoursToday: 4.5,
       hoursMonth: 120,
       recentRequests: [],
-      upcomingLeave: null,
-      lastLeaveRequest: null
+      upcomingLeave: null
     };
   },
   mounted() {
-    // Other API calls remain here
     Promise.all([
       api.get('/api/TimeTracking/today').then(res => { this.hoursToday = res.data.hours; }),
-      api.get('/api/TimeTracking/monthly-total').then(res => { this.hoursMonth = res.data.hours; }),
-      api.get('/api/LeaveRequests/recent').then(res => { this.recentRequests = res.data.slice(0, 3); }),
-      api.get('/api/LeaveRequests/upcoming').then(res => { this.upcomingLeave = res.data; }),
-      api.get('/api/LeaveRequests/last').then(res => { this.lastLeaveRequest = res.data; })
+      api.get('/api/TimeTracking/monthly-total').then(res => { this.hoursMonth = res.data.hours; })
     ]).catch(error => console.error('Error fetching data:', error));
   }
 };
@@ -276,7 +294,6 @@ h1 {
   height: auto;
   margin: 30px; 
   padding: 20px;
-  /* margin-right: 1px; */
 }
 
 .center-button {

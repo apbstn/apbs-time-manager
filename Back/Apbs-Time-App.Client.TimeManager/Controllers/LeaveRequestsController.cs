@@ -45,6 +45,17 @@ public class LeaveRequestsController : ControllerBase
         return Ok(leaveRequests);
     }
 
+    [HttpGet("last/{id}")]
+    public async Task<ActionResult<int>> GetLastLeaveRequestStatus(Guid id)
+    {
+        var status = await _leaveRequestService.GetLastLeaveRequestStatusAsync(id);
+        if (status == null)
+        {
+            return NotFound();
+        }
+        return Ok(status);
+    }
+
     [HttpPost]
     public async Task<ActionResult<LeaveRequestDto>> Create(CreateLeaveRequestDto createDto)
     {
@@ -87,6 +98,7 @@ public class LeaveRequestsController : ControllerBase
         }
         return NoContent();
     }
+
     [AllowAnonymous]
     [HttpGet("balance/{userId}")]
     public async Task<ActionResult<LeaveBalanceDto>> GetLeaveBalance(Guid userId)
@@ -114,6 +126,7 @@ public class LeaveRequestsController : ControllerBase
         }
         return Ok(new { Message = "Leave balance updated successfully." });
     }
+
     [AllowAnonymous]
     [HttpPost("balance/allocate/{userId}")]
     public async Task<IActionResult> AllocateMonthlyLeave(Guid userId, [FromBody] decimal monthlyAllocation)
