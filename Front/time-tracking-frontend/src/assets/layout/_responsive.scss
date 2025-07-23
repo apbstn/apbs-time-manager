@@ -187,6 +187,7 @@
                 align-items: center;
                 justify-content: center;
                 margin-left: 1rem;
+                background-color: black !important;
                 transition: background-color var(--layout-section-transition-duration);
 
                 &:hover {

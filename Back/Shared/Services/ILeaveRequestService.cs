@@ -1,19 +1,19 @@
 ﻿using Shared.DTOs.Leave;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.Services
+namespace Shared.Services;
+
+public interface ILeaveRequestService
 {
-    public interface ILeaveRequestService
-    {
-        Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync();
-        Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id);
-        Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId);
-        Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto);
-        Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto);
-        Task<bool> DeleteLeaveRequestAsync(Guid id);
-    }
+    Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync();
+    Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id);
+    Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId);
+    Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto);
+    Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto);
+    Task<bool> DeleteLeaveRequestAsync(Guid id);
+    Task<LeaveBalanceDto> GetLeaveBalanceByUserIdAsync(Guid userId);
+    Task<bool> UpdateLeaveBalanceAsync(Guid userId, decimal newBalance);
+    Task<bool> AllocateMonthlyLeaveAsync(Guid userId, decimal monthlyAllocation);
 }

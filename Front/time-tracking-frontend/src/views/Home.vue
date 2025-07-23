@@ -38,15 +38,88 @@ export default {
   setup() {
     const chartData = ref();
     const chartOptions = ref();
+    const errorMessage = ref(null);
+    const Id = ref(null);
+    const leaveBalance = ref(); // Moved from data() to setup as a reactive reference
 
-    onMounted(() => {
+    // JWT decoding function
+    const decodeJwt = (token) => {
+      try {
+        const base64Url = token.split('.')[1];
+        const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split('')
+            .map((c) => {
+              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+            })
+            .join('')
+        );
+        return JSON.parse(jsonPayload);
+      } catch (error) {
+        console.error('Error decoding JWT:', error);
+        return null;
+      }
+    };
+
+    // Decode token and fetch ID and leave balance on component mount
+    onMounted(async () => {
       chartData.value = setChartData();
       chartOptions.value = setChartOptions();
+
+      const token = localStorage.getItem('accessToken');
+      if (token) {
+        const decoded = decodeJwt(token);
+        console.log('Decoded token:', decoded);
+        if (decoded) {
+          const emailKey = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
+          const email = decoded[emailKey];
+          if (!email) {
+            errorMessage.value = 'Invalid token: email not found';
+            console.error('Invalid token: email not found');
+            return;
+          }
+
+          try {
+            const response = await api.post('/api/UserTenants/get-id-by-email', email,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              }
+            );
+            Id.value = response.data;
+            if (!Id.value) {
+              errorMessage.value = 'Invalid response: ID not found';
+              console.error('Invalid response: ID not found');
+            } else {
+              console.log('Extracted Id:', Id.value);
+
+              // Fetch leave balance after ID is set
+              const balanceResponse = await api.get(`/api/LeaveRequests/balance/${Id.value}`, {
+                headers: {
+                  Authorization: `Bearer ${token}`
+                }
+              });
+              leaveBalance.value = balanceResponse.data.balance; // Update reactive reference
+              console.log('Leave Balance:', leaveBalance.value);
+            }
+          } catch (error) {
+            errorMessage.value = 'Error fetching ID or balance from API';
+            console.error('Error fetching ID or balance:', error);
+          }
+        } else {
+          errorMessage.value = 'Invalid token';
+          console.error('Invalid token');
+        }
+      } else {
+        errorMessage.value = 'No token found in localStorage';
+        console.error('No token found in localStorage');
+      }
     });
 
     const setChartData = () => {
       const documentStyle = getComputedStyle(document.documentElement);
-
       return {
         labels: ['Monday', 'Tuesday', 'Wensday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
         datasets: [
@@ -71,111 +144,69 @@ export default {
       const textColor = documentStyle.getPropertyValue('--p-text-color');
       const textColorSecondary = documentStyle.getPropertyValue('--p-text-muted-color');
       const surfaceBorder = documentStyle.getPropertyValue('--p-content-border-color');
-
       return {
         maintainAspectRatio: false,
         aspectRatio: 0.8,
         plugins: {
-          title: {
-            display: true,
-            text: 'Tracked Hours',
-            color: textColor,
-            font: {
-              size: 16
+          title: { display: true, text: 'Tracked Hours', color: textColor, font: { size: 16 }, padding: { bottom: 10 } },
+          legend: {
+            position: 'left',
+            labels: {
+              color: textColor,
+              font: { size: 14 },
+              boxWidth: 20,
+              usePointStyle: false,
+              pointStyle: 'circle',
+              generateLabels: function(chart) {
+                return chart.data.datasets.map((dataset, i) => ({
+                  text: dataset.label,
+                  fillStyle: dataset.backgroundColor,
+                  strokeStyle: 'rgba(0, 0, 0, 0.2)',
+                  lineWidth: 1,
+                  hidden: !chart.isDatasetVisible(i),
+                  index: i
+                }));
+              }
             },
-            padding: {
-              bottom: 10
+            onClick: (e, legendItem, legend) => {
+              const index = legendItem.index;
+              const ci = legend.chart;
+              if (ci.isDatasetVisible(index)) {
+                ci.hide(index);
+                legendItem.hidden = true;
+              } else {
+                ci.show(index);
+                legendItem.hidden = false;
+              }
+              ci.update();
             }
           },
-          legend: { // Legend code starts here
-        position: 'left', // Positioned on the left
-        labels: {
-          color: textColor, // Text color
-          font: {
-            size: 14 // Increased font size
-          },
-          boxWidth: 20, // Size of the color box
-          // padding: 15, // Space between items
-          usePointStyle: false, // Use circular markers
-          pointStyle: 'circle', // Circular style
-          generateLabels: function(chart) {
-            return chart.data.datasets.map((dataset, i) => ({
-              text: dataset.label,
-              fillStyle: dataset.backgroundColor,
-              strokeStyle: 'rgba(0, 0, 0, 0.2)', // Subtle border
-              lineWidth: 1, // Border width
-              hidden: !chart.isDatasetVisible(i),
-              index: i
-            }));
-          }
-        },
-        onClick: (e, legendItem, legend) => {
-          const index = legendItem.index;
-          const ci = legend.chart;
-          if (ci.isDatasetVisible(index)) {
-            ci.hide(index);
-            legendItem.hidden = true;
-          } else {
-            ci.show(index);
-            legendItem.hidden = false;
-          }
-          ci.update();
-        }
-      },
-          tooltip: {
-            mode: 'index',
-            intersect: false
-          }
+          tooltip: { mode: 'index', intersect: false }
         },
         scales: {
-          x: {
-            stacked: true, // Original stacked setup
-            ticks: {
-              color: textColorSecondary
-            },
-            grid: {
-              color: surfaceBorder
-            }
-          },
-          y: {
-            stacked: true, // Original stacked setup
-            ticks: {
-              color: textColorSecondary,
-              beginAtZero: true // Ensure y-axis starts at 0
-            },
-            grid: {
-              color: surfaceBorder
-            }
-          }
+          x: { stacked: true, ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } },
+          y: { stacked: true, ticks: { color: textColorSecondary, beginAtZero: true }, grid: { color: surfaceBorder } }
         },
-        layout: {
-          padding: {
-            left: 60, // Increased for legend on left
-            right: 20,
-            top: 20, // Space for title
-            bottom: 10
-          }
-        }
+        layout: { padding: { left: 60, right: 20, top: 20, bottom: 10 } }
       };
     };
 
-    return { chartData, chartOptions };
+    return { chartData, chartOptions, errorMessage, Id, leaveBalance }; // Return leaveBalance for use in template
   },
   data() {
     return {
       aname: localStorage.getItem('username') || 'Guest',
-      leaveBalance: 10, // Placeholder; replace with API call
-      hoursToday: 4.5, // Placeholder; replace with API call
-      hoursMonth: 120, // Placeholder; replace with API call
-      recentRequests: [], // Placeholder; fetch recent leave requests
-      upcomingLeave: null, // Placeholder; fetch upcoming leave
-      lastLeaveRequest: null // Placeholder; fetch last leave request status
+      // Removed leaveBalance from data() since it's now in setup
+      hoursToday: 4.5,
+      hoursMonth: 120,
+      recentRequests: [],
+      upcomingLeave: null,
+      lastLeaveRequest: null
     };
   },
   mounted() {
-    // Fetch leave balance, hours, recent requests, upcoming leave, and last leave request
+    // Other API calls remain here
     Promise.all([
-      api.get('/api/UserTenants/leave-balance').then(res => { this.leaveBalance = res.data.balance; }),
       api.get('/api/TimeTracking/today').then(res => { this.hoursToday = res.data.hours; }),
       api.get('/api/TimeTracking/monthly-total').then(res => { this.hoursMonth = res.data.hours; }),
       api.get('/api/LeaveRequests/recent').then(res => { this.recentRequests = res.data.slice(0, 3); }),
@@ -235,7 +266,7 @@ h1 {
 }
 
 .last-request {
-  background: rgba(155, 155, 155, 0.234);
+  background: rgba(226, 226, 226, 0.234);
   border-color: #000000;
 }
 

@@ -96,6 +96,7 @@ export default {
         }
 
         this.tenantName = tenant.name || 'Unknown Tenant';
+        localStorage.setItem('Name_of_tenant', tenant.name);
         this.isLoading = false;
       } catch (error) {
         this.error = 'Error loading settings: ' + error.message;

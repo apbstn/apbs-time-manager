@@ -206,7 +206,7 @@ function checkActiveRoute(item) {
             v-tooltip.hover="isSlim && root && !isActiveMenu ? item.label : null"
         >
             <i :class="item.icon" class="layout-menuitem-icon"></i>
-            <span class="layout-menuitem-text">{{ item.label }}</span>
+            <span class="layout-menuitem-text">{{ item.label }}cc</span>
             <i class="pi pi-fw pi-angle-down layout-submenu-toggler" v-if="item.items"></i>
         </a>
         <router-link

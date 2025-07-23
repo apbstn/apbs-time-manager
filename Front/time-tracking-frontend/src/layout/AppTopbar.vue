@@ -5,15 +5,16 @@
             <a ref="menuButton" class="layout-menu-button" @click="toggleMenu">
                 <i class="pi pi-chevron-right"></i>
             </a>
-            <button class="app-config-button app-config-mobile-button" @click="toggleConfigSidebar">
-                <i class="pi pi-cog"></i>
-            </button>
+            <!-- <button class="app-config-button app-config-mobile-button" @click="toggleConfigSidebar">
+                <i class="pi pi-cog">fff</i>
+            </button> -->
             <a ref="mobileMenuButton" class="layout-topbar-mobile-button" @click="onTopbarMenuToggle">
-                <i class="pi pi-ellipsis-v"></i>
+                <i class="pi pi-ellipsis-v" style="color: #35D300 !important;"></i>
             </a>
         </div>
         <div class="layout-topbar-end">
-            <div class="layout-topbar-actions-start"></div>
+            
+            <div class="layout-topbar-actions-start">{{ nameoftenant }}</div>
             <div class="layout-topbar-actions-end">
                 <ul class="layout-topbar-items">
                     <li class="chronometer-container">
@@ -25,13 +26,13 @@
                     <li>
                         <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: #FF0000; font-size: 2rem;" @click="customStopTracking"></button>
                     </li>
-                    <li>
+                    <!-- <li>
                         <a v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }" class="">
                             <OverlayBadge severity="warn" :pt="{ pcBadge: { root: '!outline-0' } }">
-                                <i class="pi pi-bell !align-middle"></i>
+                                <i class="pi pi-bell !align-middle">fff</i>
                             </OverlayBadge>
                         </a>
-                    </li>
+                    </li> -->
                 </ul>
             </div>
         </div>
@@ -50,7 +51,8 @@ const isInitialized = ref(false);
 const chronometerInterval = ref(null);
 const elapsedTime = ref(0); // Tracks elapsed time in seconds
 const startTime = ref(null); // Stores the start time of the tracking session
-
+const nameoftenant = localStorage.getItem('Name_of_tenant')
+console.log('nameoftenant', nameoftenant);
 // Computed property to format elapsed time as HH:MM:SS
 const chronometerTime = computed(() => {
     const hours = Math.floor(elapsedTime.value / 3600).toString().padStart(2, '0');
@@ -160,6 +162,10 @@ function onTopbarMenuToggle() {
     gap: 1rem;
 }
 
+.layout-topbar-mobile-button {
+    margin-left: auto !important;
+}
+
 .chronometer-container {
     margin-right: 0.5rem;
 }
@@ -171,5 +177,12 @@ function onTopbarMenuToggle() {
     padding: 0.25rem 0.5rem;
     background-color: #f3f4f6;
     border-radius: 4px;
+}
+
+.layout-topbar-actions-start {
+    font-size: 18px !important; /* Adjust font size */
+    font-weight: 400; /* Bold text */
+    color: #ffffff; /* Dark color for contrast */
+   /* text-transform: uppercase;  make text uppercase */
 }
 </style>

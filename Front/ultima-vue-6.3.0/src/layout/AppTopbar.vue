@@ -16,13 +16,13 @@ function onTopbarMenuToggle() {
                 <i class="pi pi-chevron-right"></i>
             </a>
 
-            <button class="app-config-button app-config-mobile-button" @click="toggleConfigSidebar">
+            <!-- <button class="app-config-button app-config-mobile-button" @click="toggleConfigSidebar">
                 <i class="pi pi-cog"></i>
-            </button>
+            </button> -->
 
-            <a ref="mobileMenuButton" class="layout-topbar-mobile-button" @click="onTopbarMenuToggle">
+            <!-- <a ref="mobileMenuButton" class="layout-topbar-mobile-button" @click="onTopbarMenuToggle">
                 <i class="pi pi-ellipsis-v"></i>
-            </a>
+            </a> -->
         </div>
 
         <div class="layout-topbar-end">
