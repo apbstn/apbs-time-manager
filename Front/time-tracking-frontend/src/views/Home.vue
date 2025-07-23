@@ -1,7 +1,7 @@
 <template>
   <div class="home">
     <div class="top-left">
-      <h1>Welcome, {{ aname }} to STT</h1><br/>
+      <h1>Welcome, {{ aname }} to STT</h1><br />
       <div class="rectangles">
         <div class="card last-request">
           <h3><i class="pi pi-sign-out icon-with-bg1" style="margin-right: 0.5rem;"></i>Leave Balance</h3>
@@ -9,7 +9,7 @@
         </div>
         <div class="card last-request">
           <h3><i class="pi pi-stopwatch icon-with-bg2" style="margin-right: 0.5rem;"></i>Hours Worked Today</h3>
-          <p>{{ hoursToday }} hours</p>
+          <p>{{ hoursToday }}</p>
         </div>
         <div class="card last-request">
           <h3><i class="pi pi-clock icon-with-bg3" style="margin-right: 0.5rem;"></i>Hours Worked This Month</h3>
@@ -40,10 +40,11 @@ export default {
     const chartOptions = ref();
     const errorMessage = ref(null);
     const userId = ref(null);
-    const leaveBalance = ref();
+    const leaveBalance = ref(null);
     const lastLeaveRequest = ref(null);
+    const hoursToday = ref("0h 00m");
+    const hoursMonth = ref(0);
 
-    // JWT decoding function
     const decodeJwt = (token) => {
       try {
         const base64Url = token.split('.')[1];
@@ -51,9 +52,7 @@ export default {
         const jsonPayload = decodeURIComponent(
           atob(base64)
             .split('')
-            .map((c) => {
-              return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
-            })
+            .map((c) => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
             .join('')
         );
         return JSON.parse(jsonPayload);
@@ -63,21 +62,15 @@ export default {
       }
     };
 
-    // Computed property to map status codes to labels
     const getStatusLabel = computed(() => (status) => {
       switch (status) {
-        case 0:
-          return "Pending";
-        case 1:
-          return "Approved";
-        case 2:
-          return "Rejected";
-        default:
-          return "Unknown";
+        case 0: return "Pending";
+        case 1: return "Approved";
+        case 2: return "Rejected";
+        default: return "Unknown";
       }
     });
 
-    // Decode token and fetch data on component mount
     onMounted(async () => {
       chartData.value = setChartData();
       chartOptions.value = setChartOptions();
@@ -85,79 +78,77 @@ export default {
       const token = localStorage.getItem('accessToken');
       if (token) {
         const decoded = decodeJwt(token);
-        console.log('Decoded token:', decoded);
         if (decoded) {
           const emailKey = 'http://schemas.xmlsoap.org/ws/2005/05/identity/claims/name';
           const email = decoded[emailKey];
           if (!email) {
             errorMessage.value = 'Invalid token: email not found';
-            console.error('Invalid token: email not found');
             return;
           }
 
           try {
-            const response = await api.post('/api/UserTenants/get-id-by-email', email,
-              {
-                headers: {
-                  Authorization: `Bearer ${token}`
-                }
-              }
-            );
+            const response = await api.post('/api/UserTenants/get-id-by-email', email, {
+              headers: { Authorization: `Bearer ${token}` }
+            });
             userId.value = response.data;
-            if (!userId.value) {
-              errorMessage.value = 'Invalid response: userId not found';
-              console.error('Invalid response: userId not found');
-            } else {
-              console.log('Extracted userId:', userId.value);
-
-              // Fetch leave balance
+            if (userId.value) {
               const balanceResponse = await api.get(`/api/LeaveRequests/balance/${userId.value}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
               });
               leaveBalance.value = balanceResponse.data.balance;
-              console.log('Leave Balance:', leaveBalance.value);
 
-              // Fetch last leave request status
               const lastResponse = await api.get(`/api/LeaveRequests/last/${userId.value}`, {
-                headers: {
-                  Authorization: `Bearer ${token}`
-                }
+                headers: { Authorization: `Bearer ${token}` }
               });
               lastLeaveRequest.value = { status: lastResponse.data };
-              console.log('Last Leave Request Status:', lastLeaveRequest.value);
+
+              const todayResponse = await api.get(`/api/timelog/today/${userId.value}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              hoursToday.value = todayResponse.data;
+
+              /* const monthResponse = await api.get(`/api/TimeTracking/monthly-total/${userId.value}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              hoursMonth.value = monthResponse.data.hours || 0; */
+
+              // Fetch weekly hours
+              console.log("-------------------------------------------------");
+              console.log("ID going to sent : ",userId.value);
+              console.log("-------------------------------------------------");
+              const weeklyResponse = await api.get(`/api/timelog/weekly/${userId.value}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              chartData.value = setChartData(weeklyResponse.data);
+              console.log("-------------------------------------------------");
+              console.log('Weekly Data:', weeklyResponse.data);
+              console.log("-------------------------------------------------");
             }
           } catch (error) {
             errorMessage.value = 'Error fetching data from API';
             console.error('Error fetching data:', error);
           }
-        } else {
-          errorMessage.value = 'Invalid token';
-          console.error('Invalid token');
         }
-      } else {
-        errorMessage.value = 'No token found in localStorage';
-        console.error('No token found in localStorage');
       }
     });
 
-    const setChartData = () => {
+    const setChartData = (weeklyData = {}) => {
       const documentStyle = getComputedStyle(document.documentElement);
+      const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       return {
-        labels: ['Monday', 'Tuesday', 'Wensday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+        labels: days,
         datasets: [
           {
             type: 'bar',
             label: 'Worked Hours',
             backgroundColor: '#35D300',
-            data: [8, 6, 7.5, 8, 7, , ]
+            data: days.map(day => weeklyData[day] || 0)
           },
           {
             type: 'bar',
             label: 'Stopped Hours',
             backgroundColor: '#FF0000',
-            data: [1, 1.5, 1.5, 1.5, 2, , ]
+            data: days.map(() => 0) // Placeholder, adjust if you track stopped hours
           }
         ]
       };
@@ -175,23 +166,7 @@ export default {
           title: { display: true, text: 'Tracked Hours', color: textColor, font: { size: 16 }, padding: { bottom: 10 } },
           legend: {
             position: 'left',
-            labels: {
-              color: textColor,
-              font: { size: 14 },
-              boxWidth: 20,
-              usePointStyle: false,
-              pointStyle: 'circle',
-              generateLabels: function(chart) {
-                return chart.data.datasets.map((dataset, i) => ({
-                  text: dataset.label,
-                  fillStyle: dataset.backgroundColor,
-                  strokeStyle: 'rgba(0, 0, 0, 0.2)',
-                  lineWidth: 1,
-                  hidden: !chart.isDatasetVisible(i),
-                  index: i
-                }));
-              }
-            },
+            labels: { color: textColor, font: { size: 14 }, boxWidth: 20, usePointStyle: false, pointStyle: 'circle' },
             onClick: (e, legendItem, legend) => {
               const index = legendItem.index;
               const ci = legend.chart;
@@ -215,27 +190,18 @@ export default {
       };
     };
 
-    return { chartData, chartOptions, errorMessage, userId, leaveBalance, lastLeaveRequest, getStatusLabel };
+    return { chartData, chartOptions, errorMessage, userId, leaveBalance, lastLeaveRequest, getStatusLabel, hoursToday, hoursMonth };
   },
   data() {
     return {
-      aname: localStorage.getItem('username') || 'Guest',
-      hoursToday: 4.5,
-      hoursMonth: 120,
-      recentRequests: [],
-      upcomingLeave: null
+      aname: localStorage.getItem('username') || 'Guest'
     };
-  },
-  mounted() {
-    Promise.all([
-      api.get('/api/TimeTracking/today').then(res => { this.hoursToday = res.data.hours; }),
-      api.get('/api/TimeTracking/monthly-total').then(res => { this.hoursMonth = res.data.hours; })
-    ]).catch(error => console.error('Error fetching data:', error));
   }
 };
 </script>
 
 <style scoped>
+/* Existing styles remain unchanged */
 .home {
   position: relative;
   display: flex;
@@ -292,7 +258,7 @@ h1 {
   width: auto;
   max-width: auto;
   height: auto;
-  margin: 30px; 
+  margin: 30px;
   padding: 20px;
 }
 
@@ -321,7 +287,6 @@ button:hover {
   border-color: white !important;
 }
 
-/* Responsive design for smaller screens */
 @media (max-width: 800px) {
   .rectangles {
     flex-direction: column;
@@ -359,6 +324,7 @@ button:hover {
   width: 2.2rem;
   height: 2.2rem;
 }
+
 .icon-with-bg2 {
   background: #ff9d00;
   border-radius: 20%;
@@ -370,6 +336,7 @@ button:hover {
   width: 2.2rem;
   height: 2.2rem;
 }
+
 .icon-with-bg3 {
   background: #ff00dd;
   border-radius: 20%;
@@ -381,6 +348,7 @@ button:hover {
   width: 2.2rem;
   height: 2.2rem;
 }
+
 .icon-with-bg4 {
   background: #0084ff;
   border-radius: 20%;
