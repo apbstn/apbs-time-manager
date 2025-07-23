@@ -21,6 +21,7 @@ namespace Shared.Context
         public DbSet<UserTenant> Users { get; set; }
         public DbSet<TimeLog> TimeLogs { get; set; }
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
+        public DbSet<LeaveBalance> LeaveBalances { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Planner> Planners { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)

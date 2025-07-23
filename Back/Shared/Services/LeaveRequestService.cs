@@ -1,117 +1,147 @@
-﻿using Shared.DTOs.Leave;
-using Shared.DTOs.Leave.Mapper;
+﻿using Microsoft.Extensions.Configuration;
+using Shared.DTOs.Leave;
 using Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
-namespace Shared.Services
+namespace Shared.Services;
+
+public class LeaveRequestService : ILeaveRequestService
 {
-    public class LeaveRequestService : ILeaveRequestService
+    private readonly ILeaveRequestRepository _repository;
+    private readonly decimal _monthlyAllocation;
+
+    public LeaveRequestService(ILeaveRequestRepository repository, IConfiguration configuration)
     {
-        private readonly ILeaveRequestRepository _repository;
+        _repository = repository;
+        _monthlyAllocation = configuration.GetValue<decimal>("LeaveSettings:MonthlyLeaveAllocation", 10.0m);
+    }
 
-        public LeaveRequestService(ILeaveRequestRepository repository)
+    public async Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync()
+    {
+        var leaveRequests = await _repository.GetAllAsync();
+        return leaveRequests.Select(MapToDto);
+    }
+
+    public async Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id)
+    {
+        var leaveRequest = await _repository.GetByIdAsync(id);
+        return leaveRequest == null ? null : MapToDto(leaveRequest);
+    }
+
+    public async Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId)
+    {
+        var leaveRequests = await _repository.GetByUserIdAsync(userId);
+        return leaveRequests.Select(MapToDto);
+    }
+
+    public async Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto)
+    {
+        // Ensure balance is allocated for the current month
+        await _repository.AllocateMonthlyLeaveAsync(createDto.UserId, _monthlyAllocation);
+
+        var leaveRequest = new LeaveRequest
         {
-            _repository = repository;
+            UserId = createDto.UserId,
+            StartDate = createDto.StartDate,
+            EndDate = createDto.EndDate,
+            Type = createDto.Type,
+            Reason = createDto.Reason,
+            Status = LeaveRequestStatus.Pending
+        };
+
+        leaveRequest = await _repository.AddAsync(leaveRequest);
+        return MapToDto(leaveRequest);
+    }
+
+    public async Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto)
+    {
+        var existingRequest = await _repository.GetByIdAsync(id);
+        if (existingRequest == null)
+        {
+            Console.WriteLine($"Leave request with ID {id} not found.");
+            return null;
         }
 
-        public async Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync()
-        {
-            var leaveRequests = await _repository.GetAllAsync();
-            var result = new List<LeaveRequestDto>();
-            
-             var _mapper = new LeaveMapper();
-            foreach (var lr in leaveRequests)
-            {
-                result.Add(_mapper.ToLeaveRequestDto(lr));
-            }
+        Console.WriteLine($"Updating leave request {id}. Old StartDate: {existingRequest.StartDate}, Old EndDate: {existingRequest.EndDate}, Old NumberOfDays: {existingRequest.NumberOfDays}");
 
-            return result;
+        // Create a new LeaveRequest to ensure all fields are set
+        var updatedRequest = new LeaveRequest
+        {
+            Id = existingRequest.Id,
+            UserId = existingRequest.UserId,
+            StartDate = updateDto.StartDate.HasValue ? updateDto.StartDate.Value : existingRequest.StartDate,
+            EndDate = updateDto.EndDate.HasValue ? updateDto.EndDate.Value : existingRequest.EndDate,
+            Type = updateDto.Type ?? existingRequest.Type,
+            Reason = updateDto.Reason ?? existingRequest.Reason,
+            Status = updateDto.Status.HasValue ? updateDto.Status.Value : existingRequest.Status
+        };
+
+        // Recalculate NumberOfDays if dates changed
+        if (updateDto.StartDate.HasValue || updateDto.EndDate.HasValue)
+        {
+            var newNumberOfDays = (updatedRequest.EndDate.Date - updatedRequest.StartDate.Date).Days + 1;
+            Console.WriteLine($"Recalculated NumberOfDays: {newNumberOfDays}");
+            // Assuming NumberOfDays is settable; adjust if read-only
+            updatedRequest.GetType().GetProperty("NumberOfDays")?.SetValue(updatedRequest, newNumberOfDays);
+        }
+        else
+        {
+            updatedRequest.GetType().GetProperty("NumberOfDays")?.SetValue(updatedRequest, existingRequest.NumberOfDays);
         }
 
-        public async Task<LeaveRequestDto> GetLeaveRequestByIdAsync(Guid id)
+        Console.WriteLine($"New StartDate: {updatedRequest.StartDate}, New EndDate: {updatedRequest.EndDate}, New NumberOfDays: {updatedRequest.NumberOfDays}, New Status: {updatedRequest.Status}");
+
+        updatedRequest = await _repository.UpdateAsync(updatedRequest);
+        return MapToDto(updatedRequest);
+    }
+
+    public async Task<bool> DeleteLeaveRequestAsync(Guid id)
+    {
+        return await _repository.DeleteAsync(id);
+    }
+
+    public async Task<LeaveBalanceDto> GetLeaveBalanceByUserIdAsync(Guid userId)
+    {
+        // Ensure balance is allocated for the current month
+        await _repository.AllocateMonthlyLeaveAsync(userId, _monthlyAllocation);
+
+        var balance = await _repository.GetLeaveBalanceByUserIdAsync(userId);
+        return new LeaveBalanceDto
         {
-            var leaveRequest = await _repository.GetByIdAsync(id);
-            return leaveRequest == null ? null : MapToDto(leaveRequest);
-        }
+            Id = balance.Id,
+            UserId = balance.UserId,
+            Balance = balance.Balance,
+            LastUpdated = balance.LastUpdated,
+            LastAllocationMonth = balance.LastAllocationMonth
+        };
+    }
 
-        public async Task<IEnumerable<LeaveRequestDto>> GetLeaveRequestsByUserIdAsync(Guid userId)
+    public async Task<bool> UpdateLeaveBalanceAsync(Guid userId, decimal newBalance)
+    {
+        return await _repository.UpdateLeaveBalanceAsync(userId, newBalance);
+    }
+
+    public async Task<bool> AllocateMonthlyLeaveAsync(Guid userId, decimal monthlyAllocation)
+    {
+        return await _repository.AllocateMonthlyLeaveAsync(userId, monthlyAllocation);
+    }
+
+    private LeaveRequestDto MapToDto(LeaveRequest leaveRequest)
+    {
+        return new LeaveRequestDto
         {
-            var leaveRequests = await _repository.GetByUserIdAsync(userId);
-            var result = new List<LeaveRequestDto>();
-
-            foreach (var lr in leaveRequests)
-            {
-                result.Add(MapToDto(lr));
-            }
-
-            return result;
-        }
-
-        public async Task<LeaveRequestDto> CreateLeaveRequestAsync(CreateLeaveRequestDto createDto)
-        {
-            var leaveRequest = new LeaveRequest
-            {
-                UserId = createDto.UserId,
-                StartDate = createDto.StartDate,
-                EndDate = createDto.EndDate,
-                Type = createDto.Type,
-                Reason = createDto.Reason,
-                Status = LeaveRequestStatus.Pending
-            };
-
-            leaveRequest = await _repository.AddAsync(leaveRequest);
-            return MapToDto(leaveRequest);
-        }
-
-        public async Task<LeaveRequestDto> UpdateLeaveRequestAsync(Guid id, UpdateLeaveRequestDto updateDto)
-        {
-            var existingRequest = await _repository.GetByIdAsync(id);
-            if (existingRequest == null) return null;
-
-            // Update only provided fields
-            if (updateDto.StartDate.HasValue)
-                existingRequest.StartDate = updateDto.StartDate.Value;
-
-            if (updateDto.EndDate.HasValue)
-                existingRequest.EndDate = updateDto.EndDate.Value;
-
-            if (updateDto.Status.HasValue)
-                existingRequest.Status = updateDto.Status.Value;
-
-            if (!string.IsNullOrEmpty(updateDto.Type))
-                existingRequest.Type = updateDto.Type;
-
-            if (!string.IsNullOrEmpty(updateDto.Reason))
-                existingRequest.Reason = updateDto.Reason;
-
-            // NumberOfDays is automatically recalculated by the model
-            existingRequest = await _repository.UpdateAsync(existingRequest);
-
-            return MapToDto(existingRequest);
-        }
-
-        public async Task<bool> DeleteLeaveRequestAsync(Guid id)
-        {
-            return await _repository.DeleteAsync(id);
-        }
-
-        private LeaveRequestDto MapToDto(LeaveRequest leaveRequest)
-        {
-            return new LeaveRequestDto
-            {
-                Id = leaveRequest.Id,
-                UserId = leaveRequest.UserId,
-                StartDate = leaveRequest.StartDate,
-                EndDate = leaveRequest.EndDate,
-                NumberOfDays = leaveRequest.NumberOfDays,
-                Status = leaveRequest.Status,
-                Type = leaveRequest.Type,
-                Reason = leaveRequest.Reason
-            };
-        }
+            Id = leaveRequest.Id,
+            UserId = leaveRequest.UserId,
+            Username = leaveRequest.User?.Username,
+            StartDate = leaveRequest.StartDate,
+            EndDate = leaveRequest.EndDate,
+            NumberOfDays = leaveRequest.NumberOfDays,
+            Status = leaveRequest.Status,
+            Type = leaveRequest.Type,
+            Reason = leaveRequest.Reason
+        };
     }
 }

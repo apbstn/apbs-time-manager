@@ -3,7 +3,6 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2 style="font-size: 22px; color: #6B7280;">User Accounts</h2>
-
       </div>
     </div>
 
@@ -19,10 +18,11 @@
             {{ getTeamName(slotProps.data.teamId) || 'No team' }}
           </template>
         </Column>
-        <Column :exportable="false" style="max-width: 3rem" header="Actions">
+        <Column :exportable="false" style="max-width: 4rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> &nbsp;
-            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
+            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" />  
+            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />  
+            <Button icon="pi pi-plus-circle" class="allocate-button" @click="showAllocateDialog(slotProps.data)" />
           </template>
         </Column>
         <template #empty>
@@ -34,6 +34,9 @@
     <!-- Add/Edit Dialog -->
     <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId" :teams="availableTeams"
       @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
+
+    <!-- Allocate Leave Balance Dialog -->
+    <AllocateLeaveDialog v-model:visible="allocateDialogVisible" :user="selectedUserForAllocation" @allocate="allocateLeaveBalance" />
   </div>
 </template>
 
@@ -45,6 +48,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import UserDialog from './Componant/UserDialog.vue'
+import AllocateLeaveDialog from './Componant/AllocateLeaveDialog.vue'
 
 // Inject the DeleteDialog instance
 const deleteDialogRef = inject('deleteDialog')
@@ -56,6 +60,8 @@ const currentId = ref(null)
 const searchQuery = ref('')
 const selectedUser = ref(null)
 const availableTeams = ref([]) // Store available teams for the dropdown
+const allocateDialogVisible = ref(false)
+const selectedUserForAllocation = ref(null)
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
@@ -152,6 +158,43 @@ const deleteUser = async (user) => {
   }
 }
 
+const showAllocateDialog = (user) => {
+  selectedUserForAllocation.value = user
+  allocateDialogVisible.value = true
+}
+
+const allocateLeaveBalance = async ({ user, days }) => {
+  try {
+    console.log('Allocating leave balance for user:', user)
+
+    // Step 1: Retrieve the email from the selected user data
+    const email = user.email
+    console.log('Retrieved email:', email)
+
+    // Step 2: Use get-id-by-email to get the userId
+    const idResponse = await api.post('/api/UserTenants/get-id-by-email',email , {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    const userId = idResponse.data
+    console.log('Retrieved userId:', userId)
+
+    // Step 3: Use POST /api/LeaveRequests/balance/allocate/{id} with the entered days
+    const allocationResponse = await api.put(`/api/LeaveRequests/balance/${userId}`, days , {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    console.log('Allocation response:', allocationResponse.data)
+
+    alert('Leave balance allocated successfully!')
+  } catch (error) {
+    console.error('Error allocating leave balance:', error)
+    alert('Failed to allocate leave balance. Check console for details.')
+  }
+}
+
 onMounted(() => {
   fetchUsers()
   fetchTeams()
@@ -224,6 +267,23 @@ h2 {
 .add-button1:hover {
   transform: translateY(-1px);
   background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.allocate-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #FFD700 !important;
+  border-color: #FFD700 !important;
+  background-color: white;
+}
+
+.allocate-button:hover {
+  transform: translateY(-1px);
+  background-color: #FFD700 !important;
   color: white !important;
   border-color: white !important;
 }

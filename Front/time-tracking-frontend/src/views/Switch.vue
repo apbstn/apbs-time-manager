@@ -3,7 +3,6 @@
         <div class="header-container">
             <div class="flex justify-content-between align-items-center mb-2">
                 <h2>Tenants</h2>
-              
             </div>
         </div>
 
@@ -12,7 +11,7 @@
         <div class="card">
             <div v-if="isLoading" class="text-center">Loading tenants...</div>
             <div v-else-if="error" class="text-center text-red-500">{{ error }}</div>
-            <DataTable  responsiveLayout="stack"v-else :value="filteredTenants" paginator :rows="10" tableStyle="min-width: 50rem"
+            <DataTable responsiveLayout="stack" v-else :value="filteredTenants" paginator :rows="10" tableStyle="min-width: 50rem"
                 :showGridlines="true" @row-click="onRowClick" class="clickable-rows">
                 <Column field="name" header="Name" sortable>
                     <template #body="{ data }">
@@ -28,189 +27,272 @@
 </template>
 
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-import DataTable from 'primevue/datatable'
-import Column from 'primevue/column'
-import InputText from 'primevue/inputtext'
+import { ref, onMounted, computed } from 'vue';
+import DataTable from 'primevue/datatable';
+import Column from 'primevue/column';
+import InputText from 'primevue/inputtext';
+import api from '@/api';
 
-import api from '@/api'
+const tenants = ref([]);
+const searchQuery = ref('');
+const isLoading = ref(false);
+const error = ref(null);
+const tenantName = ref('');
 
-const tenants = ref([])
-const searchQuery = ref('')
-const isLoading = ref(false)
-const error = ref(null)
+// Decode JWT token
+const decodeJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+
+// Fetch and set tenant name
+const nametenant = async () => {
+  try {
+    isLoading.value = true;
+    error.value = '';
+    console.log('Starting nametenant at:', new Date().toLocaleString());
+
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      error.value = 'No token found';
+      console.error('nametenant: No token found');
+      return false;
+    }
+
+    // Decode token
+    const decoded = decodeJwt(token);
+    console.log('Decoded token:', decoded);
+    if (!decoded) {
+      error.value = 'Invalid token';
+      console.error('nametenant: Invalid token');
+      return false;
+    }
+
+    // Extract tenantId (configurable key)
+    const tenantIdKey = 'tenant_id'; // Adjust to 'sub', 'tid', etc., if needed
+    const tenantId = decoded[tenantIdKey];
+    if (!tenantId) {
+      error.value = `Missing ${tenantIdKey} in token`;
+      console.error(`nametenant: Missing ${tenantIdKey} in token`, decoded);
+      return false;
+    }
+
+    // Retrieve tenant list from localStorage
+    const tenantList = JSON.parse(localStorage.getItem('tenants') || '[]');
+    console.log('Tenant list:', tenantList);
+    if (!tenantList || tenantList.length === 0) {
+      error.value = 'No tenants found in localStorage';
+      console.error('nametenant: No tenants found in localStorage');
+      return false;
+    }
+
+    // Find tenant by matching tenantId with id
+    const tenant = tenantList.find((t) => t.id === tenantId);
+    if (!tenant) {
+      error.value = `Tenant not found for tenantId: ${tenantId}`;
+      console.error(`nametenant: Tenant not found for tenantId: ${tenantId}`);
+      return false;
+    }
+
+    tenantName.value = tenant.name || 'Unknown Tenant';
+    localStorage.setItem('Name_of_tenant', tenant.name);
+    console.log('nametenant: Set Name_of_tenant to', tenant.name);
+    return true;
+  } catch (err) {
+    console.error('nametenant Error:', err);
+    error.value = 'Failed to fetch tenant name';
+    return false;
+  } finally {
+    isLoading.value = false;
+    console.log('nametenant: Completed, isLoading set to false');
+  }
+};
 
 // Filter tenants based on search query
 const filteredTenants = computed(() => {
-    if (!searchQuery.value) return tenants.value
-    const query = searchQuery.value.toLowerCase()
-    return tenants.value.filter(tenant =>
-        tenant.name && tenant.name.toLowerCase().includes(query)
-    )
-})
+  if (!searchQuery.value) return tenants.value;
+  const query = searchQuery.value.toLowerCase();
+  return tenants.value.filter((tenant) =>
+    tenant.name && tenant.name.toLowerCase().includes(query)
+  );
+});
 
 // Handle row click to switch tenant
 const onRowClick = async (event) => {
-    const tenant = event.data
-    if (!tenant || !tenant.id) {
-        console.error('No tenant ID found for the clicked row')
-        error.value = 'Unable to switch tenant: Missing tenant ID.'
-        return
+  const tenant = event.data;
+  if (!tenant || !tenant.id) {
+    console.error('No tenant ID found for the clicked row');
+    error.value = 'Unable to switch tenant: Missing tenant ID.';
+    return;
+  }
+
+  try {
+    isLoading.value = true;
+    error.value = null;
+    console.log('Switching to tenant:', tenant.id);
+
+    // Step 1: Get the token
+    const oldToken = localStorage.getItem('accessToken');
+    console.log('Step 1: Retrieved old token:', oldToken);
+
+    if (!oldToken) {
+      throw new Error('No access token found in localStorage');
     }
 
-    try {
-        console.log('Switching to tenant:', tenant.id)
+    // Step 2: Call the API
+    const response = await api.post(`/api/auth/switch/${tenant.id}`, {}, {
+      headers: {
+        Authorization: `Bearer ${oldToken}`,
+      },
+    });
+    console.log('Step 2: Switch API response:', response.data);
 
-        // Step 1: Get the token
-        const oldToken = localStorage.getItem('accessToken')
-        console.log('Step 1: Retrieved old token:', oldToken)
+    // Step 3: Store the new token in a new const
+    const newToken = response.data.accessToken;
+    console.log('Step 3: New token stored in const:', newToken);
 
-        if (!oldToken) {
-            throw new Error('No access token found in localStorage')
-        }
-
-        // Step 2: Call the API
-        const response = await api.post(`/api/auth/switch/${tenant.id}`, {}, {
-            headers: {
-                'Authorization': `Bearer ${oldToken}`
-            }
-        })
-        console.log('Step 2: Switch API response:', response.data)
-
-        // Step 3: Store the new token in a new const
-        const newToken = response.data.accessToken
-        console.log('Step 3: New token stored in const:', newToken)
-
-        if (!newToken) {
-            throw new Error('No access token found in switch response')
-        }
-
-        // Step 4: Delete the old token
-        localStorage.removeItem('accessToken')
-        console.log('Step 4: Old token deleted from localStorage')
-
-        // Step 5: Store the new token in the place of the old token
-        localStorage.setItem('accessToken', newToken)
-        console.log('Step 5: New token stored in localStorage:', newToken)
-
-        // Step 6: Refresh
-        console.log('Step 6: Refreshing the page')
-        window.location.href = '/home'; // Redirect to home page
-        
-     
-    } catch (err) {
-        console.error('Error switching tenant:', err)
-        error.value = 'Failed to switch tenant: ' + (err.response?.data?.message || err.message)
-        localStorage.removeItem('accessToken') // Ensure token is cleared on error
-        console.log('Cleared accessToken due to error')
+    if (!newToken) {
+      throw new Error('No access token found in switch response');
     }
-}
 
-// Placeholder function (to be implemented if needed)
+    // Step 4: Delete the old token
+    localStorage.removeItem('accessToken');
+    console.log('Step 4: Old token deleted from localStorage');
+
+    // Step 5: Store the new token in the place of the old token
+    localStorage.setItem('accessToken', newToken);
+    console.log('Step 5: New token stored in localStorage:', newToken);
+
+    // Step 6: Update tenant name
+    const tenantSuccess = await nametenant();
+    console.log('Step 6: nametenant result:', tenantSuccess);
+
+    // Step 7: Refresh
+    console.log('Step 7: Refreshing the page');
+    window.location.href = '/home'; // Redirect to home page
+  } catch (err) {
+    console.error('Error switching tenant:', err);
+    error.value = 'Failed to switch tenant: ' + (err.response?.data?.message || err.message);
+    localStorage.removeItem('accessToken'); // Ensure token is cleared on error
+    console.log('Cleared accessToken due to error');
+  } finally {
+    isLoading.value = false;
+    console.log('onRowClick: Completed, isLoading set to false');
+  }
+};
 
 // Load tenants from localStorage on mount
 onMounted(() => {
-    console.log('Component mounted')
-    isLoading.value = true
-    error.value = null
+  console.log('Component mounted');
+  isLoading.value = true;
+  error.value = null;
 
-    try {
-        const accessToken = localStorage.getItem('accessToken')
-        console.log('Access token:', accessToken ? 'Present' : 'Missing')
+  try {
+    const accessToken = localStorage.getItem('accessToken');
+    console.log('Access token:', accessToken ? 'Present' : 'Missing');
 
-        if (!accessToken) {
-            error.value = 'No access token found. Please log in.'
-            return
-        }
-
-        const storedTenants = localStorage.getItem('tenants')
-        console.log('Stored tenants:', storedTenants)
-
-        if (storedTenants) {
-            tenants.value = JSON.parse(storedTenants)
-            if (!Array.isArray(tenants.value)) {
-                tenants.value = [tenants.value] // Ensure it's an array
-            }
-            if (!tenants.value.length) {
-                console.log('No tenants found in localStorage')
-            } else {
-                console.log('Tenant objects:', tenants.value)
-            }
-        } else {
-            error.value = 'No tenants found in localStorage. Please log in again.'
-        }
-    } catch (err) {
-        console.error('Error loading tenants from localStorage:', err)
-        error.value = 'Failed to load tenants from localStorage. Check console for details.'
-    } finally {
-        isLoading.value = false
+    if (!accessToken) {
+      error.value = 'No access token found. Please log in.';
+      return;
     }
-})
+
+    const storedTenants = localStorage.getItem('tenants');
+    console.log('Stored tenants:', storedTenants);
+
+    if (storedTenants) {
+      tenants.value = JSON.parse(storedTenants);
+      if (!Array.isArray(tenants.value)) {
+        tenants.value = [tenants.value]; // Ensure it's an array
+      }
+      if (!tenants.value.length) {
+        console.log('No tenants found in localStorage');
+      } else {
+        console.log('Tenant objects:', tenants.value);
+      }
+    } else {
+      error.value = 'No tenants found in localStorage. Please log in again.';
+    }
+
+    // Set initial tenant name
+    nametenant();
+  } catch (err) {
+    console.error('Error loading tenants from localStorage:', err);
+    error.value = 'Failed to load tenants from localStorage. Check console for details.';
+  } finally {
+    isLoading.value = false;
+  }
+});
 </script>
 
 <style scoped>
 .header-container {
-    margin-bottom: 1.5rem;
+  margin-bottom: 1.5rem;
 }
 
 .flex {
-    display: flex;
+  display: flex;
 }
 
 .justify-content-between {
-    justify-content: space-between;
+  justify-content: space-between;
 }
 
 .align-items-center {
-    align-items: center;
+  align-items: center;
 }
 
 .search-input {
-    border: 1px solid #ced4da !important;
-    border-radius: 4px !important;
-    width: 300px;
-    margin-bottom: 1rem;
+  border: 1px solid #ced4da !important;
+  border-radius: 4px !important;
+  width: 300px;
+  margin-bottom: 1rem;
 }
 
 h2 {
-    font-size: 2rem;
-    margin: 0;
-}
-
-.add-button {
-    align-items: right;
+  font-size: 2rem;
+  margin: 0;
 }
 
 .card {
-    margin-top: 1rem;
+  margin-top: 1rem;
 }
 
 .text-center {
-    text-align: center;
+  text-align: center;
 }
 
 .text-muted {
-    color: #6c757d;
+  color: #6c757d;
 }
 
 .text-red-500 {
-    color: #ef4444;
-}
-
-.field {
-    margin-bottom: 1.5rem;
+  color: #ef4444;
 }
 
 .clickable-rows {
-    cursor: pointer;
+  cursor: pointer;
 }
 
 .clickable-name {
-    color: #007bff;
-    text-decoration: underline;
+  color: #007bff;
+  text-decoration: underline;
 }
 
 .clickable-name:hover {
-    color: #0056b3;
+  color: #0056b3;
 }
 </style>

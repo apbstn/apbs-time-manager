@@ -2,7 +2,9 @@
 using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.Leave;
 using Shared.Services;
-using System.Security.Claims;
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
 
 namespace Apbs_Time_App.Client.TimeManager.Controllers;
 
@@ -17,7 +19,7 @@ public class LeaveRequestsController : ControllerBase
     {
         _leaveRequestService = leaveRequestService;
     }
-    
+
     [HttpGet]
     public async Task<ActionResult<IEnumerable<LeaveRequestDto>>> GetAll()
     {
@@ -46,20 +48,33 @@ public class LeaveRequestsController : ControllerBase
     [HttpPost]
     public async Task<ActionResult<LeaveRequestDto>> Create(CreateLeaveRequestDto createDto)
     {
-        //var userId = Request.HttpContext.User.FindFirst(ClaimTypes.NameIdentifier).Value;
-        var leaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(createDto);
-        return CreatedAtAction(nameof(GetById), new { id = leaveRequest.Id }, leaveRequest);
+        try
+        {
+            var leaveRequest = await _leaveRequestService.CreateLeaveRequestAsync(createDto);
+            return CreatedAtAction(nameof(GetById), new { id = leaveRequest.Id }, leaveRequest);
+        }
+        catch (InvalidOperationException ex) when (ex.Message == "Insufficient leave balance.")
+        {
+            return BadRequest(new { Message = "Insufficient leave balance for this request." });
+        }
     }
 
     [HttpPut("{id}")]
     public async Task<ActionResult<LeaveRequestDto>> Update(Guid id, UpdateLeaveRequestDto updateDto)
     {
-        var leaveRequest = await _leaveRequestService.UpdateLeaveRequestAsync(id, updateDto);
-        if (leaveRequest == null)
+        try
         {
-            return NotFound();
+            var leaveRequest = await _leaveRequestService.UpdateLeaveRequestAsync(id, updateDto);
+            if (leaveRequest == null)
+            {
+                return NotFound();
+            }
+            return Ok(leaveRequest);
         }
-        return Ok(leaveRequest);
+        catch (InvalidOperationException ex) when (ex.Message == "Insufficient leave balance.")
+        {
+            return BadRequest(new { Message = "Insufficient leave balance for updated dates." });
+        }
     }
 
     [HttpDelete("{id}")]
@@ -71,5 +86,48 @@ public class LeaveRequestsController : ControllerBase
             return NotFound();
         }
         return NoContent();
+    }
+    [AllowAnonymous]
+    [HttpGet("balance/{userId}")]
+    public async Task<ActionResult<LeaveBalanceDto>> GetLeaveBalance(Guid userId)
+    {
+        var balance = await _leaveRequestService.GetLeaveBalanceByUserIdAsync(userId);
+        if (balance == null)
+        {
+            return NotFound();
+        }
+        return Ok(balance);
+    }
+
+    [HttpPut("balance/{userId}")]
+    public async Task<IActionResult> UpdateLeaveBalance(Guid userId, [FromBody] decimal newBalance)
+    {
+        if (newBalance < 0)
+        {
+            return BadRequest(new { Message = "Leave balance cannot be negative." });
+        }
+
+        var result = await _leaveRequestService.UpdateLeaveBalanceAsync(userId, newBalance);
+        if (!result)
+        {
+            return StatusCode(500, new { Message = "Failed to update leave balance." });
+        }
+        return Ok(new { Message = "Leave balance updated successfully." });
+    }
+    [AllowAnonymous]
+    [HttpPost("balance/allocate/{userId}")]
+    public async Task<IActionResult> AllocateMonthlyLeave(Guid userId, [FromBody] decimal monthlyAllocation)
+    {
+        if (monthlyAllocation < 0)
+        {
+            return BadRequest(new { Message = "Monthly allocation cannot be negative." });
+        }
+
+        var result = await _leaveRequestService.AllocateMonthlyLeaveAsync(userId, monthlyAllocation);
+        if (!result)
+        {
+            return Ok(new { Message = "No allocation needed for this month." });
+        }
+        return Ok(new { Message = "Monthly leave allocated successfully." });
     }
 }

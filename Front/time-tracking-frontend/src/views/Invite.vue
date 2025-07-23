@@ -65,8 +65,41 @@ onMounted(async () => {
         tenantId,
       });
 
+      
+
       const newAccessToken = response.data.accessToken;
       const role = response.data.role;
+
+const decodeJwt = (token) => {
+  try {
+    const base64Url = token.split('.')[1];
+    const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/');
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split('')
+        .map((c) => {
+          return '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2);
+        })
+        .join('')
+    );
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error('Error decoding JWT:', error);
+    return null;
+  }
+};
+const decoded = decodeJwt(newAccessToken);
+    console.log('Decoded token:', decoded);
+    if (!decoded) {
+      errorMessage.value = 'Invalid token';
+      console.error('nametenant: Invalid token');
+      return false;
+    }
+        const tenantIdKey = 'nameidentifier'; // Adjust to 'sub', 'tid', etc., if needed
+    const Id = decoded[tenantIdKey];
+      const leaveBalance = await api.post(`/api/LeaveRequests/balance/allocate/${Id}`, 10.0);
+      const leaveBalanceResponse = await leaveBalance.data;
+      
       if (newAccessToken) {
         // Step 7: Save new accessToken
         localStorage.removeItem('accessToken');
