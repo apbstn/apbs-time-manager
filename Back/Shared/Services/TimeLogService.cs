@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using Microsoft.EntityFrameworkCore;
+﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Npgsql;
 using Shared.Context;
@@ -302,6 +299,68 @@ namespace Shared.Services
             {
                 _logger.LogInformation("Table TIMELOG does not exist for userId {UserId}. Returning empty data.", id);
                 return new Dictionary<string, double>();
+            }
+        }
+
+
+
+        public Dictionary<string, double> GetWeeklyPause(Guid id)
+        {
+            try
+            {
+                var currentDate = DateTime.UtcNow.Date; // 2025-07-23 00:00:00 UTC
+                var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek); // Start of week (Monday, July 21, 2025)
+
+                var weeklyData = _context.TimeLogs
+                    .Where(log => log.UserId == id && log.Time.Date >= startOfWeek && log.Type == TimeLogType.P)
+                    .ToList() // Load into memory
+                    .GroupBy(log => log.Time.DayOfWeek)
+                    .Select(g => new
+                    {
+                        Day = g.Key,
+                        TotalHours = g.Sum(log => log.TotalHours?.TotalHours ?? 0) // Client-side sum
+                    })
+                    .ToDictionary(
+                        x => Enum.GetName(typeof(DayOfWeek), x.Day) ?? "Unknown",
+                        x => Math.Round(x.TotalHours, 2)
+                    );
+
+                // Ensure all days (Monday to Sunday) are included with 0 if no data
+                var allDays = Enum.GetValues(typeof(DayOfWeek))
+                    .Cast<DayOfWeek>()
+                    .ToDictionary(d => d.ToString(), d => weeklyData.GetValueOrDefault(d.ToString(), 0.0));
+
+                return allDays;
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
+            {
+                _logger.LogInformation("Table TIMELOG does not exist for userId {UserId}. Returning empty data.", id);
+                return new Dictionary<string, double>();
+            }
+        }
+
+
+        public double GetMonthlyTotalHours(Guid id)
+        {
+            try
+            {
+                var currentDate = DateTime.UtcNow; // e.g., 2025-07-25 20:36:00 UTC
+                var startOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0, DateTimeKind.Utc); // First day of month, e.g., 2025-07-01 00:00:00 UTC
+                var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1); // Last moment of month, e.g., 2025-07-31 23:59:59.9999999 UTC
+
+                var totalHours = _context.TimeLogs
+                    .Where(log => log.UserId == id
+                                && log.Time >= startOfMonth
+                                && log.Time <= endOfMonth
+                                && log.Type == TimeLogType.PE)
+                    .Sum(log => log.TotalHours.HasValue ? log.TotalHours.Value.TotalHours : 0);
+
+                return Math.Round(totalHours, 2);
+            }
+            catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
+            {
+                _logger.LogInformation("Table TIMELOG does not exist for userId {UserId}. Returning 0.", id);
+                return 0.0;
             }
         }
     }

@@ -5,34 +5,26 @@
             <a ref="menuButton" class="layout-menu-button" @click="toggleMenu">
                 <i class="pi pi-chevron-right"></i>
             </a>
-            <!-- <button class="app-config-button app-config-mobile-button" @click="toggleConfigSidebar">
-                <i class="pi pi-cog">fff</i>
-            </button> -->
             <a ref="mobileMenuButton" class="layout-topbar-mobile-button" @click="onTopbarMenuToggle">
                 <i class="pi pi-ellipsis-v" style="color: #35D300 !important;"></i>
             </a>
         </div>
         <div class="layout-topbar-end">
-            
             <div class="layout-topbar-actions-start">{{ nameoftenant }}</div>
             <div class="layout-topbar-actions-end">
                 <ul class="layout-topbar-items">
                     <li class="chronometer-container">
-                        <span v-if="isInitialized && (showStart || showStop)" class="chronometer">{{ chronometerTime }}</span>
+                        <span v-if="isInitialized && (showStart || showStop || showPause)" class="chronometer">{{ chronometerTime }}</span>
                     </li>
                     <li>
                         <button v-if="isInitialized && showStart" class="pi pi-play-circle" style="color: #35D300; font-size: 2rem;" @click="customStartTracking"></button>
                     </li>
                     <li>
+                        <button v-if="isInitialized && showPause" class="pi pi-pause-circle" style="color: #ff8000; font-size: 2rem;" @click="customPauseTracking"></button>
+                    </li>
+                    <li>
                         <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: #FF0000; font-size: 2rem;" @click="customStopTracking"></button>
                     </li>
-                    <!-- <li>
-                        <a v-styleclass="{ selector: '@next', enterFromClass: 'hidden', enterActiveClass: 'animate-scalein', leaveToClass: 'hidden', leaveActiveClass: 'animate-fadeout', hideOnOutsideClick: true }" class="">
-                            <OverlayBadge severity="warn" :pt="{ pcBadge: { root: '!outline-0' } }">
-                                <i class="pi pi-bell !align-middle">fff</i>
-                            </OverlayBadge>
-                        </a>
-                    </li> -->
                 </ul>
             </div>
         </div>
@@ -45,15 +37,15 @@ import { useLayout } from '@/layout/composables/layout';
 import { useTimeTracking } from './composables/useTimeTracking';
 
 const { layoutState, toggleMenu, toggleConfigSidebar } = useLayout();
-const { initialize, startTracking, stopTracking, showStart, showStop } = useTimeTracking();
+const { initialize, startTracking, stopTracking, pauseTracking, showStart, showStop, showPause } = useTimeTracking();
 
 const isInitialized = ref(false);
 const chronometerInterval = ref(null);
-const elapsedTime = ref(0); // Tracks elapsed time in seconds
-const startTime = ref(null); // Stores the start time of the tracking session
-const nameoftenant = localStorage.getItem('Name_of_tenant')
+const elapsedTime = ref(0);
+const startTime = ref(null);
+const nameoftenant = localStorage.getItem('Name_of_tenant');
 console.log('nameoftenant', nameoftenant);
-// Computed property to format elapsed time as HH:MM:SS
+
 const chronometerTime = computed(() => {
     const hours = Math.floor(elapsedTime.value / 3600).toString().padStart(2, '0');
     const minutes = Math.floor((elapsedTime.value % 3600) / 60).toString().padStart(2, '0');
@@ -61,7 +53,6 @@ const chronometerTime = computed(() => {
     return `${hours}:${minutes}:${seconds}`;
 });
 
-// Calculate elapsed time based on the start time
 const calculateElapsedTime = () => {
     if (startTime.value) {
         const now = new Date().getTime();
@@ -73,7 +64,6 @@ const calculateElapsedTime = () => {
     }
 };
 
-// Start the chronometer
 const startChronometer = () => {
     if (!chronometerInterval.value) {
         console.log('Starting chronometer at:', new Date().toLocaleString());
@@ -88,66 +78,79 @@ const startChronometer = () => {
     }
 };
 
-// Stop the chronometer (but don't reset elapsedTime)
+const pauseChronometer = () => {
+    if (chronometerInterval.value) {
+        console.log('Pausing chronometer at:', new Date().toLocaleString());
+        clearInterval(chronometerInterval.value);
+        chronometerInterval.value = null;
+        // Keep elapsedTime and startTime for resume
+    }
+};
+
 const stopChronometer = () => {
     if (chronometerInterval.value) {
         console.log('Stopping chronometer at:', new Date().toLocaleString());
         clearInterval(chronometerInterval.value);
         chronometerInterval.value = null;
-        // Do not reset elapsedTime here; keep it for display
-        startTime.value = null; // Clear start time
-        localStorage.removeItem('chronometerStartTime'); // Clear persisted start time
+        startTime.value = null;
+        localStorage.removeItem('chronometerStartTime');
         console.log('Cleared startTime and localStorage at:', new Date().toLocaleString());
     }
 };
 
-// Override startTracking to include chronometer start
 const customStartTracking = async () => {
     console.log('Custom start tracking called at:', new Date().toLocaleString());
     const now = new Date().toISOString();
-    startTime.value = now; // Set start time
-    localStorage.setItem('chronometerStartTime', now); // Persist start time
+    startTime.value = now;
+    localStorage.setItem('chronometerStartTime', now);
     await startTracking();
-    startChronometer(); // Start immediately after tracking begins
+    startChronometer();
 };
 
-// Override stopTracking to include chronometer stop
+const customPauseTracking = async () => {
+    console.log('Custom pause tracking called at:', new Date().toLocaleString());
+    if (startTime.value) {
+        await pauseTracking();
+        pauseChronometer(); // Pause the chronometer
+    } else {
+        console.warn('No active tracking to pause at:', new Date().toLocaleString());
+    }
+};
+
 const customStopTracking = async () => {
     console.log('Custom stop tracking called at:', new Date().toLocaleString());
     await stopTracking();
-    stopChronometer(); // Stop without resetting elapsedTime
+    stopChronometer();
 };
 
-// Watch showStop to manage chronometer state
-watch(showStop, (newValue) => {
-    if (newValue && startTime.value) {
-        startChronometer(); // Resume chronometer if tracking is active
-    } else if (!newValue && chronometerInterval.value) {
-        stopChronometer(); // Stop if tracking is not active
+watch(() => [showStart.value, showPause.value, showStop.value], ([newShowStart, newShowPause, newShowStop]) => {
+    if (newShowStop && startTime.value) {
+        startChronometer();
+    } else if (!newShowStop && !newShowPause && chronometerInterval.value) {
+        stopChronometer();
+    } else if (newShowPause && startTime.value) {
+        pauseChronometer(); // Pause when pause button is visible
     }
 });
 
 onMounted(async () => {
-    // Load persisted start time from localStorage
     const savedStartTime = localStorage.getItem('chronometerStartTime');
     if (savedStartTime) {
         startTime.value = savedStartTime;
-        console.log('Loaded startTime from localStorage:', startTime.value, 'at:', new Date().toLocaleString());
     }
 
     await initialize();
     isInitialized.value = true;
 
-    // Calculate elapsed time if tracking is active
     if (showStop.value && startTime.value) {
         calculateElapsedTime();
         startChronometer();
     } else if (!showStop.value) {
-        elapsedTime.value = 0; // Reset if not tracking
+        elapsedTime.value = 0;
         localStorage.removeItem('chronometerStartTime');
     }
 
-    console.log('layout-topbar mounted - showStart:', showStart.value, 'showStop:', showStop.value, 'elapsedTime:', elapsedTime.value, 'at:', new Date().toLocaleString());
+    console.log('layout-topbar mounted - showStart:', showStart.value, 'showPause:', showPause.value, 'showStop:', showStop.value, 'elapsedTime:', elapsedTime.value, 'at:', new Date().toLocaleString());
 });
 
 function onTopbarMenuToggle() {
@@ -180,9 +183,8 @@ function onTopbarMenuToggle() {
 }
 
 .layout-topbar-actions-start {
-    font-size: 18px !important; /* Adjust font size */
-    font-weight: 400; /* Bold text */
-    color: #ffffff; /* Dark color for contrast */
-   /* text-transform: uppercase;  make text uppercase */
+    font-size: 18px !important;
+    font-weight: 400;
+    color: #ffffff;
 }
 </style>

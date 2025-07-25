@@ -72,7 +72,6 @@ export default {
     });
 
     onMounted(async () => {
-      chartData.value = setChartData();
       chartOptions.value = setChartOptions();
 
       const token = localStorage.getItem('accessToken');
@@ -107,21 +106,27 @@ export default {
               });
               hoursToday.value = todayResponse.data;
 
-              /* const monthResponse = await api.get(`/api/TimeTracking/monthly-total/${userId.value}`, {
+              const monthResponse = await api.get(`/api/timelog/monthly/${userId.value}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
-              hoursMonth.value = monthResponse.data.hours || 0; */
+              hoursMonth.value = monthResponse.data|| 0; 
+
+              console.log(hoursMonth.value)
 
               // Fetch weekly hours
               console.log("-------------------------------------------------");
-              console.log("ID going to sent : ",userId.value);
+              console.log("ID going to sent : ", userId.value);
               console.log("-------------------------------------------------");
               const weeklyResponse = await api.get(`/api/timelog/weekly/${userId.value}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
-              chartData.value = setChartData(weeklyResponse.data);
+              const weeklyPauseResponse = await api.get(`/api/timelog/weeklyPause/${userId.value}`, {
+                headers: { Authorization: `Bearer ${token}` }
+              });
+              chartData.value = setChartData(weeklyResponse.data, weeklyPauseResponse.data);
               console.log("-------------------------------------------------");
               console.log('Weekly Data:', weeklyResponse.data);
+              console.log('Weekly Pause Data:', weeklyPauseResponse.data);
               console.log("-------------------------------------------------");
             }
           } catch (error) {
@@ -132,7 +137,7 @@ export default {
       }
     });
 
-    const setChartData = (weeklyData = {}) => {
+    const setChartData = (weeklyData = {}, weeklyPauseData = {}) => {
       const documentStyle = getComputedStyle(document.documentElement);
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       return {
@@ -146,9 +151,9 @@ export default {
           },
           {
             type: 'bar',
-            label: 'Stopped Hours',
-            backgroundColor: '#FF0000',
-            data: days.map(() => 0) // Placeholder, adjust if you track stopped hours
+            label: 'Paused Hours',
+            backgroundColor: '#ff8000',
+            data: days.map(day => weeklyPauseData[day] || 0)
           }
         ]
       };
@@ -201,7 +206,6 @@ export default {
 </script>
 
 <style scoped>
-/* Existing styles remain unchanged */
 .home {
   position: relative;
   display: flex;
