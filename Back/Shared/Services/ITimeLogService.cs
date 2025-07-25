@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using Shared.Models;
+﻿using Shared.Models;
 using Shared.Services;
 
 namespace Shared.Services
@@ -14,5 +12,7 @@ namespace Shared.Services
         Result UpdateLog(Guid logId, DateTime newTime, TimeLogType newType, int? totalHours = null);
         string GetTodayTotalHours(Guid id); // Changed to string
         Dictionary<string, double> GetWeeklyHours(Guid id);
+        Dictionary<string, double> GetWeeklyPause(Guid id);
+        double GetMonthlyTotalHours(Guid id);
     }
 }

@@ -276,14 +276,14 @@ h2 {
   padding: 0.5rem 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.1s;
-  color: #FFD700 !important;
-  border-color: #FFD700 !important;
+  color: #ff8000 !important;
+  border-color: #ff8000 !important;
   background-color: white;
 }
 
 .allocate-button:hover {
   transform: translateY(-1px);
-  background-color: #FFD700 !important;
+  background-color: #ff8000 !important;
   color: white !important;
   border-color: white !important;
 }

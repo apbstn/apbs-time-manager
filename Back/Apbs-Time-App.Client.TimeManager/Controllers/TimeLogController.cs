@@ -21,6 +21,9 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
             _ex = ex;
         }
 
+
+        
+
         [HttpPost("start/{accountId}")]
         [Authorize]
         public ActionResult StartTracking(Guid accountId)
@@ -120,6 +123,22 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
         {
             var weeklyHours = _timeLogService.GetWeeklyHours(id);
             return weeklyHours.Any() ? Ok(weeklyHours) : NotFound("No weekly tracking data found.");
+        }
+        [HttpGet("weeklyPause/{id}")]
+        [Authorize]
+        public ActionResult GetWeeklyPause(Guid id)
+        {
+            //return Ok($"Received id: {id}");
+            var weeklyHours = _timeLogService.GetWeeklyPause(id);
+            return weeklyHours.Any() ? Ok(weeklyHours) : NotFound("No weekly tracking data found.");
+        }
+
+        [HttpGet("monthly/{id}")]
+        [Authorize]
+        public ActionResult<double> GetMonthlyTotalHours(Guid id)
+        {
+            var monthlyHours = _timeLogService.GetMonthlyTotalHours(id);
+            return Ok(monthlyHours); // Always return Ok since GetMonthlyTotalHours handles empty cases
         }
     }
 }

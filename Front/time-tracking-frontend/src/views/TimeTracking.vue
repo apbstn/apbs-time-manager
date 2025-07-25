@@ -40,17 +40,18 @@
           </Column>
           <Column field="TM_TYPE" header="Status" style="min-width: 10rem" filterField="TM_TYPE">
             <template #body="{ data }">
-              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="badge" />
+              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="status-badge"
+                @before-mount="console.log('Rendering Tag for TM_TYPE:', data.TM_TYPE, 'Severity:', getSeverity(data.TM_TYPE), 'Classes:', $el.className)" />
             </template>
             <template #filter="{ filterModel }">
               <Select v-model="filterModel.value" :options="statusOptions" optionLabel="label" optionValue="value"
                 placeholder="Select Status" showClear>
                 <template #option="slotProps">
-                  <Tag :value="slotProps.option.label" :severity="getSeverity(slotProps.option.value)" />
+                  <Tag :value="slotProps.option.label" :severity="getSeverity(slotProps.option.value)" class="status-badge" />
                 </template>
                 <template #value="slotProps">
                   <Tag v-if="slotProps.value !== null && slotProps.value !== undefined"
-                    :value="displayStatus(slotProps.value)" :severity="getSeverity(slotProps.value)" />
+                    :value="displayStatus(slotProps.value)" :severity="getSeverity(slotProps.value)" class="status-badge" />
                 </template>
               </Select>
             </template>
@@ -70,150 +71,124 @@
   </div>
 </template>
 
-<script>
-import { ref, onMounted } from 'vue';
+<script setup>
+import { ref, onMounted, computed } from 'vue';
 import { useTimeTracking } from '../layout/composables/useTimeTracking';
 import { FilterMatchMode, FilterOperator } from '@primevue/core/api';
 import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import Button from 'primevue/button';
 import InputText from 'primevue/inputtext';
-import IconField from 'primevue/iconfield';
-import InputIcon from 'primevue/inputicon';
 import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import InputNumber from 'primevue/inputnumber';
 
-export default {
-  components: {
-    DataTable,
-    Column,
-    Button,
-    InputText,
-    IconField,
-    InputIcon,
-    DatePicker,
-    Select,
-    Tag,
-    InputNumber
-  },
-  setup() {
-    const { initialize, fetchTimeLogs, getStatusPhrase, formatDate, formatDuration, getState } = useTimeTracking();
-    const filters = ref();
-    const loading = ref(false);
-    const statuses = ref(['start', 'pause', 'stop']);
-    const statusOptions = ref([
-      { label: 'Start', value: 0 },
-      { label: 'Pause', value: 1 },
-      { label: 'Stop', value: 2 }
-    ]);
-    const localState = ref({
-      currentStatus: 'stop',
-      statusMessage: '',
-      timeLogs: []
-    });
+// Import components
+const components = { DataTable, Column, Button, InputText, DatePicker, Select, Tag, InputNumber };
 
-    const initFilters = () => {
-      filters.value = {
-        global: { value: null, matchMode: FilterMatchMode.CONTAINS },
-        TM_TIME: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
-        TM_TYPE: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
-        TM_TOTALHOURS: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO }] }
-      };
-    };
+// Use TimeTracking composable
+const { initialize, fetchTimeLogs, getStatusPhrase, formatDate, formatDuration, getState } = useTimeTracking();
 
-    initFilters();
+const filters = ref();
+const loading = ref(false);
+const statuses = ref(['start', 'pause', 'stop']);
+const statusOptions = ref([
+  { label: 'Start', value: 0 },
+  { label: 'Pause', value: 1 },
+  { label: 'Stop', value: 2 }
+]);
+const localState = ref({
+  currentStatus: 'stop',
+  statusMessage: '',
+  timeLogs: []
+});
 
-    onMounted(async () => {
-      loading.value = true;
-      try {
-        await fetchTimeLogs();
-        const currentState = getState();
-        localState.value.timeLogs = currentState.timeLogs;
-        localState.value.currentStatus = currentState.currentStatus;
-        localState.value.statusMessage = currentState.statusMessage;
-      } catch (error) {
-        console.error('Error loading time tracking data:', error);
-      }
-      loading.value = false;
-    });
+const initFilters = () => {
+  filters.value = {
+    global: { value: null, matchMode: FilterMatchMode.CONTAINS },
+    TM_TIME: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.DATE_IS }] },
+    TM_TYPE: { operator: FilterOperator.OR, constraints: [{ value: null, matchMode: FilterMatchMode.EQUALS }] },
+    TM_TOTALHOURS: { operator: FilterOperator.AND, constraints: [{ value: null, matchMode: FilterMatchMode.GREATER_THAN_OR_EQUAL_TO }] }
+  };
+};
 
-    return {
-      localState,
-      initialize,
-      fetchTimeLogs,
-      getStatusPhrase,
-      formatDate,
-      formatDuration,
-      getState,
-      filters,
-      loading,
-      statuses,
-      statusOptions,
-      initFilters
-    };
-  },
-  computed: {
-    sortedTimeLogs() {
-      return [...this.localState.timeLogs].sort((a, b) => {
-        const dateA = new Date(a.TM_TIME);
-        const dateB = new Date(b.TM_TIME);
-        return dateB - dateA; // Most recent first
-      });
-    },
-    filteredTimeLogs() {
-      let logs = this.sortedTimeLogs;
+initFilters();
 
-      // Apply date filter if active
-      const dateFilter = this.filters?.TM_TIME?.constraints?.[0];
-      if (dateFilter?.value) {
-        const filterDate = new Date(dateFilter.value);
-        logs = logs.filter(log => {
-          const logDate = new Date(log.TM_TIME);
-          return logDate.toDateString() === filterDate.toDateString();
-        });
-      }
-
-      return logs;
-    }
-  },
-  methods: {
-    displayStatus(type) {
-      return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
-    },
-    getSeverity(status) {
-      switch (status) {
-        case 0:
-        case 'start':
-          return 'success';
-        case 1:
-        case 'pause':
-          return 'warning';
-        case 2:
-        case 'stop':
-          return 'danger';
-        default:
-          return null;
-      }
-    },
-    clearFilter() {
-      this.initFilters();
-    },
-    async refreshData() {
-      this.loading = true;
-      try {
-        await this.fetchTimeLogs();
-        const currentState = this.getState();
-        this.localState.timeLogs = currentState.timeLogs;
-        this.localState.currentStatus = currentState.currentStatus;
-        this.localState.statusMessage = currentState.statusMessage;
-      } catch (error) {
-        console.error('Error refreshing data:', error);
-      }
-      this.loading = false;
-    }
+onMounted(async () => {
+  loading.value = true;
+  try {
+    await fetchTimeLogs();
+    const currentState = getState();
+    localState.value.timeLogs = currentState.timeLogs;
+    localState.value.currentStatus = currentState.currentStatus;
+    localState.value.statusMessage = currentState.statusMessage;
+    console.log('Loaded time logs:', localState.value.timeLogs);
+  } catch (error) {
+    console.error('Error loading time tracking data:', error);
   }
+  loading.value = false;
+});
+
+// Computed properties
+const sortedTimeLogs = computed(() => {
+  return [...localState.value.timeLogs].sort((a, b) => {
+    const dateA = new Date(a.TM_TIME);
+    const dateB = new Date(b.TM_TIME);
+    return dateB - dateA;
+  });
+});
+
+const filteredTimeLogs = computed(() => {
+  let logs = sortedTimeLogs.value;
+
+  const dateFilter = filters.value?.TM_TIME?.constraints?.[0];
+  if (dateFilter?.value) {
+    const filterDate = new Date(dateFilter.value);
+    logs = logs.filter(log => {
+      const logDate = new Date(log.TM_TIME);
+      return logDate.toDateString() === filterDate.toDateString();
+    });
+  }
+
+  return logs;
+});
+
+// Methods
+const displayStatus = (type) => {
+  return type === 0 ? 'start' : type === 1 ? 'pause' : 'stop';
+};
+
+const getSeverity = (status) => {
+  console.log('statussss', status);
+  switch (status) {
+    case 0:
+      return 'success';
+    case 1:
+      return 'warn';
+    case 2:
+      return 'danger';
+    default:
+      return null;
+  }
+};
+
+const clearFilter = () => {
+  initFilters();
+};
+
+const refreshData = async () => {
+  loading.value = true;
+  try {
+    await fetchTimeLogs();
+    const currentState = getState();
+    localState.value.timeLogs = currentState.timeLogs;
+    localState.value.currentStatus = currentState.currentStatus;
+    localState.value.statusMessage = currentState.statusMessage;
+  } catch (error) {
+    console.error('Error refreshing data:', error);
+  }
+  loading.value = false;
 };
 </script>
 
@@ -305,19 +280,20 @@ h3 {
   color: #6b7280;
 }
 
-.badge {
-  display: inline-flex;
-  align-items: center;
+/* Status badge styling */
+.status-badge {
+  display: inline-flex !important;
+  align-items: center !important;
   text-transform: uppercase;
   font-weight: 500;
   font-size: 12px;
   padding: 0.25rem 0.5rem;
   border-radius: 2px;
   color: #000000;
-  background-color: white; /* Default background for all badges */
+  background-color: white !important; /* Force white background */
 }
 
-.badge::before {
+.status-badge::before {
   content: '';
   width: 8px;
   height: 8px;
@@ -325,27 +301,29 @@ h3 {
   margin-right: 6px;
 }
 
-:deep(.p-tag-success).badge::before {
-  background: #35D300;
+/* Specific colors for each severity */
+.logs :deep(.p-tag-success).status-badge::before {
+  background: #35D300 !important; /* Green for Start */
 }
 
-:deep(.p-tag-warning).badge::before {
-  background: #ffaa00;
+.logs :deep(.p-tag-warn).status-badge::before {
+  background: #ff8000 !important; /* Orange for Pause */
 }
 
-:deep(.p-tag-danger).badge::before {
-  background: #ff0000; /* Red circle for STOP */
+.logs :deep(.p-tag-danger).status-badge::before {
+  background: #ff0000 !important; /* Red for Stop */
 }
 
-:deep(.p-tag-success, .p-tag-warning, .p-tag-danger) {
-  background: none !important; /* Remove default PrimeVue backgrounds */
+/* Remove PrimeVue default backgrounds and ensure custom styling */
+.logs :deep(.p-tag) {
+  background: none !important;
   padding: 0 !important;
 }
 
-/* Override PrimeVue danger background to white */
-:deep(.p-tag-danger) {
+/* Ensure text color and background consistency */
+.logs :deep(.p-tag-danger) {
   background-color: white !important;
-  color: #000000; /* Ensure text is readable */
+  color: #000000 !important;
 }
 
 :deep(.p-inputtext) {

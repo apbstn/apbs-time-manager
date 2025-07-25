@@ -9,21 +9,20 @@ export function useTimeTracking() {
     timeLogs: []
   };
 
-  const showStart = ref(true); // Reactive state for Start button visibility
-  const showStop = ref(false); // Reactive state for Stop button visibility
- // Get email from local storage
+  const showStart = ref(true);
+  const showStop = ref(false);
+  const showPause = ref(false);
+
   const getAccountId = async (email) => {
     try {
-
-      
-      const response = await api.post('/api/UserTenants/get-id-by-email', email)
-      console.log('Account ID fetched:', response.data)
-      return response.data
+      const response = await api.post('/api/UserTenants/get-id-by-email', email);
+      console.log('Account ID fetched:', response.data);
+      return response.data;
     } catch (error) {
-      console.error('Error fetching account ID:', error)
-      throw error
+      console.error('Error fetching account ID:', error);
+      throw error;
     }
-  }
+  };
 
   const initializeUserId = async () => {
     const email = localStorage.getItem('email');
@@ -46,17 +45,17 @@ export function useTimeTracking() {
     return date ? new Date(date).toISOString().split('T')[0] : 'No Date';
   };
 
-const formatDuration = (totalHours) => {
-  if (!totalHours || totalHours === 'null' || totalHours === '00:00:00') {
-    return 'N/A'; // Display 'N/A' if no valid duration
-  }
-  const [h = 0, m = 0, s = 0] = totalHours.split(':').map(Number);
-  if (isNaN(h) || isNaN(m) || isNaN(s)) {
-    return 'Invalid Format'; // Handle malformed duration
-  }
-  const roundedSeconds = Math.floor(s); // Round down seconds to remove decimals
-  return `${h}h ${m}m ${roundedSeconds}s`;
-};
+  const formatDuration = (totalHours) => {
+    if (!totalHours || totalHours === 'null' || totalHours === '00:00:00') {
+      return 'N/A';
+    }
+    const [h = 0, m = 0, s = 0] = totalHours.split(':').map(Number);
+    if (isNaN(h) || isNaN(m) || isNaN(s)) {
+      return 'Invalid Format';
+    }
+    const roundedSeconds = Math.floor(s);
+    return `${h}h ${m}m ${roundedSeconds}s`;
+  };
 
   const getStatusPhrase = () => {
     const username = localStorage.getItem('username') || 'User';
@@ -75,14 +74,14 @@ const formatDuration = (totalHours) => {
       const latestLog = state.timeLogs[state.timeLogs.length - 1];
       const latestType = latestLog.TM_TYPE;
       showStart.value = latestType !== 0; // Show Start if not started (TM_TYPE is 1 or 2)
-      showStop.value = latestType === 0;  // Show Stop if started (TM_TYPE is 0)
-      console.log('Updated button visibility - Latest TM_TYPE:', latestType, 'showStart:', showStart.value, 'showStop:', showStop.value, 'at:', new Date().toLocaleString());
+      showStop.value = latestType === 0 && latestLog.TM_ACTIV; // Show Stop only if active
+      showPause.value = latestType === 0 && latestLog.TM_ACTIV; // Show Pause only if active
+      console.log('Updated button visibility - Latest TM_TYPE:', latestType, 'showStart:', showStart.value, 'showStop:', showStop.value, 'showPause:', showPause.value, 'at:', new Date().toLocaleString());
     } else {
-      // Check if there was a previous active session before filtering
-      const hasActiveSession = state.timeLogs.some(log => log.TM_TYPE === 0 && log.TM_ACTIV);
-      showStart.value = !hasActiveSession; // Show Start only if no active session
-      showStop.value = hasActiveSession;   // Show Stop if an active session exists
-      console.log('No logs or filtered out, checking active session - showStart:', showStart.value, 'showStop:', showStop.value, 'at:', new Date().toLocaleString());
+      showStart.value = true;
+      showStop.value = false;
+      showPause.value = false;
+      console.log('No logs, setting default visibility - showStart:', showStart.value, 'showStop:', showStop.value, 'showPause:', showPause.value, 'at:', new Date().toLocaleString());
     }
   };
 
@@ -98,14 +97,14 @@ const formatDuration = (totalHours) => {
       const logs = Array.isArray(res.data) ? res.data : [];
       state.timeLogs = logs.map(log => {
         const rawType = log.type !== undefined ? log.type : log.TM_TYPE;
-        const rawHours = log.totalHours || log.tm_TotalHours || log.TM_TOTALHOURS; // Try multiple field names
+        const rawHours = log.totalHours || log.tm_TotalHours || log.TM_TOTALHOURS;
         console.log('Mapping log - raw type:', rawType, 'raw hours:', rawHours, 'for log:', log);
         return {
           tm_Id: log.tm_Id || log.TM_ID,
           TM_TIME: log.tm_Time || log.TM_TIME || log.time,
-          TM_TOTALHOURS: rawHours || '00:00:00', // Default to '00:00:00' if null
+          TM_TOTALHOURS: rawHours || '00:00:00',
           TM_TYPE: Number(rawType),
-          TM_ACTIV: log.activ !== undefined ? log.activ : log.TM_ACTIV || false // Add TM_ACTIV if available
+          TM_ACTIV: log.activ !== undefined ? log.activ : log.TM_ACTIV || false
         };
       });
 
@@ -113,25 +112,18 @@ const formatDuration = (totalHours) => {
         const latestLog = state.timeLogs[state.timeLogs.length - 1];
         const latestType = latestLog.TM_TYPE;
         state.currentStatus = latestType === 0 ? 'start' : latestType === 1 ? 'pause' : 'stop';
-        updateButtonVisibility(); // Update button visibility based on latest log
+        updateButtonVisibility();
       } else {
-        // Check unfiltered logs for an active session
-        const latestLog = state.timeLogs[state.timeLogs.length - 1];
-        if (latestLog && latestLog.TM_TYPE === 0 && latestLog.TM_ACTIV) {
-          state.currentStatus = 'start';
-          updateButtonVisibility(); // Show Stop if active session exists
-        } else {
-          state.currentStatus = 'stop';
-          updateButtonVisibility(); // Default to Start if no active session
-        }
+        state.currentStatus = 'stop';
+        updateButtonVisibility();
       }
     } catch (err) {
       console.error('Error fetching time logs at:', new Date().toLocaleString(), ':', err.message, 'Status:', err.response?.status);
       state.statusMessage = 'Failed to fetch logs.';
       state.currentStatus = 'error';
-      updateButtonVisibility(); // Default to Start on error
+      updateButtonVisibility();
     }
-    console.log('Post-fetch state - showStart:', showStart.value, 'showStop:', showStop.value, 'at:', new Date().toLocaleString());
+    console.log('Post-fetch state - showStart:', showStart.value, 'showStop:', showStop.value, 'showPause:', showPause.value, 'at:', new Date().toLocaleString());
     return state;
   };
 
@@ -146,12 +138,12 @@ const formatDuration = (totalHours) => {
       state.statusMessage = res.data || 'Started tracking.';
       console.log('Start response at:', new Date().toLocaleString(), ':', res.data);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      await fetchTimeLogs(); // This will update button visibility
+      await fetchTimeLogs();
     } catch (err) {
       console.error('Start tracking failed at:', new Date().toLocaleString(), ':', err.message, 'Status:', err.response?.status);
       state.statusMessage = 'Start tracking failed.';
       state.currentStatus = 'error';
-      updateButtonVisibility(); // Default to Start on error
+      updateButtonVisibility();
     }
     return state;
   };
@@ -164,15 +156,15 @@ const formatDuration = (totalHours) => {
       const res = await api.post(`/api/timelog/pause/${state.userId}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
-      state.statusMessage = res.data || 'Paused.';
+      state.statusMessage = res.data || 'Paused tracking.';
       console.log('Pause response at:', new Date().toLocaleString(), ':', res.data);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      await fetchTimeLogs(); // This will update button visibility
+      await fetchTimeLogs(); // Refresh logs to update state
     } catch (err) {
       console.error('Pause tracking failed at:', new Date().toLocaleString(), ':', err.message, 'Status:', err.response?.status);
       state.statusMessage = 'Pause tracking failed.';
       state.currentStatus = 'error';
-      updateButtonVisibility(); // Default to Start on error
+      updateButtonVisibility();
     }
     return state;
   };
@@ -185,15 +177,15 @@ const formatDuration = (totalHours) => {
       const res = await api.post(`/api/timelog/stop/${state.userId}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('accessToken')}` }
       });
-      state.statusMessage = res.data || 'Stopped.';
+      state.statusMessage = res.data || 'Stopped tracking.';
       console.log('Stop response at:', new Date().toLocaleString(), ':', res.data);
       await new Promise(resolve => setTimeout(resolve, 2000));
-      await fetchTimeLogs(); // This will update button visibility
+      await fetchTimeLogs();
     } catch (err) {
       console.error('Stop tracking failed at:', new Date().toLocaleString(), ':', err.message, 'Status:', err.response?.status);
       state.statusMessage = 'Stop tracking failed.';
       state.currentStatus = 'error';
-      updateButtonVisibility(); // Default to Start on error
+      updateButtonVisibility();
     }
     return state;
   };
@@ -201,7 +193,7 @@ const formatDuration = (totalHours) => {
   const initialize = async () => {
     await initializeUserId();
     const initialState = await fetchTimeLogs();
-    console.log('Initialization complete - showStart:', showStart.value, 'showStop:', showStop.value, 'at:', new Date().toLocaleString());
+    console.log('Initialization complete - showStart:', showStart.value, 'showStop:', showStop.value, 'showPause:', showPause.value, 'at:', new Date().toLocaleString());
     return initialState;
   };
 
@@ -215,7 +207,8 @@ const formatDuration = (totalHours) => {
     formatDate,
     formatDuration,
     getState: () => state,
-    showStart, // Expose for button visibility
-    showStop   // Expose for button visibility
+    showStart,
+    showStop,
+    showPause
   };
 }
