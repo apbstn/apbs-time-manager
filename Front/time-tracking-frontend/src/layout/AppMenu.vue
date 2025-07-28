@@ -26,7 +26,7 @@ const fullMenu = ref([
                 label: 'Plan',
                 icon: 'pi pi-fw pi-calendar',
                 to: '/plan',
-                showFor: ['Owner']
+                showFor: ['all']
             },
             {
                 label: 'Users',

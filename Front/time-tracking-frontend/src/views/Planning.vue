@@ -12,8 +12,10 @@
         </h2>
         <div v-if="!isEditing && savedDate" class="text-xs text-gray-400">Created At {{ formatDate(savedDate) }}</div>
       </div>
-      <Button v-if="isEditing" @click="saveSchedule" label="Save" icon="pi pi-check" class="add-button" iconPos="right" />
-      <Button v-else @click="toggleEdit" label="Update" icon="pi pi-refresh" class="add-button1" iconPos="right" />
+      <div v-if="role === 'Owner'">
+        <Button v-if="isEditing" @click="saveSchedule" label="Save" icon="pi pi-check" class="add-button" iconPos="right" />
+        <Button v-else @click="toggleEdit" label="Update" icon="pi pi-refresh" class="add-button1" iconPos="right" />
+      </div>
     </div>
 
     <!-- Work Type Selector -->
@@ -94,9 +96,7 @@
 
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
-import api from '@/api';
-
-
+import api from '@/api'
 
 const scheduleId = ref(null)
 const isEditing = ref(false)
@@ -104,6 +104,7 @@ const scheduleName = ref('Horaire de travail')
 const savedDate = ref('')
 const workType = ref('Fixe')
 const weeklyHours = ref(40)
+const role = ref('')
 
 const days = [
   { key: 'M', name: 'Monday' },
@@ -145,12 +146,11 @@ const fetchSchedule = async () => {
   try {
     const response = await api.get('/api/schedules/1')
     const data = response.data
-    console.log("reponse : ---------------------------------", response.data)
+    console.log("response: ---------------------------------", response.data)
     if (data) {
-      workType.value= data.workType
-      console.log("work type : --------------------", workType.value)
       scheduleId.value = data.id
       scheduleName.value = data.name
+      workType.value = data.workType
       selectedDays.value = data.selectedDays
       weeklyHours.value = data.weeklyHours
       savedDate.value = data.createdAt
@@ -163,6 +163,7 @@ const fetchSchedule = async () => {
 }
 
 const saveSchedule = async () => {
+  if (role.value !== 'Owner') return // Prevent saving if not Owner
   const payload = {
     name: scheduleName.value,
     workType: workType.value,
@@ -189,10 +190,13 @@ const saveSchedule = async () => {
 }
 
 const toggleEdit = () => {
-  isEditing.value = !isEditing.value
+  if (role.value === 'Owner') {
+    isEditing.value = !isEditing.value
+  }
 }
 
 const toggleDay = (dayKey) => {
+  if (role.value !== 'Owner') return // Prevent day toggling if not Owner
   const index = selectedDays.value.indexOf(dayKey)
   if (index === -1) {
     selectedDays.value.push(dayKey)
@@ -201,7 +205,10 @@ const toggleDay = (dayKey) => {
   }
 }
 
-onMounted(fetchSchedule)
+onMounted(() => {
+  role.value = localStorage.getItem('role') || ''
+  fetchSchedule()
+})
 </script>
 
 <style scoped>
