@@ -1,6 +1,6 @@
 <template>
     <div class="layout-footer">
-        <span class="font-medium text-lg text-muted-color">APBS Group</span>
+        <span class="font-medium text-lg text-muted-color">AP Business Soft © Copyright 2025</span>
         <div class="flex gap-2">
             <a href="https://www.instagram.com/ketataah/" target="_blank" rel="noopener noreferrer">
                 <Button icon="pi pi-instagram" rounded variant="text" severity="secondary"></Button>
