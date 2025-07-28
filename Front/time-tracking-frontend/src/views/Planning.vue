@@ -3,7 +3,6 @@
   <div class="max-w-4xl mx-auto p-6 bg-white rounded-2xl shadow-2xl border border-gray-100 mt-10">
     <!-- Header -->
     <div class="flex justify-between items-center mb-6">
-      
       <div class="space-y-1">
         <InputText v-if="isEditing" v-model="scheduleName" placeholder="Nom de l’horaire"
           class="text-xl font-bold text-slate-700 border-b border-slate-300 focus:outline-none focus:border-blue-500" />
@@ -11,9 +10,9 @@
           {{ scheduleName }}
           <span class="ml-2 text-xs bg-slate-200 text-slate-600 px-2 py-0.5 rounded-full">Default</span>
         </h2>
-        <div v-if="!isEditing" class="text-xs text-gray-400">Created At {{ savedDate }}</div>
+        <div v-if="!isEditing && savedDate" class="text-xs text-gray-400">Created At {{ formatDate(savedDate) }}</div>
       </div>
-      <Button v-if="isEditing" @click="toggleEdit" label="Save" icon="pi pi-check" class="add-button" iconPos="right" />
+      <Button v-if="isEditing" @click="saveSchedule" label="Save" icon="pi pi-check" class="add-button" iconPos="right" />
       <Button v-else @click="toggleEdit" label="Update" icon="pi pi-refresh" class="add-button1" iconPos="right" />
     </div>
 
@@ -94,9 +93,13 @@
 </template>
 
 <script setup>
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted } from 'vue'
+import api from '@/api';
 
-const isEditing = ref(true)
+
+
+const scheduleId = ref(null)
+const isEditing = ref(false)
 const scheduleName = ref('Horaire de travail')
 const savedDate = ref('')
 const workType = ref('Fixe')
@@ -105,7 +108,7 @@ const weeklyHours = ref(40)
 const days = [
   { key: 'M', name: 'Monday' },
   { key: 'T', name: 'Tuesday' },
-  { key: 'W', name: 'Wensday' },
+  { key: 'W', name: 'Wednesday' },
   { key: 'Th', name: 'Thursday' },
   { key: 'F', name: 'Friday' },
   { key: 'S', name: 'Saturday' },
@@ -134,20 +137,58 @@ const fixedHours = reactive({
   Su: { start: '', end: '' }
 })
 
-const toggleEdit = () => {
-  if (isEditing.value) {
-    const today = new Date().toLocaleDateString()
-    savedDate.value = today
-    console.log('Saved schedule:', {
-      name: scheduleName.value,
-      type: workType.value,
-      selectedDays: selectedDays.value,
-      flexible: flexibleHours,
-      fixed: fixedHours,
-      weekly: weeklyHours.value,
-      date: today
-    })
+const formatDate = (dateString) => {
+  return new Date(dateString).toLocaleDateString()
+}
+
+const fetchSchedule = async () => {
+  try {
+    const response = await api.get('/api/schedules/1')
+    const data = response.data
+    console.log("reponse : ---------------------------------", response.data)
+    if (data) {
+      workType.value= data.workType
+      console.log("work type : --------------------", workType.value)
+      scheduleId.value = data.id
+      scheduleName.value = data.name
+      selectedDays.value = data.selectedDays
+      weeklyHours.value = data.weeklyHours
+      savedDate.value = data.createdAt
+      Object.assign(flexibleHours, data.flexibleHours)
+      Object.assign(fixedHours, data.fixedHours)
+    }
+  } catch (error) {
+    console.error('Error fetching schedule:', error)
   }
+}
+
+const saveSchedule = async () => {
+  const payload = {
+    name: scheduleName.value,
+    workType: workType.value,
+    selectedDays: selectedDays.value,
+    flexibleHours,
+    fixedHours,
+    weeklyHours: weeklyHours.value
+  }
+
+  try {
+    let response
+    if (scheduleId.value) {
+      response = await api.put(`/api/schedules/${scheduleId.value}`, payload)
+    } else {
+      response = await api.post('/api/schedules', payload)
+      scheduleId.value = response.data.id
+    }
+    savedDate.value = response.data.createdAt || new Date().toISOString()
+    isEditing.value = false
+    console.log('Saved schedule:', response.data)
+  } catch (error) {
+    console.error('Error saving schedule:', error)
+  }
+}
+
+const toggleEdit = () => {
   isEditing.value = !isEditing.value
 }
 
@@ -159,9 +200,10 @@ const toggleDay = (dayKey) => {
     selectedDays.value.splice(index, 1)
   }
 }
+
+onMounted(fetchSchedule)
 </script>
 
-<!-- CSS for Save and Edit Buttons -->
 <style scoped>
 .add-button {
   border-radius: 6px;
@@ -196,10 +238,7 @@ const toggleDay = (dayKey) => {
   color: white !important;
   border-color: white !important;
 }
-</style>
 
-<!-- CSS for Day Selector Buttons -->
-<style scoped>
 .day-button {
   border-radius: 6px;
   font-weight: 500;
@@ -217,7 +256,7 @@ const toggleDay = (dayKey) => {
 }
 
 .day-button.bg-green-500 {
-  background-color: #35D300 !important; /* Matches Tailwind's bg-green-500 */
+  background-color: #35D300 !important;
   color: white !important;
   border-color: white !important;
 }

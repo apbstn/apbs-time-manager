@@ -51,7 +51,7 @@ public class LeaveRequestsController : ControllerBase
         var status = await _leaveRequestService.GetLastLeaveRequestStatusAsync(id);
         if (status == null)
         {
-            return NotFound();
+            return Ok("no leave request were found");
         }
         return Ok(status);
     }

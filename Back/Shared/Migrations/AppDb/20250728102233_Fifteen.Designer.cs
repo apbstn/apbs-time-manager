@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 using Shared.Context;
@@ -11,9 +12,11 @@ using Shared.Context;
 namespace Shared.Migrations.AppDb
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20250728102233_Fifteen")]
+    partial class Fifteen
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -171,45 +174,6 @@ namespace Shared.Migrations.AppDb
                     b.HasKey("Id");
 
                     b.ToTable("Planners");
-                });
-
-            modelBuilder.Entity("Shared.Models.Schedule", b =>
-                {
-                    b.Property<int>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("integer");
-
-                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
-
-                    b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("timestamp with time zone");
-
-                    b.Property<string>("FixedHoursJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("FlexibleHoursJson")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("Name")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<string>("SelectedDays")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.Property<int>("WeeklyHours")
-                        .HasColumnType("integer");
-
-                    b.Property<string>("WorkType")
-                        .IsRequired()
-                        .HasColumnType("text");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("Schedules");
                 });
 
             modelBuilder.Entity("Shared.Models.Team", b =>

@@ -2,7 +2,7 @@
 import { ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 
-const home = { icon: 'pi pi-home', to: '/' };
+const home = { icon: 'pi pi-home', to: '/home' };
 const breadcrumbRoutes = ref([]);
 
 const route = useRoute();

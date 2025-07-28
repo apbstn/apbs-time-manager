@@ -1,5 +1,6 @@
 ﻿using apbs_time_app.Models;
 using apbs_time_app.Services.Security;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using NPOI.POIFS.Crypt;
 using Shared.Context;
@@ -123,7 +124,7 @@ public class InvitationService : IInvitationService
                 <p>Dear {user.Username},</p>
                 <p>You have been invited to join {tenant.Name} on our platform. Please click the button below to accept the invitation and complete your registration.</p>
                 <p>
-                    <a href='{applicationUrl}' style='background-color: #3498db; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
+                    <a href='{applicationUrl}' style='background-color: #35D300; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;'>
                         Accept Invitation
                     </a>
                 </p>
