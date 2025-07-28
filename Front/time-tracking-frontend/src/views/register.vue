@@ -8,7 +8,7 @@ const route = useRoute();
 
 const email = ref(route.query.email || '');
 const username = ref(route.query.username || '');
-const phoneNumber = ref(route.query.phoneNumber || '');
+const phoneNumber = ref(route.query.PhoneNumber || '');
 const tenantId = ref(route.query.tenantId || '');
 const password = ref('');
 const errorMessage = ref('');
@@ -37,7 +37,7 @@ const submitForm = async () => {
     const registerResponse = await api.post('/api/auth/register', {
       email: email.value,
       username: username.value,
-      phoneNumber: phoneNumber.value,
+      PhoneNumber: phoneNumber.value,
       password: password.value
     });
     console.log('Register response:', registerResponse.data);
@@ -122,7 +122,7 @@ const submitForm = async () => {
       </div>
       <div class="form-group">
         <label for="phoneNumber">Phone Number</label>
-        <input id="phoneNumber" v-model="phoneNumber" type="text" readonly="readonly" placeholder="Phone Number" />
+        <input id="phoneNumber" v-model="phoneNumber" type="text" placeholder="Phone Number" required/>
       </div>
       <div class="form-group">
         <label for="password">Password</label>

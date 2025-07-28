@@ -25,7 +25,8 @@ builder.Services.AddDbContext<TenantDbContext>(
 
 builder.Services.AddScoped<ITeamRepository, TeamRepository>();
 builder.Services.AddScoped<ITeamService, TeamService>();
-
+builder.Services.AddScoped<IScheduleRepository, ScheduleRepository>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<ITimeLogService, TimeLogService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddTransient<IMailService, SmtpMailService>();

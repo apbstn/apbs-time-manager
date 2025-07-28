@@ -24,6 +24,7 @@ namespace Shared.Context
         public DbSet<LeaveBalance> LeaveBalances { get; set; }
         public DbSet<Team> Teams { get; set; }
         public DbSet<Planner> Planners { get; set; }
+        public DbSet<Schedule> Schedules { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{
         //    modelBuilder.Entity<User>().HasQueryFilter(a => a.TenantId == CurrentTenantId);
