@@ -15,7 +15,14 @@ export function useTimeTracking() {
 
   const getAccountId = async (email) => {
     try {
-      const response = await api.post('/api/UserTenants/get-id-by-email', email);
+      console.log('Account ID fetched: bla bla bla bla bla bla');
+      const response = await api.post('/api/UserTenants/get-id-by-email', email , {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`,
+    'Content-Type': 'application/json'
+  }
+});
+      console.log('Account ID fetched: bla bla bla bla bla bla');
       console.log('Account ID fetched:', response.data);
       return response.data;
     } catch (error) {
@@ -27,9 +34,12 @@ export function useTimeTracking() {
   const initializeUserId = async () => {
     const email = localStorage.getItem('email');
     console.log('Email from localStorage:', email);
-    if (email) {
+    if (email !== null) {
       try {
-        const accountId = await getAccountId(email);
+        console.log('Fetching account ID for email:', email);
+        const responsee = await api.post('/api/UserTenants/get-id-by-email', email );
+        const accountId = responsee.data;
+
         state.userId = accountId || 'guest';
         console.log('Set state.userId to:', state.userId);
       } catch (error) {

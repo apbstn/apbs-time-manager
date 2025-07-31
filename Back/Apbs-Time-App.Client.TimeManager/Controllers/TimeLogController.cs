@@ -135,7 +135,7 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
 
         [HttpGet("monthly/{id}")]
         [Authorize]
-        public ActionResult<double> GetMonthlyTotalHours(Guid id)
+        public ActionResult<string> GetMonthlyTotalHours(Guid id)
         {
             var monthlyHours = _timeLogService.GetMonthlyTotalHours(id);
             return Ok(monthlyHours); // Always return Ok since GetMonthlyTotalHours handles empty cases

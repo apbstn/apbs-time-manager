@@ -9,8 +9,28 @@
       </div>
     </div>
     <template #footer>
-      <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="cancel" />
-      <Button label="Allocate" icon="pi pi-check" class="add-button" @click="confirm" :disabled="!allocationDays" />
+      <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="cancel" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+      <Button label="Allocate" icon="pi pi-check-square" class="add-button" @click="confirm" :disabled="!allocationDays" v-tooltip="{
+                value: 'Allocate',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
     </template>
     <Divider class="dialog-divider" />
   </Dialog>

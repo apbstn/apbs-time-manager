@@ -13,8 +13,28 @@
         <div v-if="!isEditing && savedDate" class="text-xs text-gray-400">Created At {{ formatDate(savedDate) }}</div>
       </div>
       <div v-if="role === 'Owner'">
-        <Button v-if="isEditing" @click="saveSchedule" label="Save" icon="pi pi-check" class="add-button" iconPos="right" />
-        <Button v-else @click="toggleEdit" label="Update" icon="pi pi-refresh" class="add-button1" iconPos="right" />
+        <Button v-if="isEditing" @click="saveSchedule" label="Save" icon="pi pi-check" class="add-button" iconPos="right" v-tooltip="{
+                value: 'Save the plan',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+        <Button v-else @click="toggleEdit" label="Update" icon="pi pi-refresh" class="add-button1" iconPos="right" v-tooltip="{
+                value: 'Update the plan',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
       </div>
     </div>
 

@@ -17,13 +17,43 @@
                         <span v-if="isInitialized && (showStart || showStop || showPause)" class="chronometer">{{ chronometerTime }}</span>
                     </li>
                     <li>
-                        <button v-if="isInitialized && showStart" class="pi pi-play-circle" style="color: #35D300; font-size: 2rem;" @click="customStartTracking"></button>
+                        <button v-if="isInitialized && showStart" class="pi pi-play-circle" style="color: #35D300; font-size: 2rem;" @click="customStartTracking" v-tooltip.bottom="{
+                value: 'Start Tracking',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"></button>
                     </li>
                     <li>
-                        <button v-if="isInitialized && showPause" class="pi pi-pause-circle" style="color: #ff8000; font-size: 2rem;" @click="customPauseTracking"></button>
+                        <button v-if="isInitialized && showPause" class="pi pi-pause-circle" style="color: #ff8000; font-size: 2rem;" @click="customPauseTracking" v-tooltip.bottom="{
+                value: 'Pause Tracking',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"></button>
                     </li>
                     <li>
-                        <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: #FF0000; font-size: 2rem;" @click="customStopTracking"></button>
+                        <button v-if="isInitialized && showStop" class="pi pi-stop-circle" style="color: #FF0000; font-size: 2rem;" @click="customStopTracking" v-tooltip.bottom="{
+                value: 'Stop Tracking',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"></button>
                     </li>
                 </ul>
             </div>
@@ -109,12 +139,10 @@ const customStartTracking = async () => {
 
 const customPauseTracking = async () => {
     console.log('Custom pause tracking called at:', new Date().toLocaleString());
-    if (startTime.value) {
+
         await pauseTracking();
         pauseChronometer(); // Pause the chronometer
-    } else {
-        console.warn('No active tracking to pause at:', new Date().toLocaleString());
-    }
+    
 };
 
 const customStopTracking = async () => {

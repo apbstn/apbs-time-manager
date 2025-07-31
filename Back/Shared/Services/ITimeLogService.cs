@@ -13,6 +13,6 @@ namespace Shared.Services
         string GetTodayTotalHours(Guid id); // Changed to string
         Dictionary<string, double> GetWeeklyHours(Guid id);
         Dictionary<string, double> GetWeeklyPause(Guid id);
-        double GetMonthlyTotalHours(Guid id);
+        string GetMonthlyTotalHours(Guid id);
     }
 }

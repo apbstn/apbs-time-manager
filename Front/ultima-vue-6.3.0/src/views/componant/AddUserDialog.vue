@@ -31,9 +31,29 @@
       
       <div class="footer-buttons">
         <Button label="Cancel" icon="pi pi-times" @click="emitCancel"
-          class="p-button-text stunning-button stunning-button-cancel" />
+          class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
         <Button label="Save" icon="pi pi-check" @click="validateAndSave" class="stunning-button stunning-button-save"
-          :disabled="!isFormValid" />
+          :disabled="!isFormValid" v-tooltip="{
+                value: 'Add User',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
       </div>
     
   </Dialog>

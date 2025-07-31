@@ -2,6 +2,7 @@
 using Shared.Services;
 using System.Threading.Tasks;
 using System.Collections.Generic;
+using Microsoft.AspNetCore.Authorization;
 
 namespace Apbs_Time_App.Client.Controllers;
 
@@ -16,6 +17,7 @@ public class UserTenantsController : ControllerBase
         _userTenantService = userTenantService;
     }
 
+    [AllowAnonymous]
     [HttpPost("get-id-by-email")]
     public async Task<ActionResult<Guid>> GetIdByEmail([FromBody] string email)
     {

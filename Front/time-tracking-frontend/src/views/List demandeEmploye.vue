@@ -3,7 +3,17 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2 style="font-size: 22px; color: #6B7280;">Leave Requests</h2>
-        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+        <Button label="Add" icon="pi pi-plus" class="add-button" v-tooltip="{
+                value: 'Make a leave request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="openAddDialog" />
       </div>
     </div>
 
@@ -11,32 +21,54 @@
 
     <div class="card">
       <DataTable :value="filteredRequests" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="startDate" header="Start Date" sortable style="max-width: 8rem;">
+        <Column field="startDate" header="Start Date" sortable style="width: 16.6667%;">
           <template #body="{ data }">
             {{ formatDate(data.startDate) }}
           </template>
         </Column>
-        <Column field="endDate" header="End Date" sortable style="max-width: 8rem;">
+        <Column field="endDate" header="End Date" sortable style="width: 16.6667%;">
           <template #body="{ data }">
             {{ formatDate(data.endDate) }}
           </template>
         </Column>
-        <Column field="numberOfDays" header="Days" sortable style="max-width: 8rem;"/>
-        <Column field="status" header="Status" sortable style="max-width: 8rem;">
+        <Column field="numberOfDays" header="Days" sortable style="width: 16.6667%;" />
+        <Column field="status" header="Status" sortable style="width: 16.6667%;">
           <template #body="{ data }">
             {{ statusDisplay(data.status) }}
           </template>
         </Column>
-        <Column field="type" header="Type" sortable style="max-width: 8rem;"/>
-        <Column field="reason" header="Reason" sortable style="max-width: 8rem;"/>
-        <Column :exportable="false" style="max-width: 5rem" header="Actions">
+        <Column field="type" header="Type" sortable style="width: 16.6667%;" />
+        <Column field="reason" header="Reason" sortable style="width: 16.6667%;" />
+        <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button"
-              :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
-              @click="openEditDialog(slotProps.data)" />  
-            <Button icon="pi pi-trash" class="add-button1"
-              :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
-              @click="confirmDelete(slotProps.data)" />
+            <div class="actions-container">
+              <Button icon="pi pi-pencil" class="add-button"
+                :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
+                @click="openEditDialog(slotProps.data)" v-tooltip="{
+                value: 'Edit the leave request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+              <Button icon="pi pi-trash" class="add-button1"
+                :disabled="slotProps.data.status === 1 || slotProps.data.status === 2"
+                @click="confirmDelete(slotProps.data)" v-tooltip="{
+                value: 'Delete the leave request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" />
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -107,12 +139,11 @@ const getAccountId = async (email) => {
 }
 
 onMounted(async () => {
-    console.log('ListDemandeEmploye mounted')
-    // Assume email is stored in localStorage or user object
-    const userEmail = localStorage.getItem('email') // Replace with your email source
+    console.log('LeaveRequests mounted')
+    const userEmail = localStorage.getItem('email')
     if (userEmail) {
         try {
-            userId.value = await getAccountId(`"${userEmail}"`) // Send as raw string with quotes
+            userId.value = await getAccountId(`"${userEmail}"`)
             await fetchLeaveRequests()
         } catch (error) {
             console.error('User ID not fetched:', error)
@@ -128,11 +159,11 @@ const fetchLeaveRequests = async () => {
             throw new Error('User ID is not available')
         }
         const accessToken = localStorage.getItem('accessToken')
-        console.log("bla bla bla", userId.value)
-        localStorage.setItem("Id", userId.value) // Retrieve the token
+        console.log("Fetching leave requests for userId:", userId.value)
+        localStorage.setItem("Id", userId.value)
         const { data } = await api.get(`/api/LeaveRequests/user/${userId.value}`, {
             headers: {
-                Authorization: `Bearer ${accessToken}` // Add token to Authorization header
+                Authorization: `Bearer ${accessToken}`
             }
         })
         leaveRequests.value = data
@@ -243,6 +274,7 @@ h2 {
   color: white !important;
   border-color: white !important;
 }
+
 .add-button1 {
   border-radius: 6px;
   padding: 0.5rem 1rem;
@@ -274,5 +306,11 @@ h2 {
 
 .field {
     margin-bottom: 1.5rem;
+}
+
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 </style>

@@ -340,7 +340,7 @@ namespace Shared.Services
         }
 
 
-        public double GetMonthlyTotalHours(Guid id)
+        public string GetMonthlyTotalHours(Guid id)
         {
             try
             {
@@ -355,12 +355,14 @@ namespace Shared.Services
                                 && log.Type == TimeLogType.PE)
                     .Sum(log => log.TotalHours.HasValue ? log.TotalHours.Value.TotalHours : 0);
 
-                return Math.Round(totalHours, 2);
+                int hours = (int)totalHours;
+                int minutes = (int)((totalHours - hours) * 60); // Convert decimal fraction to minutes
+                return $"{hours}h {minutes:D2}m";
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
             {
                 _logger.LogInformation("Table TIMELOG does not exist for userId {UserId}. Returning 0.", id);
-                return 0.0;
+                return "No Track were found";
             }
         }
     }

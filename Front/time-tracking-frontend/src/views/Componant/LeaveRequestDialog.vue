@@ -42,8 +42,28 @@
             </div>
 <Divider/>
             <template #footer>
-                <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="closeDialog" />
-                <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" :disabled="!isSavable || isSaving" />
+                <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="closeDialog" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+                <Button label="Save" icon="pi pi-check" class="add-button" :loading="isSaving" @click="saveRequest" :disabled="!isSavable || isSaving" v-tooltip="{
+                value: 'Save',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
             </template>
         </Dialog>
     </div>

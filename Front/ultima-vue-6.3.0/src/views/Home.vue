@@ -3,7 +3,17 @@
       <h1>Welcome To </h1>
       <h2>The Admin Console</h2>
       <router-link to="/user-management">
-        <button>Go to Management</button>
+        <button v-tooltip.bottom="{
+                value: 'Start',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }">Go to Management</button>
       </router-link>
     </div>
   </template>

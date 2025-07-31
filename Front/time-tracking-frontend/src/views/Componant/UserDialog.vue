@@ -35,9 +35,29 @@
     <Divider class="dialog-divider" />
     <div class="footer-buttons">
       <Button label="Cancel" icon="pi pi-times" @click="closeDialog"
-        class="p-button-text stunning-button stunning-button-cancel" />
+        class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
       <Button label="Save" icon="pi pi-check" @click="handleSave" class="stunning-button stunning-button-save"
-        :disabled="!isSavable" />
+        :disabled="!isSavable" v-tooltip="{
+                value: 'Add Employee to the team',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
     </div>
   </Dialog>
 </template>

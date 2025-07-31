@@ -89,15 +89,17 @@ const decodeJwt = (token) => {
   }
 };
 const decoded = decodeJwt(newAccessToken);
+const emailll = localStorage.getItem('email');
+const Idd = await api.post('/api/UserTenants/get-id-by-email', emailll);
     console.log('Decoded token:', decoded);
     if (!decoded) {
       errorMessage.value = 'Invalid token';
       console.error('nametenant: Invalid token');
       return false;
     }
-        const tenantIdKey = 'nameidentifier'; // Adjust to 'sub', 'tid', etc., if needed
-    const Id = decoded[tenantIdKey];
-      const leaveBalance = await api.post(`/api/LeaveRequests/balance/allocate/${Id}`, 10.0);
+// Adjust to 'sub', 'tid', etc., if needed
+
+      const leaveBalance = await api.post(`/api/LeaveRequests/balance/allocate/${Idd}`, 10.0);
       const leaveBalanceResponse = await leaveBalance.data;
       
       if (newAccessToken) {

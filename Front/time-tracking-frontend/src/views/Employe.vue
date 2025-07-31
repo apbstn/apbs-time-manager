@@ -10,19 +10,51 @@
 
     <div class="card">
       <DataTable :value="filteredUsers" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="username" header="Username" sortable style="max-width: 6rem;" />
-        <Column field="email" header="Email" sortable style="max-width: 6rem;" />
-        <Column field="phoneNumber" header="Phone Number" sortable style="max-width: 6rem;" />
-        <Column field="teamId" header="Teams" sortable style="max-width: 6rem;">
+        <Column field="username" header="Username" sortable style="width: 25%;" />
+        <Column field="email" header="Email" sortable style="width: 25%;" />
+        <Column field="phoneNumber" header="Phone Number" sortable style="width: 25%;" />
+        <Column field="teamId" header="Teams" sortable style="width: 25%;">
           <template #body="slotProps">
             {{ getTeamName(slotProps.data.teamId) || 'No team' }}
           </template>
         </Column>
-        <Column :exportable="false" style="max-width: 4rem" header="Actions">
+        <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" />  
-            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />  
-            <Button icon="pi pi-plus-circle" class="allocate-button" @click="showAllocateDialog(slotProps.data)" />
+            <div class="actions-container">
+              <Button icon="pi pi-pencil" class="add-button" v-tooltip="{
+                value: 'Add Employee to a team',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="openEditDialog(slotProps.data)" />
+              <Button icon="pi pi-times" class="add-button1" v-tooltip="{
+                value: 'Fire User',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="confirmDelete(slotProps.data)" />
+              <Button icon="pi pi-plus-circle" class="allocate-button" v-tooltip="{
+                value: 'Allocate Leave Balance',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="showAllocateDialog(slotProps.data)" />
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -32,11 +64,12 @@
     </div>
 
     <!-- Add/Edit Dialog -->
-    <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId" :teams="availableTeams"
-      @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
+    <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId"
+      :teams="availableTeams" @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
 
     <!-- Allocate Leave Balance Dialog -->
-    <AllocateLeaveDialog v-model:visible="allocateDialogVisible" :user="selectedUserForAllocation" @allocate="allocateLeaveBalance" />
+    <AllocateLeaveDialog v-model:visible="allocateDialogVisible" :user="selectedUserForAllocation"
+      @allocate="allocateLeaveBalance" />
   </div>
 </template>
 
@@ -49,6 +82,7 @@ import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import UserDialog from './Componant/UserDialog.vue'
 import AllocateLeaveDialog from './Componant/AllocateLeaveDialog.vue'
+import { ColorPicker } from 'primevue'
 
 // Inject the DeleteDialog instance
 const deleteDialogRef = inject('deleteDialog')
@@ -59,7 +93,7 @@ const isEdit = ref(false)
 const currentId = ref(null)
 const searchQuery = ref('')
 const selectedUser = ref(null)
-const availableTeams = ref([]) // Store available teams for the dropdown
+const availableTeams = ref([])
 const allocateDialogVisible = ref(false)
 const selectedUserForAllocation = ref(null)
 
@@ -78,7 +112,7 @@ const fetchUsers = async () => {
     const response = await api.get('/api/UserTenants/accounts')
     users.value = response.data.map(user => ({
       ...user,
-      id: user.email // Use email as a temporary id since id is missing
+      id: user.email
     }))
     console.log('Raw users response:', users.value)
     console.log('Users fetched:', users.value)
@@ -114,7 +148,7 @@ const getTeamName = (teamId) => {
 const openEditDialog = (user) => {
   console.log('Opening edit dialog for user:', user)
   selectedUser.value = { ...user }
-  currentId.value = user.email // Use email as currentId since id is missing
+  currentId.value = user.email
   isEdit.value = true
   dialogVisible.value = true
 }
@@ -166,28 +200,21 @@ const showAllocateDialog = (user) => {
 const allocateLeaveBalance = async ({ user, days }) => {
   try {
     console.log('Allocating leave balance for user:', user)
-
-    // Step 1: Retrieve the email from the selected user data
     const email = user.email
     console.log('Retrieved email:', email)
-
-    // Step 2: Use get-id-by-email to get the userId
-    const idResponse = await api.post('/api/UserTenants/get-id-by-email',email , {
+    const idResponse = await api.post('/api/UserTenants/get-id-by-email', email, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
     const userId = idResponse.data
     console.log('Retrieved userId:', userId)
-
-    // Step 3: Use POST /api/LeaveRequests/balance/allocate/{id} with the entered days
-    const allocationResponse = await api.put(`/api/LeaveRequests/balance/${userId}`, days , {
+    const allocationResponse = await api.put(`/api/LeaveRequests/balance/${userId}`, days, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
     console.log('Allocation response:', allocationResponse.data)
-
     alert('Leave balance allocated successfully!')
   } catch (error) {
     console.error('Error allocating leave balance:', error)
@@ -301,5 +328,38 @@ h2 {
 
 .text-muted {
   color: #6b7280;
+}
+
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+/* Tooltip styles */
+:deep(.p-tooltip) {
+  background-color: #000000 !important;
+  color: #ff0000 !important;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  max-width: 200px;
+  line-height: 1.2;
+}
+
+:deep(.p-tooltip-arrow) {
+  border-bottom-color: #000000 !important;
+}
+
+/* Optional: Differentiate tooltips by button type */
+:deep(.p-tooltip.add-button-tooltip) {
+  background-color: #35D300 !important;
+}
+:deep(.p-tooltip.add-button1-tooltip) {
+  background-color: #ff0000 !important;
+}
+:deep(.p-tooltip.allocate-button-tooltip) {
+  background-color: #ff8000 !important;
 }
 </style>

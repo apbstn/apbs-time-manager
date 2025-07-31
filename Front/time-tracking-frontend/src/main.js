@@ -25,6 +25,7 @@ import DataTable from 'primevue/datatable';
 import Column from 'primevue/column';
 import ColumnGroup from 'primevue/columngroup';
 import Row from 'primevue/row';
+import Tooltip from 'primevue/tooltip';
 
 const app = createApp(App);
 app.use(router);
@@ -78,6 +79,7 @@ app.component('ColumnGroup', ColumnGroup);
 app.component('Row', Row);
 app.component('Menu', Menu);
 app.component('Chart', Chart);
+app.directive('tooltip', Tooltip);
 
 
 

@@ -22,7 +22,7 @@ const password = ref('');
 const errorMessage = ref('');
 const isLoading = ref(false);
 const tenantName = ref('');
-const router = useRouter(); // Kept for potential future use, but not used for redirect
+const router = useRouter();
 
 // Decode JWT token
 const decodeJwt = (token) => {
@@ -144,6 +144,9 @@ const login = async () => {
         console.warn('No tenants or listTen found in response, storing empty array');
         localStorage.setItem('tenants', JSON.stringify([]));
       }
+
+      // Set flag for tracking reminder popup
+      localStorage.setItem('showTrackingReminder', 'true');
 
       // Set Authorization header for future API calls
       api.defaults.headers.common['Authorization'] = `Bearer ${response.data.accessToken}`;

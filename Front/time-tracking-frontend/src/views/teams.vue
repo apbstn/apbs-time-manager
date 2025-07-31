@@ -3,7 +3,17 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2 style="font-size: 22px; color: #6B7280;">Teams</h2>
-        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+        <Button label="Add" icon="pi pi-plus" class="add-button" v-tooltip="{
+                value: 'Add team',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="openAddDialog" />
       </div>
     </div>
 
@@ -12,12 +22,34 @@
     <div class="card">
       <DataTable responsiveLayout="stack" breakpoint="960px" :value="filteredTeams" paginator :rows="10"
         tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="name" header="Name" sortable style="max-width: 6rem;" />
-        <Column field="description" header="Description" sortable style="max-width: 6rem;" />
-        <Column :exportable="false" style="max-width: 1rem" header="Actions">
+        <Column field="name" header="Name" sortable style="width: 50%;" />
+        <Column field="description" header="Description" sortable style="width: 50%;" />
+        <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-pencil" class="add-button" @click="openEditDialog(slotProps.data)" /> &nbsp;
-            <Button icon="pi pi-trash" class="add-button1" @click="confirmDelete(slotProps.data)" />
+            <div class="actions-container">
+              <Button icon="pi pi-pencil" class="add-button" v-tooltip="{
+                value: 'Edit',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="openEditDialog(slotProps.data)" />
+              <Button icon="pi pi-trash" class="add-button1" v-tooltip="{
+                value: 'Delete',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="confirmDelete(slotProps.data)" />
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -212,5 +244,9 @@ h2 {
 .text-muted {
   color: #6b7280;
 }
-
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
 </style>

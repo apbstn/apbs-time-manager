@@ -2,7 +2,7 @@
   <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h2 style="font-size: 22px; color: #6B7280;">Leave Requests</h2>
+        <h2 style="font-size: 22px; color: #6B7280;">List of Leave Requests</h2>
       </div>
     </div>
 
@@ -11,29 +11,51 @@
     <div class="card">
       <DataTable :value="filteredRequests" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
         <!-- User Name Column -->
-        <Column field="username" header="Requested By" sortable style="max-width: 8rem;"/>
-        <Column field="startDate" header="Start Date" sortable style="max-width: 8rem;">
+        <Column field="username" header="Requested By" sortable style="width: 14.2857%;" />
+        <Column field="startDate" header="Start Date" sortable style="width: 14.2857%;">
           <template #body="{ data }">
             {{ formatDate(data.startDate) }}
           </template>
         </Column>
-        <Column field="endDate" header="End Date" sortable style="max-width: 8rem;">
+        <Column field="endDate" header="End Date" sortable style="width: 14.2857%;">
           <template #body="{ data }">
             {{ formatDate(data.endDate) }}
           </template>
         </Column>
-        <Column field="numberOfDays" header="Days" sortable style="max-width: 8rem;" />
-        <Column field="status" header="Status" sortable style="max-width: 8rem;">
+        <Column field="numberOfDays" header="Days" sortable style="width: 14.2857%;" />
+        <Column field="status" header="Status" sortable style="width: 14.2857%;">
           <template #body="{ data }">
             {{ statusDisplay(data.status) }}
           </template>
         </Column>
-        <Column field="type" header="Type" sortable style="max-width: 8rem;"/>
-        <Column field="reason" header="Reason" sortable style="max-width: 8rem;" />
-        <Column :exportable="false" style="max-width: 6rem" header="Actions">
+        <Column field="type" header="Type" sortable style="width: 14.2857%;" />
+        <Column field="reason" header="Reason" sortable style="width: 14.2857%;" />
+        <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-check-circle" class="add-button" @click="showConfirmDialog(slotProps.data, 'accept')" /> &nbsp;
-            <Button icon="pi pi-times-circle" class="add-button1" @click="showConfirmDialog(slotProps.data, 'deny')" />
+            <div class="actions-container">
+              <Button icon="pi pi-thumbs-up" class="add-button" @click="showConfirmDialog(slotProps.data, 'accept')" v-tooltip="{
+                value: 'Accept the leave request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" />
+              <Button icon="pi pi-thumbs-down" class="add-button1" @click="showConfirmDialog(slotProps.data, 'deny')" v-tooltip="{
+                value: 'Reject the leave request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -57,10 +79,11 @@
       :closable="false"
       :style="{ width: '650px' }"
     >
-
-        <Divider class="dialog-divider" />
-<span class="tte">Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request for </span><span class="ttee"> {{ selectedRequest.username }}</span> <span class="tte">with the duration : {{ selectedRequest.numberOfDays }} Days?</span>
-        <Divider class="dialog-divider" />
+      <Divider class="dialog-divider" />
+      <span class="tte">Are you sure you want to {{ confirmAction === 'accept' ? 'approve' : 'deny' }} this leave request for </span>
+      <span class="ttee">{{ selectedRequest.username }}</span>
+      <span class="tte"> with the duration: {{ selectedRequest.numberOfDays }} Days?</span>
+      <Divider class="dialog-divider" />
 
       <template #footer>
         <Button label="Cancel" icon="pi pi-times" class="add-button1" @click="confirmDialogVisible = false" />
@@ -83,6 +106,7 @@ import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
 import Dialog from 'primevue/dialog'
+import Divider from 'primevue/divider'
 import LeaveRequestDialog from './Componant/LeaveRequestDialog.vue'
 
 const leaveRequests = ref([])
@@ -222,12 +246,12 @@ onMounted(async () => {
 </script>
 
 <style scoped>
-.tte{
+.tte {
   font-size: medium;
 }
-.ttee{
+.ttee {
   font-size: medium;
-font-weight: bold;
+  font-weight: bold;
 }
 .header-container {
   margin-bottom: 1.5rem;
@@ -309,5 +333,11 @@ h2 {
 
 .confirmation-content {
   padding: 1rem;
+}
+
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 </style>

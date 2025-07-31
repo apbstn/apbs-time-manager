@@ -184,6 +184,7 @@ const onRowClick = async (event) => {
     // Step 7: Refresh
     console.log('Step 7: Refreshing the page');
     window.location.href = '/home'; // Redirect to home page
+    localStorage.setItem('showTrackingReminder', true)
   } catch (err) {
     console.error('Error switching tenant:', err);
     error.value = 'Failed to switch tenant: ' + (err.response?.data?.message || err.message);

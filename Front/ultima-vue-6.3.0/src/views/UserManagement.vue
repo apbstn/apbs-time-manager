@@ -13,7 +13,17 @@
           </div>
         </template>
         <template #end>
-          <Button label="Add User" icon="pi pi-plus" class="add-button" @click="showAddDialog = true" outlined />
+          <Button label="Add User" icon="pi pi-plus" class="add-button" @click="showAddDialog = true" outlined v-tooltip.top="{
+                value: 'Add Account',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
         </template>
       </Toolbar>
     </div>
@@ -61,25 +71,57 @@
         <template #empty>
           <div class="text-center text-muted">No users found</div>
         </template>
-        <Column field="email" header="Email" sortable style="max-width: 6rem;">
+        <Column field="email" header="Email" sortable style="width: 33.3333%;">
           <template #body="{ data }">
             {{ data.email }}
           </template>
         </Column>
-        <Column field="username" header="Username" sortable style="max-width: 6rem" />
-        <Column field="phoneNumber" header="Phone Number" sortable style="max-width: 6rem">
+        <Column field="username" header="Username" sortable style="width: 33.3333%;" />
+        <Column field="phoneNumber" header="Phone Number" sortable style="width: 33.3333%;">
           <template #body="{ data }">
             {{ data.phoneNumber || 'N/A' }}
           </template>
         </Column>
-        <Column :exportable="false" header="Actions" style="max-width: 3rem; text-align: center">
+        <Column :exportable="false" header="Actions" style="width: 1%; text-align: center">
           <template #body="slotProps">
-            <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
-              @click="openResetDialog(slotProps.data)" />
-            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
-              @click="openEditDialog(slotProps.data)" />
-            <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
-              @click="openDeleteDialog(slotProps.data)" />
+            <div class="actions-container">
+              <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
+                @click="openResetDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Reset Password',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+              <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+                @click="openEditDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Edit Account',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+              <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+                @click="openDeleteDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Delete Account',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+            </div>
           </template>
         </Column>
       </DataTable>
@@ -99,7 +141,7 @@ import Toolbar from 'primevue/toolbar';
 import AddUserDialog from './componant/AddUserDialog.vue';
 import ResetPasswordDialog from './componant/ResetPasswordDialog.vue';
 import EditUserDialog from './componant/EditUserDialog.vue';
-import DeleteUserDialog from './componant/DeleteUserDialog.vue'; // New component
+import DeleteUserDialog from './componant/DeleteUserDialog.vue';
 
 const users = ref([]);
 const loading = ref(false);
@@ -108,7 +150,7 @@ const searchQuery = ref('');
 const showAddDialog = ref(false);
 const showResetDialog = ref(false);
 const showEditDialog = ref(false);
-const showDeleteDialog = ref(false); // New state for delete dialog
+const showDeleteDialog = ref(false);
 const newUser = ref({
   email: '',
   username: '',
@@ -218,7 +260,7 @@ const resetPassword = async (data) => {
     if (successMessage.value) {
       setTimeout(() => {
         successMessage.value = null;
-      }, 7000); // Auto-close after 7 seconds
+      }, 7000);
     }
   }
 };
@@ -238,7 +280,7 @@ const editUser = async (userData) => {
       throw new Error('No access token found');
     }
 
-    const userId = selectedUser.value.id; // Assuming the user object has an 'id' field
+    const userId = selectedUser.value.id;
     await axios.put(`http://localhost:58169/api/user/edit/${userId}`, userData, {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -254,7 +296,7 @@ const editUser = async (userData) => {
 
     showEditDialog.value = false;
     successMessage.value = userData.username + '\'s account has updated successfully';
-    setTimeout(() => (successMessage.value = null), 7000); // Auto-close after 3 seconds
+    setTimeout(() => (successMessage.value = null), 7000);
   } catch (err) {
     console.error('Error editing user:', err);
     error.value =
@@ -283,7 +325,6 @@ const deleteUser = async (data) => {
     successMessage.value = `${data.user.username} has been deleted successfully`;
     console.log('Success message set to:', successMessage.value);
 
-    // Remove the user from the local users array
     const index = users.value.findIndex(user => user.id === data.user.id);
     if (index !== -1) {
       users.value.splice(index, 1);
@@ -296,7 +337,7 @@ const deleteUser = async (data) => {
     if (successMessage.value) {
       setTimeout(() => {
         successMessage.value = null;
-      }, 7000); // Auto-close after 7 seconds
+      }, 7000);
     }
   }
 };
@@ -356,7 +397,6 @@ onMounted(fetchUsers);
 
 .search-input:focus {
   border-color: #35D300 !important;
-  /* box-shadow: 0 0 0 3px #35D300 !important; */
 }
 
 .add-button {
@@ -409,19 +449,19 @@ onMounted(fetchUsers);
 }
 
 h2 {
-    font-size: 2.1rem;
-    font-weight: 450;
-    margin: 0;
-    color: #000000;
-    letter-spacing: -0.025rem;
+  font-size: 2.1rem;
+  font-weight: 450;
+  margin: 0;
+  color: #000000;
+  letter-spacing: -0.025rem;
 }
 
 h3 {
-    font-size: 1.25rem;
-    font-weight: 150;
-    margin: 0;
-    color: #000000;
-    letter-spacing: -0.025rem;
+  font-size: 1.25rem;
+  font-weight: 150;
+  margin: 0;
+  color: #000000;
+  letter-spacing: -0.025rem;
 }
 
 .text-center {
@@ -449,15 +489,12 @@ h3 {
 }
 
 :deep(.p-input-icon-left > i) {
-    position: absolute;
-    left: 0.75rem;
-    /* Position icon inside input */
-    top: 50%;
-    transform: translateY(-50%);
-    color: #6b7280;
-    /* Match placeholder color */
-    pointer-events: none;
-    /* Prevent icon from interfering with input */
+  position: absolute;
+  left: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #6b7280;
+  pointer-events: none;
 }
 
 :deep(.p-button.p-button-text.reset-password-button) {
@@ -482,13 +519,13 @@ h3 {
 }
 
 :deep(.p-button.p-button-text.delete-button) {
-  color: #35D300 !important;
+  color: #35D300 !important; /* Changed to red for delete button */
   margin-left: 0.25rem;
 }
 
 :deep(.p-button.p-button-text.delete-button:hover) {
   color: #ffffff !important;
-  background-color: #35D300 !important;
+  background-color: #35D300 !important; /* Changed to red for delete button */
   box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
 }
 
@@ -502,5 +539,12 @@ h3 {
 
 :deep(.p-button.p-button-text) {
   margin: 0 0.25rem;
+}
+
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
+  justify-content: center;
 }
 </style>
