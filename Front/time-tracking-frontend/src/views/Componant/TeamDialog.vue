@@ -27,8 +27,28 @@
     </div>
     <Divider class="dialog-divider" />
     <div class="footer-buttons">
-      <Button label="Cancel" icon="pi pi-times" @click="closeDialog" class="p-button-text stunning-button stunning-button-cancel" />
-      <Button label="Save" icon="pi pi-check" :loading="isSaving" @click="saveTeam" class="stunning-button stunning-button-save" :disabled="!isSavable || isSaving" />
+      <Button label="Cancel" icon="pi pi-times" @click="closeDialog" class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+      <Button label="Save" icon="pi pi-check" :loading="isSaving" @click="saveTeam" class="stunning-button stunning-button-save" :disabled="!isSavable || isSaving" v-tooltip="{
+                value: 'Save',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
     </div>
   </Dialog>
 </template>
@@ -43,6 +63,7 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import Divider from 'primevue/divider'
 import Message from 'primevue/message'
+
 
 const props = defineProps({
   visible: Boolean,

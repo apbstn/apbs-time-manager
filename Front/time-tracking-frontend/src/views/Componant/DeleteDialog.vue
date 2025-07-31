@@ -5,8 +5,28 @@
             <span>Are you sure you want to delete this {{ itemType }} "{{ itemName }}"?</span>
         </div>
         <template #footer>
-            <Button label="No" icon="pi pi-times" class="add-button1" @click="hideDeleteDialog" />
-            <Button label="Yes" icon="pi pi-check" class="add-button" @click="confirmDelete" />
+            <Button label="No" icon="pi pi-times" class="add-button1" @click="hideDeleteDialog" v-tooltip="{
+                value: 'Cancel Delete',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+            <Button label="Yes" icon="pi pi-check" class="add-button" @click="confirmDelete" v-tooltip="{
+                value: 'Confirm Deletion',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
         </template>
     </Dialog>
 </template>

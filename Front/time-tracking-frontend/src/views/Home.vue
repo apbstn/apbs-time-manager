@@ -4,7 +4,7 @@
       <h1>Welcome, {{ aname }} to STT</h1><br />
       <div class="rectangles">
         <div class="card last-request">
-          <h3><i class="pi pi-sign-out icon-with-bg1" style="margin-right: 0.5rem;"></i>Leave Balance</h3>
+          <h3><i class="pi pi-sign-out icon-with-bg1" style="margin-right: 0.5rem;"></i>Leave Balance left</h3>
           <p>{{ leaveBalance }} days</p>
         </div>
         <div class="card last-request">
@@ -13,7 +13,7 @@
         </div>
         <div class="card last-request">
           <h3><i class="pi pi-clock icon-with-bg3" style="margin-right: 0.5rem;"></i>Hours Worked This Month</h3>
-          <p>{{ hoursMonth }} hours</p>
+          <p>{{ hoursMonth }}</p>
         </div>
         <div class="card last-request">
           <h3><i class="pi pi-history icon-with-bg4" style="margin-right: 0.5rem;"></i>Last Leave Request</h3>
@@ -26,15 +26,45 @@
         <Chart type="bar" :data="chartData" :options="chartOptions" class="h-[30rem]" />
       </div>
     </div>
+
+    <!-- Tracking Reminder Popup -->
+    <Dialog
+      v-model:visible="showReminderDialog"
+      header="Time Tracking Reminder"
+      :modal="true"
+      :closable="true"
+      :style="{ width: '650px' }"
+      @update:visible="dismissReminder"
+    >
+    <Divider class="df"/>
+      <p>Don't forget to start tracking time!</p>
+      <Divider/>
+      <div class="dialog-footer">
+        <Button
+          label="Dismiss"
+          class="p-button-text1"
+          :style="{ color: '#35D300' }"
+          @click="dismissReminder"
+        />
+      </div>
+    </Dialog>
   </div>
 </template>
 
 <script>
-import { ref, onMounted, computed } from "vue";
+import { ref, onMounted, computed } from 'vue';
 import api from '@/api';
+import Dialog from 'primevue/dialog';
+import Button from 'primevue/button';
+import Chart from 'primevue/chart';
 
 export default {
-  name: "Home",
+  name: 'Home',
+  components: {
+    Dialog,
+    Button,
+    Chart
+  },
   setup() {
     const chartData = ref();
     const chartOptions = ref();
@@ -42,8 +72,17 @@ export default {
     const userId = ref(null);
     const leaveBalance = ref(null);
     const lastLeaveRequest = ref(null);
-    const hoursToday = ref("0h 00m");
-    const hoursMonth = ref(0);
+    const hoursToday = ref('0h 00m');
+    const hoursMonth = ref('0h 00m');
+    const showReminderDialog = ref(false);
+    const isStarting = ref(false);
+
+    // Helper function to convert decimal hours to "Xh Ym" format
+    const formatHoursToHm = (decimalHours) => {
+      const hours = Math.floor(decimalHours);
+      const minutes = Math.round((decimalHours - hours) * 60);
+      return `${hours}h ${minutes.toString().padStart(2, '0')}m`;
+    };
 
     const decodeJwt = (token) => {
       try {
@@ -64,15 +103,57 @@ export default {
 
     const getStatusLabel = computed(() => (status) => {
       switch (status) {
-        case 0: return "Pending";
-        case 1: return "Approved";
-        case 2: return "Rejected";
-        default: return "No Leave Request were found";
+        case 0: return 'Pending';
+        case 1: return 'Approved';
+        case 2: return 'Rejected';
+        default: return 'No Leave Request were found';
       }
     });
 
+    const startTracking = async () => {
+      if (!userId.value) {
+        errorMessage.value = 'User ID not found';
+        console.error('startTracking: User ID not found');
+        return;
+      }
+
+      try {
+        isStarting.value = true;
+        const token = localStorage.getItem('accessToken');
+        await api.post(`/api/timelog/start/${userId.value}`, {}, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        console.log('Tracking started for user:', userId.value);
+        // Refresh today's hours
+        const todayResponse = await api.get(`/api/timelog/today/${userId.value}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        hoursToday.value = todayResponse.data;
+        // Close the dialog
+        dismissReminder();
+      } catch (error) {
+        console.error('Error starting tracking:', error.response?.data || error.message);
+        errorMessage.value = error.response?.data?.message || 'Failed to start tracking';
+      } finally {
+        isStarting.value = false;
+      }
+    };
+
+    const dismissReminder = () => {
+      showReminderDialog.value = false;
+      localStorage.setItem('showTrackingReminder', 'false');
+      console.log('Reminder dismissed, showTrackingReminder set to false');
+    };
+
     onMounted(async () => {
       chartOptions.value = setChartOptions();
+
+      // Check for tracking reminder flag
+      localStorage.setItem('showStopTrackingReminder',true)
+      const showReminder = localStorage.getItem('showTrackingReminder') === 'true';
+      if (showReminder) {
+        showReminderDialog.value = true;
+      }
 
       const token = localStorage.getItem('accessToken');
       if (token) {
@@ -109,14 +190,14 @@ export default {
               const monthResponse = await api.get(`/api/timelog/monthly/${userId.value}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
-              hoursMonth.value = monthResponse.data|| 0; 
+              hoursMonth.value = monthResponse.data || '0h 00m';
 
-              console.log(hoursMonth.value)
+              console.log('Monthly hours:', hoursMonth.value);
 
               // Fetch weekly hours
-              console.log("-------------------------------------------------");
-              console.log("ID going to sent : ", userId.value);
-              console.log("-------------------------------------------------");
+              console.log('-------------------------------------------------');
+              console.log('ID going to sent:', userId.value);
+              console.log('-------------------------------------------------');
               const weeklyResponse = await api.get(`/api/timelog/weekly/${userId.value}`, {
                 headers: { Authorization: `Bearer ${token}` }
               });
@@ -124,10 +205,10 @@ export default {
                 headers: { Authorization: `Bearer ${token}` }
               });
               chartData.value = setChartData(weeklyResponse.data, weeklyPauseResponse.data);
-              console.log("-------------------------------------------------");
+              console.log('-------------------------------------------------');
               console.log('Weekly Data:', weeklyResponse.data);
               console.log('Weekly Pause Data:', weeklyPauseResponse.data);
-              console.log("-------------------------------------------------");
+              console.log('-------------------------------------------------');
             }
           } catch (error) {
             errorMessage.value = 'Error fetching data from API';
@@ -138,7 +219,6 @@ export default {
     });
 
     const setChartData = (weeklyData = {}, weeklyPauseData = {}) => {
-      const documentStyle = getComputedStyle(document.documentElement);
       const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
       return {
         labels: days,
@@ -147,13 +227,13 @@ export default {
             type: 'bar',
             label: 'Worked Hours',
             backgroundColor: '#35D300',
-            data: days.map(day => weeklyData[day] || 0)
+            data: days.map(day => weeklyData[day] || 0),
           },
           {
             type: 'bar',
             label: 'Paused Hours',
             backgroundColor: '#ff8000',
-            data: days.map(day => weeklyPauseData[day] || 0)
+            data: days.map(day => weeklyPauseData[day] || 0),
           }
         ]
       };
@@ -185,17 +265,41 @@ export default {
               ci.update();
             }
           },
-          tooltip: { mode: 'index', intersect: false }
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            callbacks: {
+              label: function (context) {
+                const label = context.dataset.label || '';
+                const value = context.parsed.y;
+                return `${label}: ${formatHoursToHm(value)}`;
+              }
+            }
+          }
         },
         scales: {
-          x: { stacked: true, ticks: { color: textColorSecondary }, grid: { color: surfaceBorder } },
-          y: { stacked: true, ticks: { color: textColorSecondary, beginAtZero: true }, grid: { color: surfaceBorder } }
+          x: {
+            stacked: true,
+            ticks: { color: textColorSecondary },
+            grid: { color: surfaceBorder }
+          },
+          y: {
+            stacked: true,
+            ticks: {
+              color: textColorSecondary,
+              beginAtZero: true,
+              callback: function (value) {
+                return formatHoursToHm(value);
+              }
+            },
+            grid: { color: surfaceBorder }
+          }
         },
         layout: { padding: { left: 60, right: 20, top: 20, bottom: 10 } }
       };
     };
 
-    return { chartData, chartOptions, errorMessage, userId, leaveBalance, lastLeaveRequest, getStatusLabel, hoursToday, hoursMonth };
+    return { chartData, chartOptions, errorMessage, userId, leaveBalance, lastLeaveRequest, getStatusLabel, hoursToday, hoursMonth, showReminderDialog, startTracking, dismissReminder };
   },
   data() {
     return {
@@ -266,55 +370,47 @@ h1 {
   padding: 20px;
 }
 
-.center-button {
-  position: absolute;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  gap: 1.5rem !important;
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  margin-top: 1rem;
 }
 
-button {
-  padding: 0.7rem 1.5rem;
-  font-size: 1.2rem;
-  cursor: pointer;
-  background-color: #007bff00 !important;
+:deep(.p-button.p-button-text) {
   color: #35D300 !important;
-  border: 1px solid #35D300 !important;
-  border-radius: 10px;
-  transition: background-color 0.2s, color 0.2s;
-  margin-top: 55rem;
+  background-color: transparent !important;
+  border-color: #35D300 !important;
+  border-radius: 1rem;
 }
 
-button:hover {
+:deep(.p-button.p-button-text:hover) {
   background-color: #35D300 !important;
   color: white !important;
-  border-color: white !important;
 }
 
-@media (max-width: 800px) {
-  .rectangles {
-    flex-direction: column;
-    align-items: flex-start;
-  }
+:deep(.p-button.p-button-text1) {
+  color: #ff0000 !important;
+  background-color: transparent !important;
+  border-color: #ff0000 !important;
+  border-radius: 1rem;
+}
 
-  .card {
-    width: 100%;
-    max-width: 300px;
-  }
+:deep(.p-button.p-button-text1:hover) {
+  background-color: #ff0000 !important;
+  color: white !important;
+}
 
-  .chart-container {
-    width: 100%;
-    max-width: 100%;
-    margin: 20px;
-  }
+:deep(.p-dialog-header) {
+  background: #f9fafb;
+  color: #1f2937;
+  font-weight: 600;
+}
 
-  .center-button {
-    position: relative;
-    top: auto;
-    left: auto;
-    transform: none;
-    margin-top: 5rem;
-  }
+:deep(.p-dialog-content) {
+  background: #ffffff;
+  color: #1f2937;
+  padding: 1rem;
 }
 
 .icon-with-bg1 {
@@ -352,7 +448,9 @@ button:hover {
   width: 2.2rem;
   height: 2.2rem;
 }
-
+.df{
+  padding: 0px !important;
+}
 .icon-with-bg4 {
   background: #0084ff;
   border-radius: 20%;

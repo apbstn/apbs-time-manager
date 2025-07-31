@@ -2,8 +2,18 @@
   <div>
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
-        <h2 style="font-size: 22px; color: #6B7280;">User Invitations</h2>
-        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" />
+        <h2 style="font-size: 22px; color: #6B7280;">Employee Invitations</h2>
+        <Button label="Add" icon="pi pi-plus" class="add-button" @click="openAddDialog" v-tooltip.bottom="{
+                value: 'Invite an employee',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" />
       </div>
     </div>
 
@@ -11,27 +21,39 @@
 
     <div class="card">
       <DataTable :value="filteredInvitations" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="email" header="Email" sortable style="max-width: 5rem">
-            <template #body="{ data }">
-                {{ data.email || 'N/A' }}
-            </template>
+        <Column field="email" header="Email" sortable style="width: 33.3333%;">
+          <template #body="{ data }">
+            {{ data.email || 'N/A' }}
+          </template>
         </Column>
-        <Column field="phone_Number" header="Phone Number" sortable style="max-width: 5rem">
-            <template #body="{ data }">
-                {{ console.log('Phone Number Data:', data.phone_Number) }}
-                {{ data.phone_Number || 'N/A' }}
-            </template>
+        <Column field="phone_Number" header="Phone Number" sortable style="width: 33.3333%;">
+          <template #body="{ data }">
+            {{ console.log('Phone Number Data:', data.phone_Number) }}
+            {{ data.phone_Number || 'N/A' }}
+          </template>
         </Column>
-        <Column field="status" header="Status" sortable style="max-width: 5rem">
+        <Column field="status" header="Status" sortable style="width: 33.3333%;">
           <template #body="{ data }">
             {{ statusDisplay(data.status) }}
           </template>
         </Column>
-        <Column :exportable="false" style="max-width: 1rem" header="Actions">
+        <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-trash" class="add-button1"
-              :disabled="slotProps.data.status === 1"
-              @click="confirmDelete(slotProps.data)" />
+            <div class="actions-container">
+              <Button icon="pi pi-trash" class="add-button1"
+                :disabled="slotProps.data.status === 1"
+                @click="confirmDelete(slotProps.data)" v-tooltip.top="{
+                value: 'Delete the invitation',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" />
+            </div>
           </template>
         </Column>
         <template #empty>
@@ -120,9 +142,9 @@ const fetchInvitations = async () => {
             throw new Error('User ID is not available')
         }
         const { data } = await api.get(`/api/auth/invite/${tenantId.value}`)
-        console.log('Raw API response:', data) // Debug
+        console.log('Raw API response:', data)
         invitations.value = data.map(invite => ({ ...invite, status: invite.isUsed ? 1 : 0 }))
-        console.log('Mapped invitations:', invitations.value) // Debug
+        console.log('Mapped invitations:', invitations.value)
     } catch (error) {
         console.error('Error fetching invitations:', error)
     }
@@ -207,6 +229,7 @@ h2 {
   color: white !important;
   border-color: white !important;
 }
+
 .add-button1 {
   border-radius: 6px;
   padding: 0.5rem 1rem;
@@ -236,8 +259,9 @@ h2 {
     color: #6c757d;
 }
 
-:deep(.p-datatable .p-datatable-tbody td) {
-    white-space: nowrap;
-    overflow: visible;
+.actions-container {
+  display: flex;
+  gap: 0.5rem;
+  white-space: nowrap;
 }
 </style>

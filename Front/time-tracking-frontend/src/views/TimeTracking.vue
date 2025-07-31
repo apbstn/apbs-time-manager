@@ -3,7 +3,17 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2 style="font-size: 22px; color: #6B7280;">Time Tracking</h2>
-        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" />
+        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" v-tooltip.top="{
+                value: 'Refresh',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
       </div>
     </div>
 
@@ -20,7 +30,17 @@
           <template #header>
             <div class="flex justify-content-between">
               <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter"
-                class="refresh-button" />
+                class="refresh-button" v-tooltip="{
+                value: 'Clear',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
             </div>
           </template>
           <template #empty>

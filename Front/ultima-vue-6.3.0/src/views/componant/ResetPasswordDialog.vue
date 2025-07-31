@@ -10,8 +10,28 @@
     </div>
     <Divider class="dialog-divider" />
     <div class="footer-buttons">
-      <Button label="Cancel" icon="pi pi-times" @click="emitCancel" class="p-button-text stunning-button stunning-button-cancel" />
-      <Button label="Confirm" icon="pi pi-check" @click="save" class="stunning-button stunning-button-save" />
+      <Button label="Cancel" icon="pi pi-times" @click="emitCancel" class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+                value: 'Cancel',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+      <Button label="Confirm" icon="pi pi-check" @click="save" class="stunning-button stunning-button-save" v-tooltip="{
+                value: 'Confirme Reseting the password',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
     </div>
   </Dialog>
 </template>

@@ -32,8 +32,28 @@
         <Column field="reason" header="Reason" sortable />
         <Column :exportable="false" style="min-width: 12rem" header="Actions">
           <template #body="slotProps">
-            <Button icon="pi pi-check-circle" class="add-button" @click="acceptRequest(slotProps.data)" />
-            <Button icon="pi pi-times-circle" class="add-button1" @click="denyRequest(slotProps.data)" />
+            <Button icon="pi pi-check-circle" class="add-button" @click="acceptRequest(slotProps.data)" v-tooltip="{
+                value: 'Accept Leave Request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+            <Button icon="pi pi-times-circle" class="add-button1" @click="denyRequest(slotProps.data)" v-tooltip="{
+                value: 'Deny This Leave Request',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
           </template>
         </Column>
         <template #empty>

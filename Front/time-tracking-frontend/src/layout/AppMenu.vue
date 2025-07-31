@@ -24,7 +24,7 @@ const fullMenu = ref([
             },
             {
                 label: 'Plan',
-                icon: 'pi pi-fw pi-calendar',
+                icon: 'pi pi-fw pi-calendar-clock',
                 to: '/plan',
                 showFor: ['all']
             },

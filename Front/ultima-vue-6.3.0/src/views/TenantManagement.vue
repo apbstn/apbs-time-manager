@@ -26,7 +26,17 @@
                 </template>
                 <template #end>
                     <Button label="Add Tenant" icon="pi pi-plus" class="add-button" @click="openAddPopup" outlined
-                        style="border-color: #35D300; color: #35D300;" />
+                        style="border-color: #35D300; color: #35D300;" v-tooltip.top="{
+                value: 'Add Tenant',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
                 </template>
             </Toolbar>
         </div>
@@ -49,20 +59,42 @@
                 <template #empty>
                     <div class="text-center text-muted">No tenants found</div>
                 </template>
-                <Column field="tenantname" header="Tenant Name" sortable style="max-width: 8rem"></Column>
-                <Column field="email" header="Email" sortable style="max-width: 8rem"></Column>
-                <Column field="username" header="Username" sortable style="max-width: 8rem"></Column>
-                <Column field="phonenumber" header="Phone Number" sortable style="max-width: 8rem">
+                <Column field="tenantname" header="Tenant Name" sortable style="width: 24.75%;"></Column>
+                <Column field="email" header="Email" sortable style="width: 24.75%;"></Column>
+                <Column field="username" header="Username" sortable style="width: 24.75%;"></Column>
+                <Column field="phonenumber" header="Phone Number" sortable style="width: 24.75%;">
                     <template #body="{ data }">
                         {{ data.phonenumber || 'N/A' }}
                     </template>
                 </Column>
-                <Column :exportable="false" header="Actions" style="max-width: 5rem; text-align: center">
+                <Column :exportable="false" header="Actions" style="width: 1%; text-align: center">
                     <template #body="slotProps">
-                        <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
-                            @click="openEditDialog(slotProps.data)" />
-                        <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
-                            @click="openDeleteDialog(slotProps.data)" />
+                        <div class="actions-container">
+                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+                                @click="openEditDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Edit Tenant',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+                            <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+                                @click="openDeleteDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Delete Tenant',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+                        </div>
                     </template>
                 </Column>
             </DataTable>
@@ -174,7 +206,6 @@ const fetchUsers = async () => {
     }
 };
 
-// --- Add logic ---
 const openAddPopup = () => {
     isAdding.value = true;
     newTenantData.value = {
@@ -225,7 +256,6 @@ const saveNewTenant = async (tenantData) => {
     }
 };
 
-// --- Edit logic ---
 const openEditDialog = (tenant) => {
     selectedTenant.value = { ...tenant };
     showEditDialog.value = true;
@@ -241,7 +271,7 @@ const editTenant = async (tenantData) => {
             throw new Error('No access token found');
         }
 
-        const tenantId = selectedTenant.value.code; // Assuming 'code' is the tenantId
+        const tenantId = selectedTenant.value.code;
         const payload = {
             Name: tenantData.tenantname,
             Email: selectedTenant.value.email || 'N/A',
@@ -257,7 +287,6 @@ const editTenant = async (tenantData) => {
             }
         });
 
-        // Update the tenant in the local array
         const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
         if (index !== -1) {
             tenants.value[index] = {
@@ -282,7 +311,6 @@ const editTenant = async (tenantData) => {
     }
 };
 
-// --- Delete logic ---
 const openDeleteDialog = (tenant) => {
     selectedTenant.value = { ...tenant };
     showDeleteDialog.value = true;
@@ -298,7 +326,7 @@ const deleteTenant = async () => {
             throw new Error('No access token found');
         }
 
-        const tenantId = selectedTenant.value.code; // Assuming 'code' is the tenantId
+        const tenantId = selectedTenant.value.code;
         await api.delete(`/api/tenant/${tenantId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -306,7 +334,6 @@ const deleteTenant = async () => {
             }
         });
 
-        // Remove the tenant from the local array
         const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
         if (index !== -1) {
             tenants.value.splice(index, 1);
@@ -507,5 +534,12 @@ h3 {
     color: #ffffff !important;
     background-color: #35D300 !important;
     box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
+}
+
+.actions-container {
+    display: flex;
+    gap: 0.5rem;
+    white-space: nowrap;
+    justify-content: center;
 }
 </style>
