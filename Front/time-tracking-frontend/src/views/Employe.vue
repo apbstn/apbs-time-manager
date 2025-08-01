@@ -185,7 +185,10 @@ const confirmDelete = (user) => {
 const deleteUser = async (user) => {
   try {
     console.log('Deleting user:', user)
-    await api.delete(`/api/UserTenants/accounts/${user.email}`)
+    const id = await api.post('api/UserTenants/get-id-by-email/', user.email);
+    console.log('User ID:', id.data);
+    const idd = id.data;
+    await api.delete(`/api/UserTenants/delete/${idd}`)
     await fetchUsers()
   } catch (error) {
     console.error('Error deleting user:', error)

@@ -180,4 +180,16 @@ public class InvitationService : IInvitationService
             .Where(i => i.TenantId == Guid.Parse(tenantId))
             .ToListAsync();
     }
+
+    public async Task<string> DeleteInvitations(string email)
+    {
+        var invv = await _tenantDbContext.Invitations.FirstOrDefaultAsync(i => i.Email == email);
+        if (invv == null)
+        {
+            return "no invitation was found";
+        }
+        _tenantDbContext.Remove(invv);
+        await _tenantDbContext.SaveChangesAsync();
+        return "Deletion Done";
+    }
 }

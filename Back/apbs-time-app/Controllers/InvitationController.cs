@@ -94,4 +94,16 @@ public class InvitationController : ControllerBase
         return Ok(invitations);
     }
 
+    [AllowAnonymous]
+    [HttpDelete("delete/{email}")]
+    public async Task<IActionResult> DeleteInvite(string email)
+    {
+        var deleteinvi = await _invitationService.DeleteInvitations(email);
+        if (deleteinvi == null || !deleteinvi.Any())
+        {
+            return Ok("No invitation was found with that email");
+        }
+        return Ok("Deletion was success");
+    }
+
 }

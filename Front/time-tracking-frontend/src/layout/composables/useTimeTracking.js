@@ -13,7 +13,7 @@ export function useTimeTracking() {
   const showStop = ref(false);
   const showPause = ref(false);
 
-  const getAccountId = async (email) => {
+ /*  const getAccountId = async (email) => {
     try {
       console.log('Account ID fetched: bla bla bla bla bla bla');
       const response = await api.post('/api/UserTenants/get-id-by-email', email , {
@@ -29,27 +29,36 @@ export function useTimeTracking() {
       console.error('Error fetching account ID:', error);
       throw error;
     }
-  };
+  }; */
 
   const initializeUserId = async () => {
     const email = localStorage.getItem('email');
     console.log('Email from localStorage:', email);
-    if (email !== null) {
+    if (email !== null && email.trim() !== '') {
       try {
+        const token = localStorage.getItem('accessToken');
+        if (!token) {
+          console.warn('No token found, using default userId:', state.userId);
+          return state.userId;
+        }
         console.log('Fetching account ID for email:', email);
-        const responsee = await api.post('/api/UserTenants/get-id-by-email', email );
+        const responsee = await api.post('/api/UserTenants/get-id-by-email', email);
         const accountId = responsee.data;
-
         state.userId = accountId || 'guest';
         console.log('Set state.userId to:', state.userId);
       } catch (error) {
+        console.error('API Error:', {
+          status: error.response?.status,
+          data: error.response?.data,
+          message: error.message
+        });
         console.warn('Failed to fetch account ID, using default userId:', state.userId);
       }
     } else {
-      console.warn('No email found, using default userId:', state.userId);
+      console.warn('No email found or empty, using default userId:', state.userId);
     }
     return state.userId;
-  };
+};
 
   const formatDate = (date) => {
     return date ? new Date(date).toISOString().split('T')[0] : 'No Date';
