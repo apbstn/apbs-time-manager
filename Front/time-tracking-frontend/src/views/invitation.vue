@@ -167,12 +167,12 @@ const confirmDelete = (invite) => {
         deleteDialogRef.value.showDeleteDialog({
             item: invite,
             type: 'invitation',
-            name: invite.email || `ID ${invite.id}`,
+            name: invite.email,
             onConfirm: async () => {
                 try {
-                    console.log('Deleting invite:', invite)
-                    await api.delete(`/api/invitations/${invite.id}`)
-                    invitations.value = invitations.value.filter(i => i.id !== invite.id)
+                    console.log('Deleting invite:', invite.email);
+                    await api.delete(`/api/auth/invite/delete/${invite.email}`)
+                    window.location.reload();
                 } catch (error) {
                     console.error('Error deleting invitation:', error)
                 }

@@ -2,12 +2,14 @@
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
 using Shared.Models;
 using Shared.Models.Mailing;
 using Shared.Services.Mailing;
+using System.Data;
 
 namespace Shared.Services;
 
@@ -18,14 +20,16 @@ public class UserService : IUserService
     private readonly IEncryptionService _encryptionService;
     private readonly IMailService _mailService;
     private readonly IConfiguration _configuration;
+    private readonly ICurrentTenantService _currentTenantService;
+    private readonly ILogger<UserService>? _logger;
 
-    public UserService(ApplicationDbContext appContext, IEncryptionService encryptionService, TenantDbContext tenantDbContext, IMailService mailService)
+    public UserService(ApplicationDbContext appContext, IEncryptionService encryptionService, TenantDbContext tenantDbContext, IMailService mailService, ICurrentTenantService currentTenantService)
     {
         _appContext = appContext;
         _encryptionService = encryptionService;
         _tenantDbContext = tenantDbContext;
         _mailService = mailService;
-
+        _currentTenantService = currentTenantService;
     }
 
     public async Task<User> AuthenticateAsync(string email, string password)
@@ -247,32 +251,175 @@ public class UserService : IUserService
         try
         {
             using var transaction = await _tenantDbContext.Database.BeginTransactionAsync();
-            var user = await _tenantDbContext.Users.FindAsync(userId);
 
+            // Find the user in the tenant context
+            var user = await _tenantDbContext.Users.FindAsync(userId);
             if (user == null)
             {
+                _logger?.LogWarning("User with ID {UserId} not found.", userId);
                 return null; // User not found
             }
 
+            // Find the invitation in the tenant context
+            var invitationId = await _tenantDbContext.Invitations
+                .Where(a => a.UserId == userId)
+                .Select(a => a.Id)
+                .FirstOrDefaultAsync();
+            if (invitationId == Guid.Empty)
+            {
+                _logger?.LogWarning("No invitation found for user ID {UserId}.", userId);
+                return null;
+            }
+
+            // Store the old email before deleting
+            string oldEmail = user.Email;
+
+            // Retrieve the tenant ID from UserTenantRoles
+            var userTenantRole = await _tenantDbContext.UserTenantRoles
+                .FirstOrDefaultAsync(utr => utr.UserId == userId);
+            if (userTenantRole == null)
+            {
+                _logger?.LogWarning("No tenant role found for user ID {UserId}.", userId);
+                throw new InvalidOperationException("No tenant role found for the user.");
+            }
+
+            Guid tenantId = userTenantRole.TenantId;
+
+            // Retrieve the tenant's connection string
+            var tenant = await _tenantDbContext.Tenants
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
+            if (tenant == null || string.IsNullOrEmpty(tenant.ConnectionString))
+            {
+                _logger?.LogWarning("Tenant or connection string not found for tenant ID {TenantId}.", tenantId);
+                throw new InvalidOperationException("Tenant or connection string not found for the user.");
+            }
+
+            // Store the original connection string
+            var originalConnectionString = _appContext.Database.GetDbConnection().ConnectionString;
+
+            // Ensure the connection is closed before changing the connection string
+            if (_appContext.Database.GetDbConnection().State == ConnectionState.Open)
+            {
+                await _appContext.Database.CloseConnectionAsync();
+            }
+
+            // Set the tenant's connection string
+            if (string.IsNullOrWhiteSpace(tenant.ConnectionString))
+            {
+                throw new InvalidOperationException("Tenant connection string is empty or invalid.");
+            }
+
+            _appContext.Database.GetDbConnection().ConnectionString = tenant.ConnectionString;
+
+            try
+            {
+                // Verify and open the connection
+                if (string.IsNullOrWhiteSpace(_appContext.Database.GetDbConnection().ConnectionString))
+                {
+                    throw new InvalidOperationException("Failed to set the connection string for _appContext.");
+                }
+
+                await _appContext.Database.OpenConnectionAsync();
+
+                // Find the account in T_ACCOUNT using the old email
+                var account = await _appContext.Users
+                    .FirstOrDefaultAsync(a => a.Email == oldEmail);
+                Guid accountId = account?.Id ?? Guid.Empty;
+                if (account != null)
+                {
+                    _appContext.Users.Remove(account);
+                    _logger?.LogInformation("Deleted user account with email {Email} (ID: {UserId}).", oldEmail, accountId);
+                }
+                else
+                {
+                    _logger?.LogInformation("No user account found for email {Email}, skipping deletion.", oldEmail);
+                }
+
+                // Delete LeaveRequests
+                var leaveRequest = await _appContext.LeaveRequests
+                    .FirstOrDefaultAsync(a => a.UserId == accountId);
+                if (leaveRequest != null)
+                {
+                    _appContext.LeaveRequests.Remove(leaveRequest);
+                    _logger?.LogInformation("Deleted LeaveRequest for user ID {UserId}.", accountId);
+                }
+                else
+                {
+                    _logger?.LogInformation("No LeaveRequest found for user ID {UserId}, skipping deletion.", accountId);
+                }
+
+                // Delete LeaveBalances
+                var leaveBalance = await _appContext.LeaveBalances
+                    .FirstOrDefaultAsync(a => a.UserId == accountId);
+                if (leaveBalance != null)
+                {
+                    _appContext.LeaveBalances.Remove(leaveBalance);
+                    _logger?.LogInformation("Deleted LeaveBalance for user ID {UserId}.", accountId);
+                }
+                else
+                {
+                    _logger?.LogInformation("No LeaveBalance found for user ID {UserId}, skipping deletion.", accountId);
+                }
+
+                // Delete TimeLogs
+                var timeLogsCount = await _appContext.TimeLogs
+                    .Where(tl => tl.UserId == accountId)
+                    .CountAsync();
+                if (timeLogsCount > 0)
+                {
+                    await _appContext.TimeLogs
+                        .Where(tl => tl.UserId == accountId)
+                        .ExecuteDeleteAsync();
+                    _logger?.LogInformation("Deleted {Count} TimeLogs for user ID {UserId}.", timeLogsCount, accountId);
+                }
+                else
+                {
+                    _logger?.LogInformation("No TimeLogs found for user ID {UserId}, skipping deletion.", accountId);
+                }
+
+                // Save changes to T_ACCOUNT
+                await _appContext.SaveChangesAsync();
+            }
+            finally
+            {
+                // Close the connection and restore the original connection string
+                if (_appContext.Database.GetDbConnection().State == ConnectionState.Open)
+                {
+                    await _appContext.Database.CloseConnectionAsync();
+                }
+                _appContext.Database.GetDbConnection().ConnectionString = originalConnectionString;
+            }
+
+            // Delete the user from the tenant context
             _tenantDbContext.Users.Remove(user);
+
+            var invitationToRemove = await _tenantDbContext.Invitations.FindAsync(invitationId);
+            if (invitationToRemove != null)
+            {
+                _tenantDbContext.Invitations.Remove(invitationToRemove);
+                _logger?.LogInformation("Deleted invitation with ID {InvitationId} for user ID {UserId}.", invitationId, userId);
+            }
+
+            // Save changes to the tenant context
             await _tenantDbContext.SaveChangesAsync();
             await transaction.CommitAsync();
 
-            return user; // Return the deleted user
+            _logger?.LogInformation("User with ID {UserId} deleted successfully.", userId);
+            return user;
         }
         catch (DbUpdateConcurrencyException ex)
         {
-            // Handle concurrency conflicts (e.g., log and rethrow or resolve)
+            _logger?.LogError(ex, "Concurrency conflict occurred while deleting user with ID {UserId}.", userId);
             throw new InvalidOperationException("Concurrency conflict occurred while deleting the user.", ex);
         }
         catch (DbUpdateException ex)
         {
-            // Handle foreign key or other database constraints
+            _logger?.LogError(ex, "Database error occurred while deleting user with ID {UserId}.", userId);
             throw new InvalidOperationException("An error occurred while deleting the user due to database constraints.", ex);
         }
         catch (Exception ex)
         {
-            // Handle other unexpected errors
+            _logger?.LogError(ex, "Unexpected error occurred while deleting user with ID {UserId}.", userId);
             throw new InvalidOperationException("An unexpected error occurred while deleting the user.", ex);
         }
     }
@@ -303,9 +450,18 @@ public class UserService : IUserService
             user.Username = updatedUser.Username;
             user.PhoneNumber = updatedUser.PhoneNumber;
 
-            // Retrieve the tenant's connection string
+            // Retrieve the tenant ID from UserTenantRoles
+            var userTenantRole = await _tenantDbContext.UserTenantRoles
+                .FirstOrDefaultAsync(utr => utr.UserId == userId);
+            if (userTenantRole == null)
+            {
+                throw new InvalidOperationException("No tenant role found for the user.");
+            }
+            Guid tenantId = userTenantRole.TenantId;
+
+            // Retrieve the tenant's connection string using TenantId
             var tenant = await _tenantDbContext.Tenants
-                .FirstOrDefaultAsync(t => t.UserId == userId);
+                .FirstOrDefaultAsync(t => t.Id == tenantId);
             if (tenant == null || string.IsNullOrEmpty(tenant.ConnectionString))
             {
                 throw new InvalidOperationException("Tenant or connection string not found for the user.");

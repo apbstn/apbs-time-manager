@@ -23,7 +23,6 @@ namespace Shared.Context
         public DbSet<LeaveRequest> LeaveRequests { get; set; }
         public DbSet<LeaveBalance> LeaveBalances { get; set; }
         public DbSet<Team> Teams { get; set; }
-        public DbSet<Planner> Planners { get; set; }
         public DbSet<Schedule> Schedules { get; set; }
         //protected override void OnModelCreating(ModelBuilder modelBuilder)
         //{

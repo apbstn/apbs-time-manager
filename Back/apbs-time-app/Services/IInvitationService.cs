@@ -11,4 +11,5 @@ public interface IInvitationService
     public InviteData ExtractInvitationData(string data);
     public Task<bool> CheckInvite(ConfirmInvite confirm);
     public Task<List<Invitation>> GetInvitationsByTenantIdAsync(string tenantId);
+    public Task<string> DeleteInvitations(string email);
 }

@@ -63,4 +63,22 @@ public class UserTenantsController : ControllerBase
 
         return Ok("Team updated successfully.");
     }
+
+    [HttpDelete("delete/{id}")]
+    public async Task<IActionResult> DeleteUser(Guid id)
+    {
+        try
+        {
+            var deletedUser = await _userTenantService.DeleteUsers(id);
+            return Ok(new { Message = $"User with ID {id} deleted successfully.", User = deletedUser });
+        }
+        catch (InvalidOperationException ex)
+        {
+            return NotFound(new { Message = ex.Message });
+        }
+        catch (Exception ex)
+        {
+            return StatusCode(500, new { Message = "An error occurred while deleting the user." });
+        }
+    }
 }
