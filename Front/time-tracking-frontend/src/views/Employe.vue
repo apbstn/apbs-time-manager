@@ -21,7 +21,7 @@
         <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
             <div class="actions-container">
-              <Button icon="pi pi-pencil" class="add-button" v-tooltip="{
+              <Button icon="pi pi-user-plus" class="add-button" v-tooltip="{
                 value: 'Add Employee to a team',
                 pt: {
                   arrow: {
@@ -32,6 +32,19 @@
                   text: '!bg-black !text-white !font-medium',
                 }
               }" @click="openEditDialog(slotProps.data)" />
+
+              <Button icon="pi pi-minus-circle" class="removeteam-button" v-tooltip="{
+                value: 'Remove the User from the team',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }" @click="showRemoveDialog(slotProps.data)" />
+
               <Button icon="pi pi-times" class="add-button1" v-tooltip="{
                 value: 'Fire User',
                 pt: {
@@ -70,6 +83,45 @@
     <!-- Allocate Leave Balance Dialog -->
     <AllocateLeaveDialog v-model:visible="allocateDialogVisible" :user="selectedUserForAllocation"
       @allocate="allocateLeaveBalance" />
+
+    <!-- Remove from Team Dialog -->
+    <Dialog :visible="removeDialogVisible" @update:visible="removeDialogVisible = $event"
+      header="Remove User from Team" :modal="true" class="p-fluid stunning-dialog" :draggable="false" :style="{ width: '650px' }">
+      <Divider class="dialog-divider" />
+      <div class="dialog-content">
+        <p class="dialog-subtitle">Are you sure you want to remove {{ selectedUserForRemoval.value?.username || selectedUserForRemoval.value?.email }} from their team?</p>
+        <Message v-if="removeError" severity="error" :closable="true" class="error-message" @close="removeError = ''">
+          {{ removeError }}
+        </Message>
+      </div>
+      <Divider class="dialog-divider" />
+      <div class="footer-buttons">
+        <Button label="Cancel" icon="pi pi-times" @click="removeDialogVisible = false"
+          class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+                  value: 'Cancel',
+                  pt: {
+                    arrow: {
+                      style: {
+                        borderBottomColor: '#000000',
+                      },
+                    },
+                    text: '!bg-black !text-white !font-medium',
+                  }
+                }"/>
+        <Button label="Confirm" icon="pi pi-check" @click="removeUserFromTeam"
+          class="stunning-button stunning-button-remove" v-tooltip="{
+                  value: 'Confirm Removal',
+                  pt: {
+                    arrow: {
+                      style: {
+                        borderBottomColor: '#000000',
+                      },
+                    },
+                    text: '!bg-black !text-white !font-medium',
+                  }
+                }"/>
+      </div>
+    </Dialog>
   </div>
 </template>
 
@@ -80,9 +132,11 @@ import Button from 'primevue/button'
 import DataTable from 'primevue/datatable'
 import Column from 'primevue/column'
 import InputText from 'primevue/inputtext'
+import Dialog from 'primevue/dialog'
+import Divider from 'primevue/divider'
+import Message from 'primevue/message'
 import UserDialog from './Componant/UserDialog.vue'
 import AllocateLeaveDialog from './Componant/AllocateLeaveDialog.vue'
-import { ColorPicker } from 'primevue'
 
 // Inject the DeleteDialog instance
 const deleteDialogRef = inject('deleteDialog')
@@ -96,6 +150,9 @@ const selectedUser = ref(null)
 const availableTeams = ref([])
 const allocateDialogVisible = ref(false)
 const selectedUserForAllocation = ref(null)
+const removeDialogVisible = ref(false)
+const selectedUserForRemoval = ref(null)
+const removeError = ref('')
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
@@ -167,6 +224,43 @@ const closeDialog = () => {
   selectedUser.value = null
 }
 
+const showRemoveDialog = (user) => {
+  console.log('Opening remove dialog for user:', user)
+  selectedUserForRemoval.value = user
+  removeDialogVisible.value = true
+  removeError.value = ''
+}
+
+const removeUserFromTeam = async () => {
+  if (!selectedUserForRemoval.value?.email) {
+    removeError.value = 'User email is required.'
+    return
+  }
+  try {
+    console.log('Removing user from team:', selectedUserForRemoval.value)
+    const idResponse = await api.post('/api/UserTenants/get-id-by-email', selectedUserForRemoval.value.email, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    const userId = idResponse.data
+    console.log('Retrieved userId:', userId)
+    const response = await api.put(`/api/UserTenants/remove-team/${userId}`, null, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    console.log('Remove response:', response.data)
+
+    await fetchUsers()
+    window.location.reload()
+    removeDialogVisible.value = false
+  } catch (error) {
+    console.error('Error removing user from team:', error.response ? error.response.data : error)
+    removeError.value = error.response?.data?.Message || 'Failed to remove user from team.'
+  }
+}
+
 const confirmDelete = (user) => {
   console.log('UserAccounts.vue: deleteDialogRef:', deleteDialogRef?.value)
   console.log('UserAccounts.vue: showDeleteDialog available:', !!deleteDialogRef?.value?.showDeleteDialog)
@@ -185,9 +279,9 @@ const confirmDelete = (user) => {
 const deleteUser = async (user) => {
   try {
     console.log('Deleting user:', user)
-    const id = await api.post('api/UserTenants/get-id-by-email/', user.email);
-    console.log('User ID:', id.data);
-    const idd = id.data;
+    const id = await api.post('api/UserTenants/get-id-by-email/', user.email)
+    console.log('User ID:', id.data)
+    const idd = id.data
     await api.delete(`/api/UserTenants/delete/${idd}`)
     await fetchUsers()
   } catch (error) {
@@ -311,9 +405,26 @@ h2 {
   background-color: white;
 }
 
+.removeteam-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #007BFF !important;
+  border-color: #007BFF !important;
+  background-color: white;
+}
+
 .allocate-button:hover {
   transform: translateY(-1px);
   background-color: #ff8000 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.removeteam-button:hover {
+  transform: translateY(-1px);
+  background-color: #007BFF !important;
   color: white !important;
   border-color: white !important;
 }
@@ -339,10 +450,112 @@ h2 {
   white-space: nowrap;
 }
 
+.stunning-dialog {
+  border-radius: 12px;
+  background: linear-gradient(145deg, #ffffff, #f8fafc);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  transition: all 0.3s ease;
+}
+
+.dialog-content {
+  padding: 1.5rem;
+}
+
+.dialog-subtitle {
+  margin: 0 0 1rem 0;
+  color: #4b5563;
+  font-size: 0.95rem;
+  font-weight: 400;
+  text-align: center;
+}
+
+.dialog-divider {
+  margin: 1rem 0;
+}
+
+.error-message {
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  border-left: 4px solid #ef4444;
+  background-color: #fef2f2;
+}
+
+.footer-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 1rem;
+  padding: 0.5rem 1rem;
+}
+
+.stunning-button {
+  border-radius: 8px;
+  padding: 0.5rem 1.25rem;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.stunning-button-cancel {
+  color: #ff0000;
+  border: 1px solid #ff0000;
+}
+
+.stunning-button-cancel:hover {
+  background: #ff0000;
+  color: #ffffff;
+  border-color: #ff0000;
+}
+
+.stunning-button-remove {
+  background: transparent !important;
+  color: #007BFF !important;
+  border: 1px solid #007BFF !important;
+}
+
+.stunning-button-remove:hover:not(:disabled) {
+  background: #007BFF !important;
+  color: #ffffff !important;
+  border-color: #007BFF !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 123, 255, 0.3);
+}
+
+:deep(.p-dialog-header) {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 1rem 1.5rem;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1f2937;
+}
+
+:deep(.p-dialog-content) {
+  padding: 0;
+}
+
+:deep(.p-dialog-footer) {
+  padding: 0;
+}
+
+:deep(.p-button) {
+  transition: all 0.2s ease;
+}
+
+:deep(.p-button.p-button-text.stunning-button-cancel:hover) {
+  background-color: #ff0000 !important;
+  color: #ffffff !important;
+  border-color: #ff0000 !important;
+}
+
+:deep(.p-button.p-button-text.stunning-button-remove:hover) {
+  background-color: #007BFF !important;
+  color: #ffffff !important;
+  border-color: #007BFF !important;
+}
+
 /* Tooltip styles */
 :deep(.p-tooltip) {
   background-color: #000000 !important;
-  color: #ff0000 !important;
+  color: #ffffff !important;
   font-size: 0.9rem;
   padding: 0.5rem 0.75rem;
   border-radius: 4px;
@@ -355,14 +568,19 @@ h2 {
   border-bottom-color: #000000 !important;
 }
 
-/* Optional: Differentiate tooltips by button type */
 :deep(.p-tooltip.add-button-tooltip) {
   background-color: #35D300 !important;
 }
+
 :deep(.p-tooltip.add-button1-tooltip) {
   background-color: #ff0000 !important;
 }
+
 :deep(.p-tooltip.allocate-button-tooltip) {
   background-color: #ff8000 !important;
+}
+
+:deep(.p-tooltip.removeteam-button-tooltip) {
+  background-color: #007BFF !important;
 }
 </style>

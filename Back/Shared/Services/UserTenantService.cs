@@ -17,15 +17,15 @@ public class UserTenantService : IUserTenantService
 {
     private readonly IUserTenantRepository _repository;
     private readonly ApplicationDbContext _appContext;
-    private readonly ILogger<UserTenantService>? _logger;
     private readonly TenantDbContext _tenantDbContext;
+    private readonly ILogger<UserTenantService>? _logger;
 
-    public UserTenantService(IUserTenantRepository repository, ApplicationDbContext appContext, TenantDbContext tenantDbContext ,ILogger<UserTenantService>? logger = null)
+    public UserTenantService(IUserTenantRepository repository, ApplicationDbContext appContext, TenantDbContext tenantDbContext, ILogger<UserTenantService>? logger = null)
     {
         _repository = repository ?? throw new ArgumentNullException(nameof(repository));
         _appContext = appContext ?? throw new ArgumentNullException(nameof(appContext));
+        _tenantDbContext = tenantDbContext ?? throw new ArgumentNullException(nameof(tenantDbContext));
         _logger = logger;
-        _tenantDbContext = tenantDbContext;
     }
 
     public async Task<Guid?> GetIdByEmailAsync(string email)
@@ -69,6 +69,55 @@ public class UserTenantService : IUserTenantService
         return await _repository.UpdateUserAsync(userTenant);
     }
 
+    public async Task<bool> RemoveUserFromTeamAsync(Guid id)
+    {
+        if (id == Guid.Empty)
+        {
+            _logger?.LogWarning("User ID cannot be empty.");
+            throw new ArgumentException("User ID cannot be empty.", nameof(id));
+        }
+
+        using var transaction = await _appContext.Database.BeginTransactionAsync();
+        try
+        {
+            _logger?.LogInformation("Attempting to remove user with ID {UserId} from their team.", id);
+
+            var user = await _repository.GetByIdAsync(id);
+            if (user == null)
+            {
+                _logger?.LogWarning("User with ID {UserId} not found.", id);
+                return false;
+            }
+
+            if (user.TeamId == null)
+            {
+                _logger?.LogInformation("User with ID {UserId} is not assigned to a team, no action needed.", id);
+                return false;
+            }
+
+            user.TeamId = null;
+            var result = await _repository.UpdateUserAsync(user);
+            if (result)
+            {
+                _logger?.LogInformation("Removed user with ID {UserId} from team.", id);
+                await transaction.CommitAsync();
+                return true;
+            }
+            else
+            {
+                _logger?.LogWarning("Failed to update user with ID {UserId} to remove team.", id);
+                await transaction.RollbackAsync();
+                return false;
+            }
+        }
+        catch (Exception ex)
+        {
+            await transaction.RollbackAsync();
+            _logger?.LogError(ex, "Failed to remove user with ID {UserId} from team.", id);
+            throw new InvalidOperationException($"Failed to remove user with ID {id} from team: {ex.Message}", ex);
+        }
+    }
+
     public async Task<UserTenant> DeleteUsers(Guid id)
     {
         if (_appContext == null)
@@ -81,9 +130,9 @@ public class UserTenantService : IUserTenantService
 
             var user = await _appContext.Users.FindAsync(id);
             var accountemail = await _appContext.Users
-    .Where(a => a.Id == id)
-    .Select(a => a.Email)
-    .FirstOrDefaultAsync();
+                .Where(a => a.Id == id)
+                .Select(a => a.Email)
+                .FirstOrDefaultAsync();
             string emaill = accountemail;
             if (user == null)
             {
@@ -131,8 +180,6 @@ public class UserTenantService : IUserTenantService
             }
 
             _appContext.Users.Remove(user);
-
-
 
             _logger?.LogInformation("Deleted user with ID {UserId}.", id);
 

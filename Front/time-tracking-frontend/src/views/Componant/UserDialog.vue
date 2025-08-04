@@ -236,25 +236,29 @@ const handleSave = async () => {
 }
 
 .stunning-button-cancel:hover {
-  background: #FF0000;
+  background: #ff0000;
   color: #ffffff;
-  border-color: #FF0000;
+  border-color: #ff0000;
 }
 
 .stunning-button-save {
-  background: #35d30000 !important;
+  background: transparent !important;
   color: #35D300 !important;
-  border-color: #35D300 !important;
+  border: 1px solid #35D300 !important;
 }
 
 .stunning-button-save:hover:not(:disabled) {
-  background: #35D300;
+  background: #35D300 !important;
+  color: #ffffff !important;
+  border-color: #35D300 !important;
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3);
 }
 
 .stunning-button-save:disabled {
-  background: #d1d5db;
+  background: #d1d5db !important;
+  border-color: #d1d5db !important;
+  color: #6b7280 !important;
   cursor: not-allowed;
 }
 
@@ -292,8 +296,8 @@ const handleSave = async () => {
 }
 
 :deep(.p-button.p-button-text.stunning-button-cancel:hover) {
-  background-color: #FF0000 !important;
+  background-color: #ff0000 !important;
   color: #ffffff !important;
-  border-color: #ffffff !important;
+  border-color: #ff0000 !important;
 }
 </style>

@@ -1,21 +1,25 @@
 ﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
+using Serilog.Core;
 using Shared.Context;
+using Shared.Models;
 using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Shared.Models;
 
 namespace Shared.Services
 {
     public class TeamRepository : ITeamRepository
     {
         private readonly ApplicationDbContext _context;
+        private readonly ILogger<TeamService>? _logger;
 
-        public TeamRepository(ApplicationDbContext context)
+        public TeamRepository(ApplicationDbContext context, ILogger<TeamService>? logger = null)
         {
             _context = context;
+            _logger = logger;
         }
 
         public async Task<List<Team>> GetAllTeamsAsync()
@@ -49,12 +53,43 @@ namespace Shared.Services
 
         public async Task<Team?> DeleteTeamAsync(Guid id)
         {
-            var team = await _context.Teams.FindAsync(id);
-            if (team == null) return null;
+            if (id == Guid.Empty)
+            {
+                _logger?.LogWarning("Team ID cannot be empty.");
+                throw new ArgumentException("Team ID cannot be empty.", nameof(id));
+            }
 
-            _context.Teams.Remove(team);
-            await _context.SaveChangesAsync();
-            return team;
+            using var transaction = await _context.Database.BeginTransactionAsync();
+            try
+            {
+                var team = await _context.Teams.FindAsync(id);
+                if (team == null)
+                {
+                    _logger?.LogWarning("Team with ID {TeamId} not found.", id);
+                    return null;
+                }
+
+                // Update Users table to remove references to the team
+                var usersUpdated = await _context.Users
+                    .Where(u => u.TeamId == id)
+                    .ExecuteUpdateAsync(setters => setters.SetProperty(u => u.TeamId, (Guid?)null));
+                _logger?.LogInformation("Updated {Count} users to remove TeamId {TeamId}.", usersUpdated, id);
+
+                // Remove the team
+                _context.Teams.Remove(team);
+                _logger?.LogInformation("Deleted team with ID {TeamId}.", id);
+
+                await _context.SaveChangesAsync();
+                await transaction.CommitAsync();
+
+                return team;
+            }
+            catch (Exception ex)
+            {
+                await transaction.RollbackAsync();
+                _logger?.LogError(ex, "Failed to delete team with ID {TeamId}.", id);
+                throw new InvalidOperationException($"Failed to delete team with ID {id}: {ex.Message}", ex);
+            }
         }
     }
 }
