@@ -180,11 +180,26 @@ public class UserTenantService : IUserTenantService
             }
 
             _appContext.Users.Remove(user);
+            await _appContext.SaveChangesAsync();
+            await transaction.CommitAsync();
+            using var tt = await _tenantDbContext.Database.BeginTransactionAsync();
+            await tt.CommitAsync();
+            Guid iddd = await _tenantDbContext.Users
+                .Where(y => y.Email == emaill)
+                .Select(y => y.Id)
+                .FirstOrDefaultAsync();
+            var roles = _tenantDbContext.UserTenantRoles
+            .Where(r => r.UserId == iddd);
+            _tenantDbContext.UserTenantRoles.RemoveRange(roles);
+            var invv = _tenantDbContext.Invitations
+                .Where(f => f.UserId == iddd);
+            _tenantDbContext.Invitations.RemoveRange(invv);
+            await _tenantDbContext.SaveChangesAsync();
+
 
             _logger?.LogInformation("Deleted user with ID {UserId}.", id);
 
-            await _appContext.SaveChangesAsync();
-            await transaction.CommitAsync();
+            
 
             _logger?.LogInformation("User with ID {UserId} deleted successfully.", id);
             return user;
