@@ -1,5 +1,5 @@
 <template>
-  <h2>List Of Users</h2>
+  <h2 style="font-size: 22px; color: #6B7280;">List Of Users</h2>
   <div class="users-page">
     <div class="header-container">
       <Toolbar class="header-toolbar">
@@ -85,19 +85,8 @@
         <Column :exportable="false" header="Actions" style="width: 1%; text-align: center">
           <template #body="slotProps">
             <div class="actions-container">
-              <Button icon="pi pi-key" class="p-button-rounded p-button-text reset-password-button"
-                @click="openResetDialog(slotProps.data)" v-tooltip.top="{
-                value: 'Reset Password',
-                pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
-                }
-              }"/>
-              <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+              
+              <Button icon="pi pi-pencil" class="add-button"
                 @click="openEditDialog(slotProps.data)" v-tooltip.top="{
                 value: 'Edit Account',
                 pt: {
@@ -109,7 +98,19 @@
                   text: '!bg-black !text-white !font-medium',
                 }
               }"/>
-              <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+              <Button icon="pi pi-key" class="add-button1"
+                @click="openResetDialog(slotProps.data)" v-tooltip.top="{
+                value: 'Reset Password',
+                pt: {
+                  arrow: {
+                    style: {
+                      borderBottomColor: '#000000',
+                    },
+                  },
+                  text: '!bg-black !text-white !font-medium',
+                }
+              }"/>
+              <Button icon="pi pi-trash" class="add-button2"
                 @click="openDeleteDialog(slotProps.data)" v-tooltip.top="{
                 value: 'Delete Account',
                 pt: {
@@ -348,7 +349,7 @@ onMounted(fetchUsers);
 <style scoped>
 .users-page {
   width: 100%;
-  min-height: 100vh;
+  min-height: auto !important;
   padding: 2rem;
   background-color: #f9fafb;
   box-sizing: border-box;
@@ -421,6 +422,64 @@ onMounted(fetchUsers);
   border-color: #d1d5db;
   cursor: not-allowed;
 }
+
+
+
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #FF8000 !important;
+  background-color: transparent !important;
+  border-color: #FF8000 !important;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #FF8000 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.add-button1:disabled {
+  color: #d1d5db;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+
+
+
+
+
+
+
+
+.add-button2 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #FF0000 !important;
+  background-color: transparent !important;
+  border-color: #FF0000 !important;
+}
+
+.add-button2:hover {
+  transform: translateY(-1px);
+  background-color: #FF0000 !important;
+  color: #ffffff !important;
+  box-shadow: none !important;
+}
+
+.add-button2:disabled {
+  color: #d1d5db;
+  border-color: #d1d5db;
+  cursor: not-allowed;
+}
+
+
 
 .card {
   width: 100%;

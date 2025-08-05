@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
-using Shared.Models;
-using apbs_time_app_admin.Services.TenantService;
+﻿using apbs_time_app_admin.Services.TenantService;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using Shared.DTOs.TenantDtos;
 using Shared.DTOs.TenantDtos.Mappers;
+using Shared.Models;
+using System.Security.Claims;
 
 namespace apbs_time_app_admin.Controllers;
 
@@ -87,4 +88,6 @@ public class TenantsController : ControllerBase
             return StatusCode(500, new { message = "An error occurred while retrieving tenants." });
         }
     }
+
+   
 }

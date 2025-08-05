@@ -95,14 +95,14 @@ const confirm = () => {
   padding: 0.5rem 1rem;
   font-weight: 500;
   transition: background-color 0.2s, transform 0.1s;
-  color: #35D300 !important;
-  border-color: #35D300 !important;
+  color: #ff8000 !important;
+  border-color: #ff8000 !important;
   background-color: white;
 }
 
 .add-button:hover {
   transform: translateY(-1px);
-  background-color: #35D300 !important;
+  background-color: #ff8000 !important;
   color: white !important;
   border-color: white !important;
 }

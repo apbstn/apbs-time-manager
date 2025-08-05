@@ -1,5 +1,5 @@
 <template>
-    <h2>List Of Tenants</h2>
+    <h2 style="font-size: 22px; color: #6B7280;">List Of Tenants</h2>
     <div class="users-page">
         <!-- Error Message -->
         <Message v-if="error" severity="error" :closable="true" class="error-message">
@@ -70,7 +70,7 @@
                 <Column :exportable="false" header="Actions" style="width: 1%; text-align: center">
                     <template #body="slotProps">
                         <div class="actions-container">
-                            <Button icon="pi pi-pencil" class="p-button-rounded p-button-text edit-button"
+                            <Button icon="pi pi-pencil" class="add-button"
                                 @click="openEditDialog(slotProps.data)" v-tooltip.top="{
                 value: 'Edit Tenant',
                 pt: {
@@ -82,7 +82,7 @@
                   text: '!bg-black !text-white !font-medium',
                 }
               }"/>
-                            <Button icon="pi pi-trash" class="p-button-rounded p-button-text delete-button"
+                            <Button icon="pi pi-trash" class="add-button1"
                                 @click="openDeleteDialog(slotProps.data)" v-tooltip.top="{
                 value: 'Delete Tenant',
                 pt: {
@@ -159,7 +159,7 @@ const fetchTenants = async () => {
         });
 
         tenants.value = response.data.items.map(item => ({
-            code: item.code,
+            id: item.id,
             tenantname: item.tenantName || 'N/A',
             email: item.email || 'N/A',
             username: item.username || 'N/A',
@@ -238,8 +238,8 @@ const saveNewTenant = async (tenantData) => {
         });
 
         tenants.value.push({
-            code: response.data.code || response.data.T_CODE,
-            tenantname: response.data.tenantName || response.data.T_NAME || 'N/A',
+            id: response.data.id,
+            tenantname: response.data.tenantName || 'N/A',
             email: response.data.email || 'N/A',
             username: response.data.username || 'N/A',
             phonenumber: response.data.phoneNumber || 'N/A'
@@ -249,7 +249,7 @@ const saveNewTenant = async (tenantData) => {
         successMessage.value = `Tenant ${tenantData.tenantname} added successfully`;
         setTimeout(() => (successMessage.value = null), 7000);
     } catch (error) {
-        console.error('Error adding tenant:', error.response?.data || error.message);
+        console.error('Error adding tenant:', error.response || error);
         error.value = 'Failed to add tenant: ' + (error.response?.data?.message || error.message || 'Unknown error');
     } finally {
         loading.value = false;
@@ -271,7 +271,8 @@ const editTenant = async (tenantData) => {
             throw new Error('No access token found');
         }
 
-        const tenantId = selectedTenant.value.code;
+        const tenantId = selectedTenant.value.id;
+        console.log('Editing tenant with ID:', tenantId);
         const payload = {
             Name: tenantData.tenantname,
             Email: selectedTenant.value.email || 'N/A',
@@ -287,7 +288,7 @@ const editTenant = async (tenantData) => {
             }
         });
 
-        const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
+        const index = tenants.value.findIndex(tenant => tenant.id === tenantId);
         if (index !== -1) {
             tenants.value[index] = {
                 ...tenants.value[index],
@@ -302,7 +303,7 @@ const editTenant = async (tenantData) => {
         successMessage.value = `Tenant ${tenantData.tenantname} updated successfully`;
         setTimeout(() => (successMessage.value = null), 7000);
     } catch (err) {
-        console.error('Error editing tenant:', err);
+        console.error('Error editing tenant:', err.response || err);
         error.value =
             'Failed to edit tenant: ' +
             (err.response?.data?.message || err.message || 'Unknown error');
@@ -326,7 +327,8 @@ const deleteTenant = async () => {
             throw new Error('No access token found');
         }
 
-        const tenantId = selectedTenant.value.code;
+        const tenantId = selectedTenant.value.id;
+        console.log("Tenant ID:", tenantId);
         await api.delete(`/api/tenant/${tenantId}`, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -334,7 +336,7 @@ const deleteTenant = async () => {
             }
         });
 
-        const index = tenants.value.findIndex(tenant => tenant.code === tenantId);
+        const index = tenants.value.findIndex(tenant => tenant.id === tenantId);
         if (index !== -1) {
             tenants.value.splice(index, 1);
         }
@@ -343,7 +345,7 @@ const deleteTenant = async () => {
         successMessage.value = `Tenant ${selectedTenant.value.tenantname} deleted successfully`;
         setTimeout(() => (successMessage.value = null), 7000);
     } catch (err) {
-        console.error('Error deleting tenant:', err);
+        console.error('Error deleting tenant:', err.response || err);
         error.value =
             'Failed to delete tenant: ' +
             (err.response?.data?.message || err.message || 'Unknown error');
@@ -361,7 +363,7 @@ onMounted(() => {
 <style scoped>
 .users-page {
     width: 100%;
-    min-height: 100vh;
+    min-height: auto !important;
     padding: 2rem;
     background-color: #f9fafb;
     box-sizing: border-box;
@@ -426,16 +428,47 @@ onMounted(() => {
     padding: 0.5rem 1rem;
     font-weight: 500;
     transition: background-color 0.2s, transform 0.1s;
-    color: #35D300;
-    background-color: transparent !important;
-    border-color: #35D300 !important;
+    color: #35D300 !important;
+    border: 1px solid #35D300 !important;
+    background-color: rgba(255, 255, 255, 0);
+    line-height: 1.5;
 }
 
 .add-button:hover {
     transform: translateY(-1px);
     background-color: #35D300 !important;
-    color: #ffffff !important;
-    box-shadow: none !important;
+    color: white !important;
+    border: 1px solid white !important;
+}
+
+.add-button1 {
+    border-radius: 6px;
+    padding: 0.5rem 1rem;
+    font-weight: 500;
+    transition: background-color 0.2s, transform 0.1s;
+    color: #FF0000 !important;
+    border: 1px solid #FF0000 !important;
+    background-color: rgba(255, 255, 255, 0);
+    line-height: 1.5;
+}
+
+.add-button1:hover {
+    transform: translateY(-1px);
+    background-color: #FF0000 !important;
+    color: white !important;
+    border: 1px solid white !important;
+}
+
+:deep(.p-button.add-button.pi-pencil) {
+    padding: 0.5rem;
+    border: 1px solid #35D300 !important;
+    line-height: 1.5;
+}
+
+:deep(.p-button.add-button.pi-pencil:hover) {
+    background-color: #35D300 !important;
+    color: white !important;
+    border: 1px solid white !important;
 }
 
 .card {
@@ -512,17 +545,6 @@ h3 {
     border-radius: 8px;
     border-left: 4px solid #22c55e;
     background-color: #d1fae5;
-}
-
-:deep(.p-button.p-button-text.edit-button) {
-    color: #35D300 !important;
-    margin-left: 0.25rem;
-}
-
-:deep(.p-button.p-button-text.edit-button:hover) {
-    color: #ffffff !important;
-    background-color: #35D300 !important;
-    box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3) !important;
 }
 
 :deep(.p-button.p-button-text.delete-button) {
