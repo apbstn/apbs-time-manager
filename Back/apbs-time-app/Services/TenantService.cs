@@ -7,6 +7,7 @@ using Shared.Models.Enumerations;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Shared.Services;
 using Shared.Models;
+using System.Data;
 
 namespace apbs_time_app.Services;
 
@@ -33,7 +34,7 @@ public class TenantService : ITenantService
             .Result;
     }
 
-    public async Task AddUserToTenant(string email, Guid tenantId) 
+    public async Task AddUserToTenant(string email, Guid tenantId)
     {
         var user = await _context.Users.FirstAsync(u => u.Email == email);
 
@@ -51,8 +52,8 @@ public class TenantService : ITenantService
         _applicationDbContext.ForceReload();
 
         var existingUserTenant = await _applicationDbContext.Users
-    .OfType<UserTenant>()
-    .FirstOrDefaultAsync(ut => ut.Email == user.Email /* && ut.TenantId == tenantId if applicable */);
+            .OfType<UserTenant>()
+            .FirstOrDefaultAsync(ut => ut.Email == user.Email /* && ut.TenantId == tenantId if applicable */);
 
         if (existingUserTenant == null)
         {
@@ -66,6 +67,6 @@ public class TenantService : ITenantService
 
             _applicationDbContext.SaveChanges();
         }
-
     }
+
 }

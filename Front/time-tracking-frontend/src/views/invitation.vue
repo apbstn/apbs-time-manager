@@ -41,7 +41,7 @@
           <template #body="slotProps">
             <div class="actions-container">
               <Button icon="pi pi-trash" class="add-button1"
-                :disabled="slotProps.data.status === 1"
+                
                 @click="confirmDelete(slotProps.data)" v-tooltip.top="{
                 value: 'Delete the invitation',
                 pt: {

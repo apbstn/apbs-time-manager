@@ -55,7 +55,7 @@ watch(
         </nav>
 
         <div class="layout-breadcrumb-buttons">
-            <!-- <Button icon="pi pi-bookmark" rounded text plain></Button> -->
+            <Button icon="pi pi-bookmark" rounded text plain></Button> 
         </div>
     </div>
 </template>

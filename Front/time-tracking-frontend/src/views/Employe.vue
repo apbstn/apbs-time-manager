@@ -33,7 +33,7 @@
                 }
               }" @click="openEditDialog(slotProps.data)" />
 
-              <Button icon="pi pi-minus-circle" class="removeteam-button" v-tooltip="{
+              <Button icon="pi pi-minus" class="removeteam-button" v-tooltip="{
                 value: 'Remove the User from the team',
                 pt: {
                   arrow: {

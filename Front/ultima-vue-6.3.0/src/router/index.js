@@ -17,19 +17,19 @@ const routes = [
                 path: 'home',
                 name: 'home',
                 component: Home,
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true, breadcrumb: [{label: 'Home'}] }
             },
             {
                 path: 'tenant-management', // Fix path
                 name: 'tenant Management',
                 component: UserManagement,
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true, breadcrumb: [{label: 'Tenant Management'}] }
             },
             {
                 path: 'user-management', // Fix path
                 name: 'user-management',
                 component: Phonetest,
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true, breadcrumb: [{label: 'User Management'}] }
             },
             {
                 path: 'logout',
@@ -41,7 +41,7 @@ const routes = [
                 path: 'settings',
                 name: 'settings',
                 component: Settings,
-                meta: { requiresAuth: true }
+                meta: { requiresAuth: true, breadcrumb: [{label: 'Settings'}] }
             }
         ]
     },

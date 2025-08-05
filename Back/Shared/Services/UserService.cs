@@ -268,7 +268,6 @@ public class UserService : IUserService
             if (invitationId == Guid.Empty)
             {
                 _logger?.LogWarning("No invitation found for user ID {UserId}.", userId);
-                return null;
             }
 
             // Store the old email before deleting

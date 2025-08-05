@@ -184,12 +184,12 @@ const save = async () => {
 .stunning-button-save {
   background: #35d30000 !important;
   /* Green for save */
-  color: #35D300 !important;
-  border-color: #35D300 !important;
+  color: #FF8000 !important;
+  border-color: #FF8000 !important;
 }
 
 .stunning-button-save:hover:not(:disabled) {
-  background: #35D300;
+  background: #FF8000;
   /* Ensure green hover */
   transform: translateY(-1px);
   box-shadow: 0 2px 4px rgba(53, 211, 0, 0.3);
@@ -223,7 +223,7 @@ const save = async () => {
 }
 
 :deep(.p-button:hover) {
-  background-color: #35D300 !important;
+  background-color: #FF8000 !important;
   /* Override blue hover for all buttons */
   box-shadow: 0 3px 6px rgba(53, 211, 0, 0.2) !important;
   /* Green shadow */
@@ -234,7 +234,7 @@ const save = async () => {
 :deep(.p-button.p-button-text:hover) {
   background-color: transparent !important;
   /* Keep text buttons transparent */
-  color: #35D300 !important;
+  color: #FF8000 !important;
   /* Green text on hover for text buttons */
   box-shadow: none !important;
   /* No shadow for text buttons */
