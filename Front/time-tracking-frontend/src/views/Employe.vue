@@ -10,7 +10,19 @@
 
     <div class="card">
       <DataTable :value="filteredUsers" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
-        <Column field="username" header="Username" sortable style="width: 25%;" />
+        <Column field="username" header="Username" sortable style="width: 25%;">
+          <template #body="slotProps">
+            <span class="username-link" @click="showEmailDialog(slotProps.data)" v-tooltip="{
+              value: 'Monitor Employee Work Hours',
+              pt: {
+                arrow: { style: { borderBottomColor: '#000000' } },
+                text: '!bg-black !text-white !font-medium'
+              }
+            }">
+              {{ slotProps.data.username }}
+            </span>
+          </template>
+        </Column>
         <Column field="email" header="Email" sortable style="width: 25%;" />
         <Column field="phoneNumber" header="Phone Number" sortable style="width: 25%;" />
         <Column field="teamId" header="Teams" sortable style="width: 25%;">
@@ -24,47 +36,29 @@
               <Button icon="pi pi-user-plus" class="add-button" v-tooltip="{
                 value: 'Add Employee to a team',
                 pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
+                  arrow: { style: { borderBottomColor: '#000000' } },
+                  text: '!bg-black !text-white !font-medium'
                 }
               }" @click="openEditDialog(slotProps.data)" />
-
               <Button icon="pi pi-minus" class="removeteam-button" v-tooltip="{
                 value: 'Remove the User from the team',
                 pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
+                  arrow: { style: { borderBottomColor: '#000000' } },
+                  text: '!bg-black !text-white !font-medium'
                 }
               }" @click="showRemoveDialog(slotProps.data)" />
-
               <Button icon="pi pi-times" class="add-button1" v-tooltip="{
                 value: 'Fire User',
                 pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
+                  arrow: { style: { borderBottomColor: '#000000' } },
+                  text: '!bg-black !text-white !font-medium'
                 }
               }" @click="confirmDelete(slotProps.data)" />
               <Button icon="pi pi-plus-circle" class="allocate-button" v-tooltip="{
                 value: 'Allocate Leave Balance',
                 pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
+                  arrow: { style: { borderBottomColor: '#000000' } },
+                  text: '!bg-black !text-white !font-medium'
                 }
               }" @click="showAllocateDialog(slotProps.data)" />
             </div>
@@ -75,6 +69,28 @@
         </template>
       </DataTable>
     </div>
+
+    <!-- Email Display Dialog -->
+    <Dialog :visible="emailDialogVisible" @update:visible="emailDialogVisible = $event"
+      header="Employee Details" :modal="true" class="p-fluid stunning-dialog" :draggable="false" :style="{ width: '650px' }">
+      <Divider class="dialog-divider" />
+      <div class="dialog-content">
+        <p class="dialog-subtitle">Hours Worked Today : {{ hhours || 'No track for today' }}</p>
+        <p class="dialog-subtitle">Hours Worked This Week : {{ hhhours || 'No track for this Week' }}</p>
+        <p class="dialog-subtitle">Hours Worked This Month : {{ hhhhours || 'No track for this Month' }}</p>
+      </div>
+      <Divider class="dialog-divider" />
+      <div class="footer-buttons">
+        <Button label="Close" icon="pi pi-times" @click="emailDialogVisible = false"
+          class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
+            value: 'Close',
+            pt: {
+              arrow: { style: { borderBottomColor: '#000000' } },
+              text: '!bg-black !text-white !font-medium'
+            }
+          }"/>
+      </div>
+    </Dialog>
 
     <!-- Add/Edit Dialog -->
     <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId"
@@ -89,7 +105,7 @@
       header="Remove User from Team" :modal="true" class="p-fluid stunning-dialog" :draggable="false" :style="{ width: '650px' }">
       <Divider class="dialog-divider" />
       <div class="dialog-content">
-        <p class="dialog-subtitle">Are you sure you want to remove {{ selectedUserForRemoval.value?.username || selectedUserForRemoval.value?.email }} from their team?</p>
+        <p class="dialog-subtitle">Are you sure you want to remove {{ selectedUserForRemoval?.username || selectedUserForRemoval?.email }} from their team?</p>
         <Message v-if="removeError" severity="error" :closable="true" class="error-message" @close="removeError = ''">
           {{ removeError }}
         </Message>
@@ -98,28 +114,20 @@
       <div class="footer-buttons">
         <Button label="Cancel" icon="pi pi-times" @click="removeDialogVisible = false"
           class="p-button-text stunning-button stunning-button-cancel" v-tooltip="{
-                  value: 'Cancel',
-                  pt: {
-                    arrow: {
-                      style: {
-                        borderBottomColor: '#000000',
-                      },
-                    },
-                    text: '!bg-black !text-white !font-medium',
-                  }
-                }"/>
+            value: 'Cancel',
+            pt: {
+              arrow: { style: { borderBottomColor: '#000000' } },
+              text: '!bg-black !text-white !font-medium'
+            }
+          }"/>
         <Button label="Confirm" icon="pi pi-check" @click="removeUserFromTeam"
           class="stunning-button stunning-button-remove" v-tooltip="{
-                  value: 'Confirm Removal',
-                  pt: {
-                    arrow: {
-                      style: {
-                        borderBottomColor: '#000000',
-                      },
-                    },
-                    text: '!bg-black !text-white !font-medium',
-                  }
-                }"/>
+            value: 'Confirm Removal',
+            pt: {
+              arrow: { style: { borderBottomColor: '#000000' } },
+              text: '!bg-black !text-white !font-medium'
+            }
+          }"/>
       </div>
     </Dialog>
   </div>
@@ -153,6 +161,11 @@ const selectedUserForAllocation = ref(null)
 const removeDialogVisible = ref(false)
 const selectedUserForRemoval = ref(null)
 const removeError = ref('')
+const emailDialogVisible = ref(false)
+const selectedUserForEmail = ref(null)
+const hhours = ref(null)
+const hhhours = ref(null)
+const hhhhours = ref(null)
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
@@ -200,6 +213,58 @@ const getTeamName = (teamId) => {
   if (!teamId) return null
   const team = availableTeams.value.find(t => t.id === teamId)
   return team ? team.name : 'Unknown team'
+}
+
+const showEmailDialog = async (user) => {
+  console.log('Opening email dialog for user:', user)
+  selectedUserForEmail.value = user
+  emailDialogVisible.value = true
+  try {
+    const response = await api.post('/api/UserTenants/get-id-by-email', user.email, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    const accountId = response.data
+    console.log('Account ID:', accountId)
+    const hoursResponse = await api.get(`/api/timelog/today/${accountId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    if( hoursResponse.data === 'No PE tracking data found for today.') {
+      hhours.value = '0h 00m'
+    }
+    else {
+    hhours.value = hoursResponse.data
+    }
+    const WeekResponse = await api.get(`/api/timelog/weekly/${accountId}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+  }
+});
+// Calculate total hours from the response data
+const weeklyData = WeekResponse.data;
+const totalHours = Object.values(weeklyData).reduce((sum, hours) => sum + hours, 0);
+// Convert total hours to hours and minutes
+const hours = Math.floor(totalHours);
+const minutes = Math.floor((totalHours - hours) * 60);
+// Format as "Xh Ym"
+
+hhhours.value = `${hours}h ${minutes === 0 ? 0 : minutes}m`;
+
+const monthlyhours = await api.get(`/api/timelog/monthly/${accountId}`, {
+  headers: {
+    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+  }
+});
+hhhhours.value = monthlyhours.data;
+    console.log('Hours:', hhours.value)
+
+  } catch (error) {
+    console.error('Error fetching hours:', error)
+    hhours.value = null
+  }
 }
 
 const openEditDialog = (user) => {
@@ -251,9 +316,7 @@ const removeUserFromTeam = async () => {
       }
     })
     console.log('Remove response:', response.data)
-
     await fetchUsers()
-    window.location.reload()
     removeDialogVisible.value = false
   } catch (error) {
     console.error('Error removing user from team:', error.response ? error.response.data : error)
@@ -279,10 +342,18 @@ const confirmDelete = (user) => {
 const deleteUser = async (user) => {
   try {
     console.log('Deleting user:', user)
-    const id = await api.post('api/UserTenants/get-id-by-email/', user.email)
+    const id = await api.post('/api/UserTenants/get-id-by-email', user.email, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
     console.log('User ID:', id.data)
     const idd = id.data
-    await api.delete(`/api/UserTenants/delete/${idd}`)
+    await api.delete(`/api/UserTenants/delete/${idd}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
     await fetchUsers()
   } catch (error) {
     console.error('Error deleting user:', error)
@@ -361,6 +432,17 @@ h2 {
   margin: 0;
 }
 
+.username-link {
+  color: rgb(0, 0, 0);
+  cursor: pointer;
+
+}
+
+.username-link:hover {
+  color: #35D300;
+  text-decoration: underline;
+}
+
 .add-button {
   border-radius: 6px;
   padding: 0.5rem 1rem;
@@ -375,7 +457,7 @@ h2 {
   transform: translateY(-1px);
   background-color: #35D300 !important;
   color: white !important;
-  border-color: white !important;
+  border-color: white;
 }
 
 .add-button1 {
@@ -392,7 +474,7 @@ h2 {
   transform: translateY(-1px);
   background-color: #ff0000 !important;
   color: white !important;
-  border-color: white !important;
+  border-color: white;
 }
 
 .allocate-button {
@@ -419,14 +501,14 @@ h2 {
   transform: translateY(-1px);
   background-color: #ff8000 !important;
   color: white !important;
-  border-color: white !important;
+  border-color: white;
 }
 
 .removeteam-button:hover {
   transform: translateY(-1px);
   background-color: #007BFF !important;
   color: white !important;
-  border-color: white !important;
+  border-color: white;
 }
 
 .card {
@@ -463,9 +545,9 @@ h2 {
 
 .dialog-subtitle {
   margin: 0 0 1rem 0;
-  color: #4b5563;
-  font-size: 0.95rem;
-  font-weight: 400;
+  color: #000000;
+  font-size: 1.3rem;
+  font-weight: bold;
   text-align: center;
 }
 

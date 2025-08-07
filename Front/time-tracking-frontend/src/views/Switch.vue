@@ -289,11 +289,12 @@ h2 {
 }
 
 .clickable-name {
-  color: #007bff;
-  text-decoration: underline;
+  color: #000000;
+
 }
 
 .clickable-name:hover {
-  color: #0056b3;
+  color: #35D300;
+    text-decoration: underline;
 }
 </style>

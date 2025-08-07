@@ -12,11 +12,11 @@ public class LeaveRequestService : ILeaveRequestService
 {
     private readonly ILeaveRequestRepository _repository;
     private readonly decimal _monthlyAllocation;
-
+     
     public LeaveRequestService(ILeaveRequestRepository repository, IConfiguration configuration)
     {
         _repository = repository;
-        _monthlyAllocation = configuration.GetValue<decimal>("LeaveSettings:MonthlyLeaveAllocation", 10.0m);
+        _monthlyAllocation = configuration.GetValue<decimal>("LeaveSettings:MonthlyLeaveAllocation", 3.0m);
     }
 
     public async Task<IEnumerable<LeaveRequestDto>> GetAllLeaveRequestsAsync()
