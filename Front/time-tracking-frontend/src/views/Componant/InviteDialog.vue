@@ -19,7 +19,7 @@
                 <br />
                 <div class="p-field">
                     <label for="username" class="field-label">Username</label>
-                    <InputText v-model="form.username" id="username" :class="{ 'p-invalid': v$.username.$error || validationError }" class="stunning-input" />
+                    <InputText v-model="form.username" id="username" class="stunning-input" />
                     <small v-if="v$.username.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.username.$errors[0].$message }}
@@ -28,7 +28,7 @@
                 <br />
                 <div class="p-field">
                     <label for="phoneNumber" class="field-label">Phone Number</label>
-                    <InputText v-model="form.phoneNumber" id="phoneNumber" :class="{ 'p-invalid': v$.phoneNumber.$error || validationError }" class="stunning-input" />
+                    <InputText v-model="form.phoneNumber" id="phoneNumber" class="stunning-input" />
                     <small v-if="v$.phoneNumber.$error" class="p-error">
                         <i class="pi pi-exclamation-circle mr-1"></i>
                         {{ v$.phoneNumber.$errors[0].$message }}
@@ -38,7 +38,7 @@
             <Divider class="dialog-divider" />
             <div class="footer-buttons">
                 <Button label="Cancel" icon="pi pi-times" @click="closeDialog" class="p-button-text stunning-button stunning-button-cancel" />
-                <Button label="Send" icon="pi pi-check" :loading="isSending" @click="sendInvite" class="stunning-button stunning-button-save" :disabled="!isSavable || isSending" />
+                <Button label="Send" icon="pi pi-check" :loading="isSending" @click="sendInvite" class="stunning-button stunning-button-save" :disabled="isSending" />
             </div>
         </Dialog>
     </div>
@@ -71,10 +71,17 @@ const form = ref({
 const isSending = ref(false)
 const validationError = ref('')
 
+// Email format validator
+const emailFormat = helpers.withMessage(
+    'Invalid email format. Must be in the format ___@__.__',
+    (value) => /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/.test(value)
+)
+
 // Vuelidate rules
 const rules = {
     email: { 
-        required: helpers.withMessage('Email is required.', required)
+        required: helpers.withMessage('Email is required.', required),
+        emailFormat
     },
     username: { 
         required: helpers.withMessage('Username is required.', required)
@@ -86,10 +93,15 @@ const rules = {
 
 const v$ = useVuelidate(rules, form)
 
-// Computed property to enable Send button only when all fields are valid
+// Computed property to enable Send button only when not sending
 const isSavable = computed(() => {
-    console.log('isSavable check:', { email: form.value.email, username: form.value.username, phoneNumber: form.value.phoneNumber, invalid: v$.value.$invalid })
-    return !v$.value.$invalid && form.value.email.trim() && form.value.username.trim() && form.value.phoneNumber.trim()
+    console.log('isSavable check:', { 
+        email: form.value.email, 
+        username: form.value.username, 
+        phoneNumber: form.value.phoneNumber, 
+        invalid: v$.value.$invalid 
+    })
+    return form.value.email.trim() && form.value.username.trim() && form.value.phoneNumber.trim()
 })
 
 watch(() => props.visible, (newVisible) => {
@@ -112,7 +124,11 @@ const sendInvite = async () => {
     await v$.value.$validate()
     
     if (v$.value.$invalid) {
-        validationError.value = 'Please fix the validation errors.'
+        if (v$.value.email.$errors.length) {
+            validationError.value = v$.value.email.$errors[0].$message
+        } else {
+            validationError.value = 'Please fix the validation errors.'
+        }
         console.log('Validation errors:', v$.value.$errors)
         return
     }
@@ -151,7 +167,7 @@ const onClose = (value) => {
 <style scoped>
 .stunning-dialog {
     width: 90%;
-    max-width: 800px; /* Increased from 650px to 800px */
+    max-width: 800px;
     border-radius: 12px;
     background: linear-gradient(145deg, #ffffff, #f8fafc);
     box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
@@ -201,8 +217,8 @@ const onClose = (value) => {
 }
 
 .stunning-input.p-invalid {
-    border-color: #ef4444;
-    background: #fef2f2;
+    border-color: #ff0000;
+
 }
 
 .error-message {
@@ -232,7 +248,7 @@ const onClose = (value) => {
 }
 
 .stunning-button-cancel:hover {
-    background: #FF0000;
+    background: #ff0000;
     color: #ffffff;
     border-color: #FF0000;
 }
@@ -289,7 +305,7 @@ const onClose = (value) => {
 }
 
 :deep(.p-button.p-button-text.stunning-button-cancel:hover) {
-    background-color: #FF0000 !important;
+    background-color: #ff0000 !important;
     color: #ffffff !important;
     border-color: #ffffff !important;
 }

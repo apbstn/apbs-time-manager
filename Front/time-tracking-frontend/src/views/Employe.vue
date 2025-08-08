@@ -6,6 +6,16 @@
       </div>
     </div>
 
+    <!-- Error Message -->
+    <Message v-if="error" severity="error" :closable="true" class="error-message" @close="error = ''">
+      {{ error }}
+    </Message>
+
+    <!-- Success Message -->
+    <Message v-if="successMessage" severity="success" :closable="true" class="success-message" @close="successMessage = null">
+      {{ successMessage }}
+    </Message>
+
     <InputText v-model="searchQuery" placeholder="Search users..." class="search-input" />
 
     <div class="card">
@@ -33,13 +43,13 @@
         <Column :exportable="false" style="width: 1%;" header="Actions">
           <template #body="slotProps">
             <div class="actions-container">
-              <Button icon="pi pi-user-plus" class="add-button" v-tooltip="{
-                value: 'Add Employee to a team',
+              <Button icon="pi pi-user-plus" class="add-button" :disabled="availableTeams.length === 0" v-tooltip="{
+                value: availableTeams.length === 0 ? 'No teams available' : 'Add Employee to a team',
                 pt: {
                   arrow: { style: { borderBottomColor: '#000000' } },
                   text: '!bg-black !text-white !font-medium'
                 }
-              }" @click="openEditDialog(slotProps.data)" />
+              }" @click="openAddToTeamDialog(slotProps.data)" />
               <Button icon="pi pi-minus" class="removeteam-button" v-tooltip="{
                 value: 'Remove the User from the team',
                 pt: {
@@ -94,7 +104,7 @@
 
     <!-- Add/Edit Dialog -->
     <UserDialog :visible="dialogVisible" :isEdit="isEdit" :user="selectedUser" :currentId="currentId"
-      :teams="availableTeams" @update:visible="dialogVisible = $event" @refresh="fetchUsers" @close="closeDialog" />
+      :teams="availableTeams" @update:visible="dialogVisible = $event" @refresh="onUserDialogSave" @close="closeDialog" />
 
     <!-- Allocate Leave Balance Dialog -->
     <AllocateLeaveDialog v-model:visible="allocateDialogVisible" :user="selectedUserForAllocation"
@@ -166,6 +176,8 @@ const selectedUserForEmail = ref(null)
 const hhours = ref(null)
 const hhhours = ref(null)
 const hhhhours = ref(null)
+const error = ref('')
+const successMessage = ref(null)
 
 const filteredUsers = computed(() => {
   if (!searchQuery.value) return users.value
@@ -186,8 +198,10 @@ const fetchUsers = async () => {
     }))
     console.log('Raw users response:', users.value)
     console.log('Users fetched:', users.value)
+    error.value = ''
   } catch (error) {
     console.error('Error fetching users:', error)
+    error.value = 'Failed to fetch users: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
@@ -201,11 +215,14 @@ const fetchTeams = async () => {
     }))
     if (availableTeams.value.length === 0) {
       console.warn('No teams fetched from /api/teams')
+      error.value = 'No teams available. Please create a team first.'
     } else {
       console.log('Teams fetched:', availableTeams.value)
+      error.value = ''
     }
   } catch (error) {
     console.error('Error fetching teams:', error)
+    error.value = 'Failed to fetch teams: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
@@ -232,51 +249,60 @@ const showEmailDialog = async (user) => {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
-    if( hoursResponse.data === 'No PE tracking data found for today.') {
+    if (hoursResponse.data === 'No PE tracking data found for today.') {
       hhours.value = '0h 00m'
-    }
-    else {
-    hhours.value = hoursResponse.data
+    } else {
+      hhours.value = hoursResponse.data
     }
     const WeekResponse = await api.get(`/api/timelog/weekly/${accountId}`, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-  }
-});
-// Calculate total hours from the response data
-const weeklyData = WeekResponse.data;
-const totalHours = Object.values(weeklyData).reduce((sum, hours) => sum + hours, 0);
-// Convert total hours to hours and minutes
-const hours = Math.floor(totalHours);
-const minutes = Math.floor((totalHours - hours) * 60);
-// Format as "Xh Ym"
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    const weeklyData = WeekResponse.data
+    const totalHours = Object.values(weeklyData).reduce((sum, hours) => sum + hours, 0)
+    const hours = Math.floor(totalHours)
+    const minutes = Math.floor((totalHours - hours) * 60)
+    hhhours.value = `${hours}h ${minutes === 0 ? 0 : minutes}m`
 
-hhhours.value = `${hours}h ${minutes === 0 ? 0 : minutes}m`;
-
-const monthlyhours = await api.get(`/api/timelog/monthly/${accountId}`, {
-  headers: {
-    Authorization: `Bearer ${localStorage.getItem('accessToken')}`
-  }
-});
-hhhhours.value = monthlyhours.data;
+    const monthlyhours = await api.get(`/api/timelog/monthly/${accountId}`, {
+      headers: {
+        Authorization: `Bearer ${localStorage.getItem('accessToken')}`
+      }
+    })
+    hhhhours.value = monthlyhours.data
     console.log('Hours:', hhours.value)
-
+    error.value = ''
   } catch (error) {
     console.error('Error fetching hours:', error)
     hhours.value = null
+    error.value = 'Failed to fetch hours: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
-const openEditDialog = (user) => {
-  console.log('Opening edit dialog for user:', user)
-  selectedUser.value = { ...user }
-  currentId.value = user.email
-  isEdit.value = true
-  dialogVisible.value = true
+const openAddToTeamDialog = (user) => {
+  console.log('Opening add to team dialog for user:', user)
+  if (availableTeams.value.length === 0) {
+    error.value = 'Cannot add user to team: No teams available.'
+    return
+  }
+  try {
+    selectedUser.value = { ...user }
+    currentId.value = user.email
+    isEdit.value = true // Set to true assuming UserDialog handles team assignment as an edit
+    dialogVisible.value = true
+  } catch (err) {
+    console.error('Error opening add to team dialog:', err)
+    error.value = 'Failed to open team assignment dialog: ' + err.message
+  }
 }
 
 const openAddDialog = () => {
   console.log('Opening add dialog')
+  if (availableTeams.value.length === 0) {
+    error.value = 'Cannot add user: No teams available.'
+    return
+  }
   isEdit.value = false
   selectedUser.value = null
   currentId.value = null
@@ -287,6 +313,20 @@ const closeDialog = () => {
   console.log('Closing add/edit dialog')
   dialogVisible.value = false
   selectedUser.value = null
+  currentId.value = null
+}
+
+const onUserDialogSave = async () => {
+  try {
+    await fetchUsers()
+    successMessage.value = `Team assignment updated successfully`
+    setTimeout(() => {
+      successMessage.value = null
+    }, 7000)
+  } catch (error) {
+    console.error('Error refreshing users after dialog save:', error)
+    error.value = 'Failed to refresh users: ' + (error.response?.data?.Message || error.message || 'Unknown error')
+  }
 }
 
 const showRemoveDialog = (user) => {
@@ -310,17 +350,21 @@ const removeUserFromTeam = async () => {
     })
     const userId = idResponse.data
     console.log('Retrieved userId:', userId)
-    const response = await api.put(`/api/UserTenants/remove-team/${userId}`, null, {
+    await api.put(`/api/UserTenants/remove-team/${userId}`, null, {
       headers: {
         Authorization: `Bearer ${localStorage.getItem('accessToken')}`
       }
     })
-    console.log('Remove response:', response.data)
     await fetchUsers()
     removeDialogVisible.value = false
+    successMessage.value = `${selectedUserForRemoval.value.username || selectedUserForRemoval.value.email} has been removed from the team successfully`
+    setTimeout(() => {
+      successMessage.value = null
+    }, 7000)
   } catch (error) {
     console.error('Error removing user from team:', error.response ? error.response.data : error)
     removeError.value = error.response?.data?.Message || 'Failed to remove user from team.'
+    error.value = 'Failed to remove user from team: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
@@ -336,6 +380,7 @@ const confirmDelete = (user) => {
     })
   } else {
     console.error('DeleteDialog instance not found or showDeleteDialog not exposed')
+    error.value = 'Failed to open delete dialog: DeleteDialog instance not found'
   }
 }
 
@@ -355,8 +400,13 @@ const deleteUser = async (user) => {
       }
     })
     await fetchUsers()
+    successMessage.value = `${user.username || user.email} has been Fired successfully`
+    setTimeout(() => {
+      successMessage.value = null
+    }, 7000)
   } catch (error) {
     console.error('Error deleting user:', error)
+    error.value = 'Failed to delete user: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
@@ -383,10 +433,13 @@ const allocateLeaveBalance = async ({ user, days }) => {
       }
     })
     console.log('Allocation response:', allocationResponse.data)
-    alert('Leave balance allocated successfully!')
+    successMessage.value = `Leave balance allocated successfully for ${user.username || user.email}`
+    setTimeout(() => {
+      successMessage.value = null
+    }, 7000)
   } catch (error) {
     console.error('Error allocating leave balance:', error)
-    alert('Failed to allocate leave balance. Check console for details.')
+    error.value = 'Failed to allocate leave balance: ' + (error.response?.data?.Message || error.message || 'Unknown error')
   }
 }
 
@@ -435,7 +488,7 @@ h2 {
 .username-link {
   color: rgb(0, 0, 0);
   cursor: pointer;
-
+  text-decoration: underline;
 }
 
 .username-link:hover {
@@ -458,6 +511,12 @@ h2 {
   background-color: #35D300 !important;
   color: white !important;
   border-color: white;
+}
+
+.add-button:disabled {
+  color: #d1d5db !important;
+  border-color: #d1d5db !important;
+  cursor: not-allowed;
 }
 
 .add-button1 {
@@ -560,6 +619,13 @@ h2 {
   border-radius: 8px;
   border-left: 4px solid #ef4444;
   background-color: #fef2f2;
+}
+
+.success-message {
+  margin: 1rem 0;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+  background-color: #d1fae5;
 }
 
 .footer-buttons {

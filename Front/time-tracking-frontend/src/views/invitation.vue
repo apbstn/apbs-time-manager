@@ -23,7 +23,7 @@
       <DataTable :value="filteredInvitations" paginator :rows="10" tableStyle="min-width: 50rem" :showGridlines="true">
         <Column field="email" header="Email" sortable style="width: 33.3333%;">
           <template #body="{ data }">
-            {{ data.email || 'N/A' }}
+            {{ formatEmail(data.email) || 'N/A' }}
           </template>
         </Column>
         <Column field="phone_Number" header="Phone Number" sortable style="width: 33.3333%;">
@@ -105,6 +105,12 @@ const statusDisplay = (status) => {
     }
 }
 
+const formatEmail = (email) => {
+    if (!email) return null
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    return emailRegex.test(email) ? email : null
+}
+
 const decodeJwt = (token) => {
     try {
         const base64Url = token.split('.')[1]
@@ -157,8 +163,14 @@ const openAddDialog = () => {
 
 const handleSave = (newInvite) => {
     console.log('Handling save from dialog:', newInvite)
-    invitations.value.push(newInvite)
-    dialogVisible.value = false
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/
+    if (newInvite.email && emailRegex.test(newInvite.email)) {
+        invitations.value.push(newInvite)
+        dialogVisible.value = false
+    } else {
+        console.error('Invalid email format:', newInvite.email)
+        // Optionally, you could trigger a UI notification here
+    }
 }
 
 const confirmDelete = (invite) => {

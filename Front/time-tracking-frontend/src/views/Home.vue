@@ -4,7 +4,7 @@
       <h1>Welcome, {{ aname }} to STT</h1><br />
       <div class="rectangles">
         <div class="card last-request">
-          <h3><i class="pi pi-sign-out icon-with-bg1" style="margin-right: 0.5rem;"></i>Leave Balance left</h3>
+          <h3><i class="pi pi-sign-out icon-with-bg1" style="margin-right: 0.5rem;"></i>Leave Balance Left</h3>
           <p>{{ leaveBalance }} days</p>
         </div>
         <div class="card last-request">

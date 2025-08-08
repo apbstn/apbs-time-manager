@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
+using NPOI.SS.Formula.Functions;
 using Shared.Context;
 using Shared.DTOs.UserDtos;
 using Shared.DTOs.UserDtos.Mappers;
@@ -265,13 +266,9 @@ public class UserService : IUserService
                 .Where(a => a.UserId == userId)
                 .Select(a => a.Id)
                 .FirstOrDefaultAsync();
-            if (invitationId == Guid.Empty)
-            {
-                _logger?.LogWarning("No invitation found for user ID {UserId}.", userId);
-            }
-
+            
             // Store the old email before deleting
-            string oldEmail = user.Email;
+        string oldEmail = user.Email;
 
             // Retrieve the tenant ID from UserTenantRoles
             var userTenantRole = await _tenantDbContext.UserTenantRoles
@@ -279,114 +276,116 @@ public class UserService : IUserService
             if (userTenantRole == null)
             {
                 _logger?.LogWarning("No tenant role found for user ID {UserId}.", userId);
-                throw new InvalidOperationException("No tenant role found for the user.");
+                // Instead of throwing, proceed to delete user and invitation
             }
-
-            Guid tenantId = userTenantRole.TenantId;
-
-            // Retrieve the tenant's connection string
-            var tenant = await _tenantDbContext.Tenants
-                .FirstOrDefaultAsync(t => t.Id == tenantId);
-            if (tenant == null || string.IsNullOrEmpty(tenant.ConnectionString))
+            else
             {
-                _logger?.LogWarning("Tenant or connection string not found for tenant ID {TenantId}.", tenantId);
-                throw new InvalidOperationException("Tenant or connection string not found for the user.");
-            }
+                Guid tenantId = userTenantRole.TenantId;
 
-            // Store the original connection string
-            var originalConnectionString = _appContext.Database.GetDbConnection().ConnectionString;
-
-            // Ensure the connection is closed before changing the connection string
-            if (_appContext.Database.GetDbConnection().State == ConnectionState.Open)
-            {
-                await _appContext.Database.CloseConnectionAsync();
-            }
-
-            // Set the tenant's connection string
-            if (string.IsNullOrWhiteSpace(tenant.ConnectionString))
-            {
-                throw new InvalidOperationException("Tenant connection string is empty or invalid.");
-            }
-
-            _appContext.Database.GetDbConnection().ConnectionString = tenant.ConnectionString;
-
-            try
-            {
-                // Verify and open the connection
-                if (string.IsNullOrWhiteSpace(_appContext.Database.GetDbConnection().ConnectionString))
+                // Retrieve the tenant's connection string
+                var tenant = await _tenantDbContext.Tenants
+                    .FirstOrDefaultAsync(t => t.Id == tenantId);
+                if (tenant == null || string.IsNullOrEmpty(tenant.ConnectionString))
                 {
-                    throw new InvalidOperationException("Failed to set the connection string for _appContext.");
+                    _logger?.LogWarning("Tenant or connection string not found for tenant ID {TenantId}.", tenantId);
+                    throw new InvalidOperationException("Tenant or connection string not found for the user.");
                 }
 
-                await _appContext.Database.OpenConnectionAsync();
+                // Store the original connection string
+                var originalConnectionString = _appContext.Database.GetDbConnection().ConnectionString;
 
-                // Find the account in T_ACCOUNT using the old email
-                var account = await _appContext.Users
-                    .FirstOrDefaultAsync(a => a.Email == oldEmail);
-                Guid accountId = account?.Id ?? Guid.Empty;
-                if (account != null)
-                {
-                    _appContext.Users.Remove(account);
-                    _logger?.LogInformation("Deleted user account with email {Email} (ID: {UserId}).", oldEmail, accountId);
-                }
-                else
-                {
-                    _logger?.LogInformation("No user account found for email {Email}, skipping deletion.", oldEmail);
-                }
-
-                // Delete LeaveRequests
-                var leaveRequest = await _appContext.LeaveRequests
-                    .FirstOrDefaultAsync(a => a.UserId == accountId);
-                if (leaveRequest != null)
-                {
-                    _appContext.LeaveRequests.Remove(leaveRequest);
-                    _logger?.LogInformation("Deleted LeaveRequest for user ID {UserId}.", accountId);
-                }
-                else
-                {
-                    _logger?.LogInformation("No LeaveRequest found for user ID {UserId}, skipping deletion.", accountId);
-                }
-
-                // Delete LeaveBalances
-                var leaveBalance = await _appContext.LeaveBalances
-                    .FirstOrDefaultAsync(a => a.UserId == accountId);
-                if (leaveBalance != null)
-                {
-                    _appContext.LeaveBalances.Remove(leaveBalance);
-                    _logger?.LogInformation("Deleted LeaveBalance for user ID {UserId}.", accountId);
-                }
-                else
-                {
-                    _logger?.LogInformation("No LeaveBalance found for user ID {UserId}, skipping deletion.", accountId);
-                }
-
-                // Delete TimeLogs
-                var timeLogsCount = await _appContext.TimeLogs
-                    .Where(tl => tl.UserId == accountId)
-                    .CountAsync();
-                if (timeLogsCount > 0)
-                {
-                    await _appContext.TimeLogs
-                        .Where(tl => tl.UserId == accountId)
-                        .ExecuteDeleteAsync();
-                    _logger?.LogInformation("Deleted {Count} TimeLogs for user ID {UserId}.", timeLogsCount, accountId);
-                }
-                else
-                {
-                    _logger?.LogInformation("No TimeLogs found for user ID {UserId}, skipping deletion.", accountId);
-                }
-
-                // Save changes to T_ACCOUNT
-                await _appContext.SaveChangesAsync();
-            }
-            finally
-            {
-                // Close the connection and restore the original connection string
+                // Ensure the connection is closed before changing the connection string
                 if (_appContext.Database.GetDbConnection().State == ConnectionState.Open)
                 {
                     await _appContext.Database.CloseConnectionAsync();
                 }
-                _appContext.Database.GetDbConnection().ConnectionString = originalConnectionString;
+
+                // Set the tenant's connection string
+                if (string.IsNullOrWhiteSpace(tenant.ConnectionString))
+                {
+                    throw new InvalidOperationException("Tenant connection string is empty or invalid.");
+                }
+
+                _appContext.Database.GetDbConnection().ConnectionString = tenant.ConnectionString;
+
+                try
+                {
+                    // Verify and open the connection
+                    if (string.IsNullOrWhiteSpace(_appContext.Database.GetDbConnection().ConnectionString))
+                    {
+                        throw new InvalidOperationException("Failed to set the connection string for _appContext.");
+                    }
+
+                    await _appContext.Database.OpenConnectionAsync();
+
+                    // Find the account in T_ACCOUNT using the old email
+                    var account = await _appContext.Users
+                        .FirstOrDefaultAsync(a => a.Email == oldEmail);
+                    Guid accountId = account?.Id ?? Guid.Empty;
+                    if (account != null)
+                    {
+                        _appContext.Users.Remove(account);
+                        _logger?.LogInformation("Deleted user account with email {Email} (ID: {UserId}).", oldEmail, accountId);
+                    }
+                    else
+                    {
+                        _logger?.LogInformation("No user account found for email {Email}, skipping deletion.", oldEmail);
+                    }
+
+                    // Delete LeaveRequests
+                    var leaveRequest = await _appContext.LeaveRequests
+                        .FirstOrDefaultAsync(a => a.UserId == accountId);
+                    if (leaveRequest != null)
+                    {
+                        _appContext.LeaveRequests.Remove(leaveRequest);
+                        _logger?.LogInformation("Deleted LeaveRequest for user ID {UserId}.", accountId);
+                    }
+                    else
+                    {
+                        _logger?.LogInformation("No LeaveRequest found for user ID {UserId}, skipping deletion.", accountId);
+                    }
+
+                    // Delete LeaveBalances
+                    var leaveBalance = await _appContext.LeaveBalances
+                        .FirstOrDefaultAsync(a => a.UserId == accountId);
+                    if (leaveBalance != null)
+                    {
+                        _appContext.LeaveBalances.Remove(leaveBalance);
+                        _logger?.LogInformation("Deleted LeaveBalance for user ID {UserId}.", accountId);
+                    }
+                    else
+                    {
+                        _logger?.LogInformation("No LeaveBalance found for user ID {UserId}, skipping deletion.", accountId);
+                    }
+
+                    // Delete TimeLogs
+                    var timeLogsCount = await _appContext.TimeLogs
+                        .Where(tl => tl.UserId == accountId)
+                        .CountAsync();
+                    if (timeLogsCount > 0)
+                    {
+                        await _appContext.TimeLogs
+                            .Where(tl => tl.UserId == accountId)
+                            .ExecuteDeleteAsync();
+                        _logger?.LogInformation("Deleted {Count} TimeLogs for user ID {UserId}.", timeLogsCount, accountId);
+                    }
+                    else
+                    {
+                        _logger?.LogInformation("No TimeLogs found for user ID {UserId}, skipping deletion.", accountId);
+                    }
+
+                    // Save changes to T_ACCOUNT
+                    await _appContext.SaveChangesAsync();
+                }
+                finally
+                {
+                    // Close the connection and restore the original connection string
+                    if (_appContext.Database.GetDbConnection().State == ConnectionState.Open)
+                    {
+                        await _appContext.Database.CloseConnectionAsync();
+                    }
+                    _appContext.Database.GetDbConnection().ConnectionString = originalConnectionString;
+                }
             }
 
             // Delete the user from the tenant context
