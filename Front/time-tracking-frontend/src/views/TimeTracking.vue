@@ -3,17 +3,22 @@
     <div class="header-container">
       <div class="flex justify-content-between align-items-center mb-2">
         <h2 style="font-size: 22px; color: #6B7280;">Time Tracking</h2>
-        <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" v-tooltip.top="{
-                value: 'Refresh',
-                pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
-                }
-              }"/>
+        <div class="flex align-items-center gap-2">
+          <Button type="button" icon="pi pi-plus" label="Enter Manual" @click="openManualDialog" class="refresh-button" v-tooltip.top="{
+                  value: 'Enter Manual',
+                  pt: {
+                    arrow: { style: { borderBottomColor: '#000000' } },
+                    text: '!bg-black !text-white !font-medium'
+                  }
+                }"/>
+          <Button type="button" icon="pi pi-refresh" label="Refresh" @click="refreshData" class="refresh-button" v-tooltip.top="{
+                  value: 'Refresh',
+                  pt: {
+                    arrow: { style: { borderBottomColor: '#000000' } },
+                    text: '!bg-black !text-white !font-medium'
+                  }
+                }"/>
+        </div>
       </div>
     </div>
 
@@ -31,16 +36,12 @@
             <div class="flex justify-content-between">
               <Button type="button" icon="pi pi-filter-slash" label="Clear" outlined @click="clearFilter"
                 class="refresh-button" v-tooltip="{
-                value: 'Clear',
-                pt: {
-                  arrow: {
-                    style: {
-                      borderBottomColor: '#000000',
-                    },
-                  },
-                  text: '!bg-black !text-white !font-medium',
-                }
-              }"/>
+                  value: 'Clear',
+                  pt: {
+                    arrow: { style: { borderBottomColor: '#000000' } },
+                    text: '!bg-black !text-white !font-medium'
+                  }
+                }"/>
             </div>
           </template>
           <template #empty>
@@ -60,8 +61,7 @@
           </Column>
           <Column field="TM_TYPE" header="Status" style="min-width: 10rem" filterField="TM_TYPE">
             <template #body="{ data }">
-              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="status-badge"
-                @before-mount="console.log('Rendering Tag for TM_TYPE:', data.TM_TYPE, 'Severity:', getSeverity(data.TM_TYPE), 'Classes:', $el.className)" />
+              <Tag :value="displayStatus(data.TM_TYPE)" :severity="getSeverity(data.TM_TYPE)" class="status-badge" />
             </template>
             <template #filter="{ filterModel }">
               <Select v-model="filterModel.value" :options="statusOptions" optionLabel="label" optionValue="value"
@@ -88,6 +88,48 @@
         </DataTable>
       </div>
     </div>
+
+    <!-- Manual Entry Dialog -->
+    <!-- Manual Entry Dialog -->
+<Dialog v-model:visible="manualDialogVisible" header="Enter Manual Log" class="stunning-dialog" style="width: 650px !important;" :modal="true">
+    <Divider class="dialog-divider" />
+    <p class="dialog-subtitle">Enter Manual Time Log Details Below</p>
+
+    <div class="p-fluid form-container">
+        <div class="field mb-4">
+            <label for="manualDate" class="field-label">Date and Time</label>
+            <DatePicker id="manualDate"
+            style="width: 570px !important;"
+                v-model="manualDate"
+                
+                showTime
+                hourFormat="24"
+                dateFormat="yy-mm-dd"
+                placeholder="Select Date and Time"
+                showIcon
+            />
+        </div>
+        <div class="field mb-4">
+            <label for="manualType" class="field-label">Type</label>
+            <Select id="manualType"
+            style="width: 570px !important;"
+                v-model="manualType"
+                :options="statusOptions"
+                optionLabel="label"
+                optionValue="value"
+                placeholder="Select Type"
+            />
+        </div>
+    </div>
+
+    <Divider />
+
+    <template #footer>
+        <Button class="add-button1" label="Cancel" icon="pi pi-times" @click="manualDialogVisible = false" text />
+        <Button class="add-button" label="Save" icon="pi pi-check" @click="saveManualLog" :disabled="!manualDate || manualType === null" />
+    </template>
+</Dialog>
+
   </div>
 </template>
 
@@ -103,9 +145,11 @@ import DatePicker from 'primevue/datepicker';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
 import InputNumber from 'primevue/inputnumber';
+import Dialog from 'primevue/dialog';
+import api from '@/api';
 
 // Import components
-const components = { DataTable, Column, Button, InputText, DatePicker, Select, Tag, InputNumber };
+const components = { DataTable, Column, Button, InputText, DatePicker, Select, Tag, InputNumber, Dialog };
 
 // Use TimeTracking composable
 const { initialize, fetchTimeLogs, getStatusPhrase, formatDate, formatDuration, getState } = useTimeTracking();
@@ -123,6 +167,10 @@ const localState = ref({
   statusMessage: '',
   timeLogs: []
 });
+
+const manualDialogVisible = ref(false);
+const manualDate = ref(null);
+const manualType = ref(null);
 
 const initFilters = () => {
   filters.value = {
@@ -146,6 +194,7 @@ onMounted(async () => {
     console.log('Loaded time logs:', localState.value.timeLogs);
   } catch (error) {
     console.error('Error loading time tracking data:', error);
+    alert('Failed to load time logs');
   }
   loading.value = false;
 });
@@ -180,7 +229,6 @@ const displayStatus = (type) => {
 };
 
 const getSeverity = (status) => {
-  console.log('statussss', status);
   switch (status) {
     case 0:
       return 'success';
@@ -207,12 +255,158 @@ const refreshData = async () => {
     localState.value.statusMessage = currentState.statusMessage;
   } catch (error) {
     console.error('Error refreshing data:', error);
+    alert('Failed to refresh time logs');
   }
   loading.value = false;
+};
+
+const openManualDialog = () => {
+  manualDialogVisible.value = true;
+  manualDate.value = null;
+  manualType.value = null;
+};
+
+const saveManualLog = async () => {
+  if (!manualDate.value || manualType.value === null) {
+    alert('Date and Type are required');
+    return;
+  }
+
+  const typeMap = {
+    0: 'PE',
+    1: 'P',
+    2: 'PS'
+  };
+
+  const dto = {
+    Time: manualDate.value.toISOString(),
+    Type: typeMap[manualType.value]
+  };
+  const email = localStorage.getItem('email'); // TODO: Replace with actual email from auth context
+  const id = await api.post('/api/UserTenants/get-id-by-email', email);
+  const accountId = id.data; // TODO: Replace with actual accountId from auth context
+  // Replace with actual accountId (e.g., from auth context or composable)
+ // TODO: Get from auth context
+
+  try {
+    console.log('Manual log response:', dto);
+    const accessToken = localStorage.getItem('accessToken'); 
+    if (!accessToken) {
+      console.log('No access token found');
+    }
+
+    const responsee = await api.post(`/api/timelog/manual/add/${accountId}`, dto,{
+      headers: {
+                Authorization: `Bearer ${accessToken}`
+            }
+    });
+    
+    console.log('Manual log response:', dto);
+    console.log(responsee.data);
+    console.log(responsee);
+
+    const responseData = await responsee.data;
+    console.log('Response status:', responsee.status, 'Response data:', responseData);
+
+    if (responseData === "Log added successfully.") {
+      console.log('==========================');
+      await refreshData();
+      console.log('==========================');
+      manualDialogVisible.value = false;
+      console.log('==========================');
+      alert('Manual log added successfully');
+    } else {
+      const error = await responsee.data;
+      alert(`Failed to add manual log: ${error.exception?.message || 'Unknown error'}`);
+    }
+  } catch (error) {
+    console.error('Unexpected error saving manual log:', error);
+    alert('Unexpected error adding manual log');
+  }
 };
 </script>
 
 <style scoped>
+/* Dialog container styling */
+.stunning-dialog {
+    width: 90%;
+    max-width: 650px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    background: #ffffff;
+}
+
+/* Divider spacing */
+.dialog-divider {
+    margin: 1rem 0;
+}
+
+/* Subtitle styling */
+.dialog-subtitle {
+    margin: 0 0 1rem 0;
+    color: #4b5563;
+    font-size: 0.95rem;
+    font-weight: 400;
+    text-align: center;
+}
+
+/* Form container background and padding */
+.form-container {
+    padding: 1.5rem;
+    background: #f9fafb;
+    border-radius: 8px;
+}
+
+/* Each field block */
+.field {
+    margin-bottom: 1.5rem;
+}
+
+/* Label styling */
+.field-label {
+    font-weight: 600;
+    font-size: 1rem;
+    color: #1f2a44;
+    margin-bottom: 0.5rem;
+    display: block;
+    text-align: left;
+}
+
+/* Make inputs full width */
+:deep(.p-inputtext),
+:deep(.p-calendar),
+:deep(.p-dropdown) {
+    width: 100% !important;
+    border-radius: 6px;
+    border: 1px solid #ced4da;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+/* Input focus effects */
+:deep(.p-inputtext:focus),
+:deep(.p-calendar:focus),
+:deep(.p-dropdown:focus) {
+    border-color: #6366f1;
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+}
+
+
+
+/* Existing styles remain unchanged */
+.p-field {
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.p-field label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  align-items: center !important;
+}
+
+
+
 .header-container {
   margin-bottom: 1.5rem;
 }
@@ -228,6 +422,42 @@ const refreshData = async () => {
 .align-items-center {
   align-items: center;
 }
+
+.add-button {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #35D300 !important;
+  border-color: #35D300 !important;
+  background-color: rgba(255, 255, 255, 0);
+}
+
+.add-button:hover {
+  transform: translateY(-1px);
+  background-color: #35D300 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+.add-button1 {
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+  transition: background-color 0.2s, transform 0.1s;
+  color: #ff0000 !important;
+  border-color: #ff0000 !important;
+  background-color: white;
+}
+
+.add-button1:hover {
+  transform: translateY(-1px);
+  background-color: #ff0000 !important;
+  color: white !important;
+  border-color: white !important;
+}
+
+
 
 .search-input {
   border: 1px solid #ced4da;

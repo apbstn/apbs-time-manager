@@ -4,6 +4,7 @@ using Npgsql;
 using Shared.Context;
 using Shared.Models;
 using Shared.Services;
+using System;
 
 namespace Shared.Services
 {
@@ -74,13 +75,18 @@ namespace Shared.Services
                 _context.TimeLogs.Add(newLog);
                 _context.SaveChanges();
                 _logger.LogInformation("Tracking started successfully for AccountId {AccountId}.", accountId);
+                return new Result { Success = true };
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
             {
                 _logger.LogInformation("Table TIMELOG does not exist for AccountId {AccountId}. Ignoring and returning success.", accountId);
+                return new Result { Success = true };
             }
-
-            return new Result { Success = true };
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error starting tracking for AccountId {AccountId}.", accountId);
+                return new Result { Success = false, Exception = new Exxception(ex.Message) };
+            }
         }
 
         public Result PauseTracking(Guid accountId)
@@ -120,13 +126,18 @@ namespace Shared.Services
                 _context.TimeLogs.Add(newLog);
                 _context.SaveChanges();
                 _logger.LogInformation("Tracking paused successfully for AccountId {AccountId}.", accountId);
+                return new Result { Success = true };
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
             {
                 _logger.LogInformation("Table TIMELOG does not exist for AccountId {AccountId}. Ignoring and returning success.", accountId);
+                return new Result { Success = true };
             }
-
-            return new Result { Success = true };
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error pausing tracking for AccountId {AccountId}.", accountId);
+                return new Result { Success = false, Exception = new Exxception(ex.Message) };
+            }
         }
 
         public Result StopTracking(Guid accountId)
@@ -165,13 +176,18 @@ namespace Shared.Services
                 _context.TimeLogs.Add(newLog);
                 _context.SaveChanges();
                 _logger.LogInformation("Tracking stopped successfully for AccountId {AccountId}.", accountId);
+                return new Result { Success = true };
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
             {
                 _logger.LogInformation("Table TIMELOG does not exist for AccountId {AccountId}. Ignoring and returning success.", accountId);
+                return new Result { Success = true };
             }
-
-            return new Result { Success = true };
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error stopping tracking for AccountId {AccountId}.", accountId);
+                return new Result { Success = false, Exception = new Exxception(ex.Message) };
+            }
         }
 
         public List<TimeLog> GetLogs(Guid accountId)
@@ -231,6 +247,7 @@ namespace Shared.Services
                 }
 
                 _context.SaveChanges();
+                RecalculateLogs(log.UserId, newTime);
                 _logger.LogInformation("TimeLog updated successfully for logId {LogId}.", logId);
 
                 return new Result { Success = true };
@@ -240,13 +257,18 @@ namespace Shared.Services
                 _logger.LogInformation("Table TIMELOG does not exist for logId {LogId}. Ignoring and returning success.", logId);
                 return new Result { Success = true };
             }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error updating log for logId {LogId}.", logId);
+                return new Result { Success = false, Exception = new Exxception(ex.Message) };
+            }
         }
 
         public string GetTodayTotalHours(Guid id)
         {
             try
             {
-                var currentDate = DateTime.UtcNow.Date; // 2025-07-23
+                var currentDate = DateTime.UtcNow.Date;
 
                 var totalHours = _context.TimeLogs
                     .Where(log => log.UserId == id && log.Time.Date == currentDate && log.Type == TimeLogType.PE)
@@ -254,11 +276,11 @@ namespace Shared.Services
                     .Sum(log => log.TotalHours?.TotalHours ?? 0);
 
                 if (totalHours <= 0)
-                    return null; // Will trigger NotFound in controller
+                    return null;
 
                 int hours = (int)totalHours;
-                int minutes = (int)((totalHours - hours) * 60); // Convert decimal fraction to minutes
-                return $"{hours}h {minutes:D2}m"; // Format as "0h 00m"
+                int minutes = (int)((totalHours - hours) * 60);
+                return $"{hours}h {minutes:D2}m";
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
             {
@@ -271,24 +293,23 @@ namespace Shared.Services
         {
             try
             {
-                var currentDate = DateTime.UtcNow.Date; // 2025-07-23 00:00:00 UTC
-                var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek); // Start of week (Monday, July 21, 2025)
+                var currentDate = DateTime.UtcNow.Date;
+                var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek);
 
                 var weeklyData = _context.TimeLogs
                     .Where(log => log.UserId == id && log.Time.Date >= startOfWeek && log.Type == TimeLogType.PE)
-                    .ToList() // Load into memory
+                    .ToList()
                     .GroupBy(log => log.Time.DayOfWeek)
                     .Select(g => new
                     {
                         Day = g.Key,
-                        TotalHours = g.Sum(log => log.TotalHours?.TotalHours ?? 0) // Client-side sum
+                        TotalHours = g.Sum(log => log.TotalHours?.TotalHours ?? 0)
                     })
                     .ToDictionary(
                         x => Enum.GetName(typeof(DayOfWeek), x.Day) ?? "Unknown",
                         x => Math.Round(x.TotalHours, 2)
                     );
 
-                // Ensure all days (Monday to Sunday) are included with 0 if no data
                 var allDays = Enum.GetValues(typeof(DayOfWeek))
                     .Cast<DayOfWeek>()
                     .ToDictionary(d => d.ToString(), d => weeklyData.GetValueOrDefault(d.ToString(), 0.0));
@@ -301,31 +322,28 @@ namespace Shared.Services
                 return new Dictionary<string, double>();
             }
         }
-
-
 
         public Dictionary<string, double> GetWeeklyPause(Guid id)
         {
             try
             {
-                var currentDate = DateTime.UtcNow.Date; // 2025-07-23 00:00:00 UTC
-                var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek); // Start of week (Monday, July 21, 2025)
+                var currentDate = DateTime.UtcNow.Date;
+                var startOfWeek = currentDate.AddDays(-(int)currentDate.DayOfWeek);
 
                 var weeklyData = _context.TimeLogs
                     .Where(log => log.UserId == id && log.Time.Date >= startOfWeek && log.Type == TimeLogType.P)
-                    .ToList() // Load into memory
+                    .ToList()
                     .GroupBy(log => log.Time.DayOfWeek)
                     .Select(g => new
                     {
                         Day = g.Key,
-                        TotalHours = g.Sum(log => log.TotalHours?.TotalHours ?? 0) // Client-side sum
+                        TotalHours = g.Sum(log => log.TotalHours?.TotalHours ?? 0)
                     })
                     .ToDictionary(
                         x => Enum.GetName(typeof(DayOfWeek), x.Day) ?? "Unknown",
                         x => Math.Round(x.TotalHours, 2)
                     );
 
-                // Ensure all days (Monday to Sunday) are included with 0 if no data
                 var allDays = Enum.GetValues(typeof(DayOfWeek))
                     .Cast<DayOfWeek>()
                     .ToDictionary(d => d.ToString(), d => weeklyData.GetValueOrDefault(d.ToString(), 0.0));
@@ -339,14 +357,13 @@ namespace Shared.Services
             }
         }
 
-
         public string GetMonthlyTotalHours(Guid id)
         {
             try
             {
-                var currentDate = DateTime.UtcNow; // e.g., 2025-07-25 20:36:00 UTC
-                var startOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0, DateTimeKind.Utc); // First day of month, e.g., 2025-07-01 00:00:00 UTC
-                var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1); // Last moment of month, e.g., 2025-07-31 23:59:59.9999999 UTC
+                var currentDate = DateTime.UtcNow;
+                var startOfMonth = new DateTime(currentDate.Year, currentDate.Month, 1, 0, 0, 0, DateTimeKind.Utc);
+                var endOfMonth = startOfMonth.AddMonths(1).AddTicks(-1);
 
                 var totalHours = _context.TimeLogs
                     .Where(log => log.UserId == id
@@ -356,7 +373,7 @@ namespace Shared.Services
                     .Sum(log => log.TotalHours.HasValue ? log.TotalHours.Value.TotalHours : 0);
 
                 int hours = (int)totalHours;
-                int minutes = (int)((totalHours - hours) * 60); // Convert decimal fraction to minutes
+                int minutes = (int)((totalHours - hours) * 60);
                 return $"{hours}h {minutes:D2}m";
             }
             catch (Npgsql.PostgresException ex) when (ex.SqlState == "42P01")
@@ -364,6 +381,92 @@ namespace Shared.Services
                 _logger.LogInformation("Table TIMELOG does not exist for userId {UserId}. Returning 0.", id);
                 return "No Track were found";
             }
+        }
+
+        public Result ManualAdd(Guid accountId, DateTime time, TimeLogType type)
+        {
+            if (time > DateTime.UtcNow)
+            {
+                return new Result { Success = false, Exception = new Exxception("Cannot add log in the future.") };
+            }
+
+            try
+            {
+                // Validate log sequence
+                var lastLog = GetLastLog(accountId);
+                if (lastLog != null)
+                {
+                    if (lastLog.Type == TimeLogType.PE && type == TimeLogType.PE)
+                    {
+                        return new Result { Success = false, Exception = new Exxception("Cannot add consecutive start logs.") };
+                    }
+                    if (lastLog.Type == TimeLogType.PS && type != TimeLogType.PE)
+                    {
+                        return new Result { Success = false, Exception = new Exxception("Session is stopped. Only start log allowed.") };
+                    }
+                }
+
+                var newLog = new TimeLog
+                {
+                    Time = time,
+                    Type = type,
+                    UserId = accountId,
+                    Activ = true // Will be adjusted in recalculation
+                };
+
+                using (var transaction = _context.Database.BeginTransaction())
+                {
+                    _context.TimeLogs.Add(newLog);
+                    _context.SaveChanges();
+                    RecalculateLogs(accountId, time);
+                    transaction.Commit();
+                }
+
+                _logger.LogInformation("Manual log added successfully for AccountId {AccountId}.", accountId);
+                return new Result { Success = true };
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error adding manual log for AccountId {AccountId}. InnerException: {InnerException}, StackTrace: {StackTrace}",
+                    accountId, ex.InnerException?.Message ?? "None", ex.StackTrace);
+                return new Result { Success = false, Exception = new Exxception($"Database error: {ex.Message}, Inner: {ex.InnerException?.Message ?? "None"}") };
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unexpected error adding manual log for AccountId {AccountId}. InnerException: {InnerException}, StackTrace: {StackTrace}",
+                    accountId, ex.InnerException?.Message ?? "None", ex.StackTrace);
+                return new Result { Success = false, Exception = new Exxception($"Unexpected error: {ex.Message}, Inner: {ex.InnerException?.Message ?? "None"}") };
+            }
+        }
+
+        private void RecalculateLogs(Guid userId, DateTime time)
+        {
+            var logs = _context.TimeLogs
+                .Where(l => l.UserId == userId && l.Time.Date == time.Date)
+                .OrderBy(l => l.Time)
+                .ToList();
+
+            if (!logs.Any()) return;
+
+            for (int i = 0; i < logs.Count - 1; i++)
+            {
+                logs[i].Activ = false;
+                if (logs[i].Type == TimeLogType.PE && logs[i + 1].Type != TimeLogType.PE)
+                {
+                    logs[i].TotalHours = logs[i + 1].Time - logs[i].Time;
+                }
+                else
+                {
+                    logs[i].TotalHours = null;
+                }
+            }
+
+            var lastLog = logs.Last();
+            lastLog.Activ = lastLog.Type != TimeLogType.PS;
+            lastLog.TotalHours = null;
+
+            _context.TimeLogs.UpdateRange(logs);
+            _context.SaveChanges();
         }
     }
 }

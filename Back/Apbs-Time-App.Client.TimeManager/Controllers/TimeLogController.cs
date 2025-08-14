@@ -21,9 +21,6 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
             _ex = ex;
         }
 
-
-        
-
         [HttpPost("start/{accountId}")]
         [Authorize]
         public ActionResult StartTracking(Guid accountId)
@@ -139,6 +136,27 @@ namespace Apbs_Time_App.Client.TimeManager.Controllers
         {
             var monthlyHours = _timeLogService.GetMonthlyTotalHours(id);
             return Ok(monthlyHours); // Always return Ok since GetMonthlyTotalHours handles empty cases
+        }
+
+        [HttpPost("manual/add/{accountId}")]
+        [Authorize]
+        public ActionResult ManualAdd(Guid accountId, [FromBody] ManualLogDto dto)
+        {
+            if (!Enum.TryParse(dto.Type, out TimeLogType logType))
+            {
+                return BadRequest("Invalid time type.");
+            }
+
+            var result = _timeLogService.ManualAdd(accountId, dto.Time, logType);
+            if (result.Success)
+            {
+                return Ok("Log added successfully.");
+            }
+            else
+            {
+                _logger.LogWarning(result.Exception?.Message ?? "An error occurred while adding manual log.");
+                return BadRequest(result.Exception?.Message ?? "An error occurred while adding manual log.");
+            }
         }
     }
 }
